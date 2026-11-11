@@ -192,7 +192,7 @@ export const ExamScreen = ({ route, navigation }: Props) => {
                 subtitle={t('common.teacher')}
               />
             )}
-            {exam?.notes?.length && (
+            {!!exam?.notes?.length && (
               <ListItem
                 leadingItem={
                   <Icon icon={faNoteSticky} size={fontSizes['2xl']} />
