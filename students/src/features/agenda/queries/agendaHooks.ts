@@ -8,6 +8,7 @@ import {
 } from '@polito/lib/core';
 import { Booking, Deadline, ExamStatusEnum } from '@polito/student-api-client';
 import {
+  QueryClient,
   hashKey,
   useQueries,
   useQuery,
@@ -18,9 +19,13 @@ import { AppPreferences, CoursesPreferences } from '~/core/types/preferences';
 
 import { DateTime, Interval } from 'luxon';
 
-import { useGetBookings } from '../../../core/queries/bookingHooks';
-import { useGetExams } from '../../../core/queries/examHooks';
 import {
+  BOOKINGS_QUERY_KEY,
+  useGetBookings,
+} from '../../../core/queries/bookingHooks';
+import { EXAMS_QUERY_KEY, useGetExams } from '../../../core/queries/examHooks';
+import {
+  DEADLINES_QUERY_PREFIX,
   useGetDeadlineWeek,
   useGetDeadlineWeeks,
 } from '../../../core/queries/studentHooks';
@@ -37,9 +42,24 @@ import {
 import { AgendaTypesFilterState } from '../types/AgendaTypesFilterState';
 import { AgendaWeek } from '../types/AgendaWeek';
 import { Lecture } from '../types/Lecture';
-import { useGetLectureWeek, useGetLectureWeeks } from './lectureHooks';
+import {
+  LECTURES_QUERY_PREFIX,
+  useGetLectureWeek,
+  useGetLectureWeeks,
+} from './lectureHooks';
 
 export const AGENDA_QUERY_PREFIX = 'agenda';
+
+// Refetches the queries the agenda is built from, then rebuilds the agenda
+export const refreshAgendaQueries = (client: QueryClient) =>
+  Promise.all(
+    [
+      EXAMS_QUERY_KEY,
+      BOOKINGS_QUERY_KEY,
+      [LECTURES_QUERY_PREFIX],
+      [DEADLINES_QUERY_PREFIX],
+    ].map(queryKey => client.invalidateQueries({ queryKey })),
+  ).then(_ => client.invalidateQueries({ queryKey: [AGENDA_QUERY_PREFIX] }));
 
 const groupItemsByDay = (
   coursesPreferences: CoursesPreferences,

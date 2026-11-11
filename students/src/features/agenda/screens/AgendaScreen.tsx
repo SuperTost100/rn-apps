@@ -35,9 +35,6 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQueryClient } from '@tanstack/react-query';
 
-import { BOOKINGS_QUERY_KEY } from '~/core/queries/bookingHooks.ts';
-import { EXAMS_QUERY_KEY } from '~/core/queries/examHooks.ts';
-import { DEADLINES_QUERY_PREFIX } from '~/core/queries/studentHooks.ts';
 import { AppPreferences } from '~/core/types/preferences';
 
 import { DateTime } from 'luxon';
@@ -45,8 +42,10 @@ import { DateTime } from 'luxon';
 import { AgendaFilters } from '../components/AgendaFilters';
 import { AgendaStackParamList } from '../components/AgendaNavigator';
 import { WeeklyAgenda } from '../components/WeeklyAgenda';
-import { AGENDA_QUERY_PREFIX, useGetAgendaWeeks } from '../queries/agendaHooks';
-import { LECTURES_QUERY_PREFIX } from '../queries/lectureHooks';
+import {
+  refreshAgendaQueries,
+  useGetAgendaWeeks,
+} from '../queries/agendaHooks';
 import { AgendaOption } from '../types/AgendaOption';
 import { AgendaState } from '../types/AgendaState';
 import { AgendaWeek } from '../types/AgendaWeek';
@@ -103,19 +102,10 @@ export const AgendaScreen = ({ navigation, route }: Props) => {
   });
 
   const refreshQueries = useCallback(() => {
-    const dependingQueryKeys = [
-      EXAMS_QUERY_KEY,
-      BOOKINGS_QUERY_KEY,
-      [LECTURES_QUERY_PREFIX],
-      [DEADLINES_QUERY_PREFIX],
-    ];
-
     setAgendaState(prev => ({ ...prev, isRefreshing: true }));
-    Promise.all(
-      dependingQueryKeys.map(q => client.invalidateQueries({ queryKey: q })),
-    )
-      .then(_ => client.invalidateQueries({ queryKey: [AGENDA_QUERY_PREFIX] }))
-      .then(_ => setAgendaState(prev => ({ ...prev, isRefreshing: false })));
+    refreshAgendaQueries(client).then(_ =>
+      setAgendaState(prev => ({ ...prev, isRefreshing: false })),
+    );
   }, [client, setAgendaState]);
 
   const setCurrentDayOffset = (offsetY: number) => {
