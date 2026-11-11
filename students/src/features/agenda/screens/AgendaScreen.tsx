@@ -284,10 +284,9 @@ export const AgendaScreen = ({ navigation, route }: Props) => {
         <OverviewList emptyStateText={t('common.cacheMiss')} />
       )}
 
-      {(!data.length && isLoading) ||
-        (agendaState.isRefreshing && (
-          <ActivityIndicator style={styles.activityIndicator} size="large" />
-        ))}
+      {((!data.length && isLoading) || agendaState.isRefreshing) && (
+        <ActivityIndicator style={styles.activityIndicator} size="large" />
+      )}
       {!!data.length && !agendaState.isRefreshing && (
         <FlatList
           ref={flatListRef}
