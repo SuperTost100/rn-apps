@@ -289,9 +289,7 @@ export const CardSwiper = ({
   );
 
   useEffect(() => {
-    if (isFirstRequest) {
-      scrollTo();
-    }
+    return isFirstRequest ? scrollTo() : undefined;
   }, [isFirstRequest, scrollTo]);
 
   useEffect(() => {

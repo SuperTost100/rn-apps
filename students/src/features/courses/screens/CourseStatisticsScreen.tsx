@@ -93,7 +93,11 @@ export const CourseStatisticsScreen = ({ route }: Props) => {
       const { width: newWidth } = Dimensions.get('screen');
       setGraphWidth(newWidth - Platform.select({ ios: 128, android: 100 })!);
     };
-    Dimensions.addEventListener('change', updateDimensions);
+    const subscription = Dimensions.addEventListener(
+      'change',
+      updateDimensions,
+    );
+    return () => subscription.remove();
   }, []);
 
   const {

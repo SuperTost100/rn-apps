@@ -84,7 +84,11 @@ export const LectureScreen = ({ route, navigation }: Props) => {
       setWidth(newWidth);
       setHeight(newHeight);
     };
-    Dimensions.addEventListener('change', updateDimensions);
+    const subscription = Dimensions.addEventListener(
+      'change',
+      updateDimensions,
+    );
+    return () => subscription.remove();
   }, []);
 
   const renderItem = ({
