@@ -40,6 +40,8 @@ const mimeTypeIcons: Record<IconType, IconDefinition> = {
   rar: faFileZipper,
   video: faFileVideo,
   powerpoint: faFilePowerpoint,
+  spreadsheetml: faFileExcel,
+  presentationml: faFilePowerpoint,
   csv: faFileCsv,
   xml: faFileCode,
   audio: faFileAudio,
@@ -50,11 +52,13 @@ const mimeTypeIcons: Record<IconType, IconDefinition> = {
   '7z': faFileZipper,
 };
 
+const mimeTypeKeywords = new RegExp(Object.keys(mimeTypeIcons).join('|'), 'i');
+
 const getIconFromMimeType = (mimeType?: string) => {
   if (!mimeType) return faFile;
-  const keywords = new RegExp(Object.keys(mimeTypeIcons).join('|'), 'i');
-  const match = mimeType.match(keywords);
-  const type = match?.[0];
+  // Office mime types contain "openxml", which would match the "xml" keyword
+  const match = mimeType.replace(/openxml/gi, '').match(mimeTypeKeywords);
+  const type = match?.[0].toLowerCase();
   if (type && type in mimeTypeIcons) {
     return mimeTypeIcons[type];
   }
