@@ -188,15 +188,20 @@ export const useNotifications = () => {
       if (!notification || !notification.data?.polito_transaction) {
         return;
       }
-      const payload = JSON.parse(
-        notification.data?.payload ?? 'null',
-      ) as PushNotificationPayload;
+      let payload: PushNotificationPayload | null = null;
+      try {
+        payload = JSON.parse(
+          notification.data?.payload ?? 'null',
+        ) as PushNotificationPayload | null;
+      } catch {
+        // A malformed payload only means there is no detail screen to open.
+      }
       const transaction = notification.data.polito_transaction as TransactionId;
       // Course
       const mapping =
         courseTransactionsMapping[transaction as CourseTransactionId];
       if (mapping) {
-        if (payload.inc) {
+        if (payload?.inc) {
           navigation.navigate('TeachingTab', {
             screen: 'Course',
             params: {
@@ -208,7 +213,7 @@ export const useNotifications = () => {
         }
       }
       // Tickets
-      if (transaction === TransactionId.ticket && payload.idTicket) {
+      if (transaction === TransactionId.ticket && payload?.idTicket) {
         navigation.navigate('ServicesTab', {
           screen: 'Ticket',
           params: {
@@ -220,8 +225,8 @@ export const useNotifications = () => {
       // News
       if (
         transaction === TransactionId.avvisi &&
-        payload.origine !== 'personali' &&
-        payload.idAvviso
+        payload?.origine !== 'personali' &&
+        payload?.idAvviso
       ) {
         navigation.navigate('ServicesTab', {
           screen: 'NewsItem',
