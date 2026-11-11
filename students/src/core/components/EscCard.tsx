@@ -60,11 +60,14 @@ export const EscCard = (
 
     while (start < input.length) {
       let end = Math.min(start + maxLength, input.length);
-      if (end < input.length && input[end] !== ' ')
-        end = input.lastIndexOf(' ', end) || end;
+      if (end < input.length && input[end] !== ' ') {
+        const space = input.lastIndexOf(' ', end);
+        // Without a space after start, break the long word at end.
+        if (space > start) end = space;
+      }
 
       result.push(input.slice(start, end).trim());
-      start = end + 1;
+      start = input[end] === ' ' ? end + 1 : end;
     }
 
     return result.join('\n');
