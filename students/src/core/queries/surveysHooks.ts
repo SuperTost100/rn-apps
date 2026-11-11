@@ -5,20 +5,22 @@ import { useQuery } from '@tanstack/react-query';
 import { SurveyType } from '../../features/surveys/types/SurveyType';
 
 const SURVEYS_QUERY_KEY = ['surveys'];
-const CPD_QUERY_KEY = ['cpd'];
-const CPD_ALL_QUERY_KEY = ['cpdall'];
-const CPD_CATEGORIES_QUERY_KEY = ['cpdCategories'];
 
 const useSurveysClient = (): SurveysApi => {
   return new SurveysApi();
 };
 
-export const useGetSurveys = () => {
+// The derived hooks below pass a `select` so that they read the surveys query
+// itself: refetching or updating it updates them too.
+export const useGetSurveys = <T = Survey[]>(
+  select?: (surveys: Survey[]) => T,
+) => {
   const surveysClient = useSurveysClient();
 
   return useQuery({
     queryKey: SURVEYS_QUERY_KEY,
     queryFn: () => surveysClient.getSurveys().then(pluckData),
+    select,
   });
 };
 
@@ -26,30 +28,15 @@ const filterMandatoryNotCompiledSurveys = (surveys: Survey[]): Survey[] => {
   return surveys.filter(survey => survey.isMandatory && !survey.isCompiled);
 };
 
-export const useGetCpdSurveys = () => {
-  const surveysQuery = useGetSurveys();
-
-  return useQuery({
-    queryKey: CPD_QUERY_KEY,
-    queryFn: () => filterMandatoryNotCompiledSurveys(surveysQuery.data!),
-    enabled: surveysQuery.data !== undefined,
-  });
-};
+export const useGetCpdSurveys = () =>
+  useGetSurveys(filterMandatoryNotCompiledSurveys);
 
 const filterMandatorySurveys = (surveys: Survey[]): Survey[] => {
   const s = surveys.filter(survey => survey.isMandatory);
   return s;
 };
 
-export const useGetAllCpdSurveys = () => {
-  const surveysQuery = useGetSurveys();
-
-  return useQuery({
-    queryKey: CPD_ALL_QUERY_KEY,
-    queryFn: () => filterMandatorySurveys(surveysQuery.data!),
-    enabled: surveysQuery.data !== undefined,
-  });
-};
+export const useGetAllCpdSurveys = () => useGetSurveys(filterMandatorySurveys);
 
 const groupSurveysIntoTypes = (surveys: Survey[]): SurveyType[] => {
   return surveys
@@ -83,12 +70,8 @@ const groupSurveysIntoTypes = (surveys: Survey[]): SurveyType[] => {
     .sort((a, b) => a.name.localeCompare(b.name));
 };
 
-export const useGetSurveyCategories = () => {
-  const cpdSurveys = useGetCpdSurveys();
+const groupCpdSurveysIntoTypes = (surveys: Survey[]): SurveyType[] =>
+  groupSurveysIntoTypes(filterMandatoryNotCompiledSurveys(surveys));
 
-  return useQuery({
-    queryKey: CPD_CATEGORIES_QUERY_KEY,
-    queryFn: () => groupSurveysIntoTypes(cpdSurveys.data!),
-    enabled: cpdSurveys.data !== undefined,
-  });
-};
+export const useGetSurveyCategories = () =>
+  useGetSurveys(groupCpdSurveysIntoTypes);
