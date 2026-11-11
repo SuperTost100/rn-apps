@@ -253,45 +253,46 @@ export const useFileManagement = ({
     };
   }, [isRemoveButtonDisabled, colors.secondaryText, palettes, spacing]);
 
+  // Sorting only depends on which files are downloaded, so progress ticks,
+  // which change `downloads` but not this string, do not re-sort the list.
+  const downloadedKeys = useMemo(
+    () =>
+      Object.keys(downloads)
+        .filter(key => downloads[key].isDownloaded)
+        .join('\n'),
+    [downloads],
+  );
+
   const sortByDownloadStatus = useCallback(
     (files: (CourseDirectory | CourseFileOverview)[]) => {
-      if (!downloads || Object.keys(downloads).length === 0) {
+      if (!downloadedKeys) {
         return files;
       }
-      return files.sort((a, b) => {
-        const aFilePath = getCourseFilePath({
-          courseId,
-          courseName: course?.name,
-          location: (a as any).location,
-          fileId: a.id,
-          fileName: a.name,
-          mimeType: (a as any).mimeType,
-        });
-        const aKey = `${buildCourseFileUrl(courseId, a.id)}:${aFilePath}`;
-
-        const bFilePath = getCourseFilePath({
-          courseId,
-          courseName: course?.name,
-          location: (b as any).location,
-          fileId: b.id,
-          fileName: b.name,
-          mimeType: (b as any).mimeType,
-        });
-        const bKey = `${buildCourseFileUrl(courseId, b.id)}:${bFilePath}`;
-
-        const aDownloaded = downloads[aKey]?.isDownloaded ?? false;
-        const bDownloaded = downloads[bKey]?.isDownloaded ?? false;
-        if (aDownloaded && !bDownloaded) return 1;
-        if (!aDownloaded && bDownloaded) return -1;
-        return 0;
-      });
+      const downloadedKeySet = new Set(downloadedKeys.split('\n'));
+      const isDownloaded = new Map(
+        files.map(file => {
+          const filePath = getCourseFilePath({
+            courseId,
+            courseName: course?.name,
+            location: (file as any).location,
+            fileId: file.id,
+            fileName: file.name,
+            mimeType: (file as any).mimeType,
+          });
+          const key = `${buildCourseFileUrl(courseId, file.id)}:${filePath}`;
+          return [file, downloadedKeySet.has(key)];
+        }),
+      );
+      return [...files].sort(
+        (a, b) => Number(isDownloaded.get(a)) - Number(isDownloaded.get(b)),
+      );
     },
-    [courseId, course?.name, getCourseFilePath, downloads],
+    [courseId, course?.name, getCourseFilePath, downloadedKeys],
   );
 
   const sortByDate = useCallback(
     (files: (CourseDirectory | CourseFileOverview)[], ascending = false) => {
-      return files.sort((a, b) => {
+      return [...files].sort((a, b) => {
         const aDate = (a as CourseFileOverview).createdAt
           ? new Date((a as CourseFileOverview).createdAt).getTime()
           : 0;
