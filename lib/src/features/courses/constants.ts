@@ -567,26 +567,31 @@ export const pdfSizes =
       }
     : {};
 
+/**
+ * `color` is the colour the student picks (dots, the week grid).
+ * `tile` is a darker shade of the same hue for a course tile with a white
+ * icon on it: white on every tile reaches at least 4.5:1.
+ */
 export const courseColors = [
-  { name: 'colors.red', color: '#DC2626' },
-  { name: 'colors.orange', color: '#EA580C' },
-  { name: 'colors.amber', color: '#D97706' },
-  { name: 'colors.yellow', color: '#CA8A04' },
-  { name: 'colors.lime', color: '#65A30D' },
-  { name: 'colors.green', color: '#16A34A' },
-  { name: 'colors.emerald', color: '#059669' },
-  { name: 'colors.teal', color: '#0D9488' },
-  { name: 'colors.cyan', color: '#0891B2' },
-  { name: 'colors.lightBlue', color: '#0284C7' },
-  { name: 'colors.blue', color: '#2563EB' },
-  { name: 'colors.indigo', color: '#4F46E5' },
-  { name: 'colors.violet', color: '#7C3AED' },
-  { name: 'colors.purple', color: '#9333EA' },
-  { name: 'colors.fuchsia', color: '#C026D3' },
-  { name: 'colors.pink', color: '#DB2777' },
-  { name: 'colors.rose', color: '#E11D48' },
-  { name: 'colors.warmGray', color: '#737373' },
-  { name: 'colors.coolGray', color: '#5C778A' },
+  { name: 'colors.red', color: '#DC2626', tile: '#B91C1C' },
+  { name: 'colors.orange', color: '#EA580C', tile: '#C2410C' },
+  { name: 'colors.amber', color: '#D97706', tile: '#B45309' },
+  { name: 'colors.yellow', color: '#CA8A04', tile: '#A16207' },
+  { name: 'colors.lime', color: '#65A30D', tile: '#4D7C0F' },
+  { name: 'colors.green', color: '#16A34A', tile: '#15803D' },
+  { name: 'colors.emerald', color: '#059669', tile: '#047857' },
+  { name: 'colors.teal', color: '#0D9488', tile: '#0F766E' },
+  { name: 'colors.cyan', color: '#0891B2', tile: '#0E7490' },
+  { name: 'colors.lightBlue', color: '#0284C7', tile: '#0369A1' },
+  { name: 'colors.blue', color: '#2563EB', tile: '#1D4ED8' },
+  { name: 'colors.indigo', color: '#4F46E5', tile: '#4338CA' },
+  { name: 'colors.violet', color: '#7C3AED', tile: '#6D28D9' },
+  { name: 'colors.purple', color: '#9333EA', tile: '#7E22CE' },
+  { name: 'colors.fuchsia', color: '#C026D3', tile: '#A21CAF' },
+  { name: 'colors.pink', color: '#DB2777', tile: '#BE185D' },
+  { name: 'colors.rose', color: '#E11D48', tile: '#BE123C' },
+  { name: 'colors.warmGray', color: '#737373', tile: '#404040' },
+  { name: 'colors.coolGray', color: '#5C778A', tile: '#415462' },
 ];
 
 export const MENU_ACTIONS = {
