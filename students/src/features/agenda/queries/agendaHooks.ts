@@ -4,7 +4,6 @@ import {
   APP_TIMEZONE,
   PreferencesContextProps,
   dateFormatter,
-  formatMachineDate,
   usePreferencesContext,
 } from '@polito/lib/core';
 import { Booking, Deadline, ExamStatusEnum } from '@polito/student-api-client';
@@ -51,6 +50,8 @@ const groupItemsByDay = (
     zone: APP_TIMEZONE,
   };
   const formatHHmm = dateFormatter('HH:mm');
+  // Group items by their day in the app time zone, the one their times are shown in
+  const formatDay = dateFormatter('yyyy-MM-dd');
   agendaItems.push(
     ...exams
       .filter(exam => exam.status === ExamStatusEnum.Booked)
@@ -63,7 +64,7 @@ const groupItemsByDay = (
           type: 'exam',
           color: coursePreferences?.color,
           icon: coursePreferences?.icon,
-          date: formatMachineDate(exam.examStartsAt!),
+          date: formatDay(exam.examStartsAt!),
           start: DateTime.fromJSDate(exam.examStartsAt!, timeOptions),
           end: DateTime.fromJSDate(exam.examEndsAt!, timeOptions),
           startTimestamp: exam.examStartsAt!.valueOf(),
@@ -83,7 +84,7 @@ const groupItemsByDay = (
         id: booking.id,
         key: 'booking' + booking.id,
         type: 'booking',
-        date: formatMachineDate(booking.startsAt!),
+        date: formatDay(booking.startsAt!),
         startTimestamp: booking.startsAt!.valueOf(),
         fromTime: formatHHmm(booking.startsAt!),
         toTime: formatHHmm(booking.endsAt!),
@@ -106,7 +107,7 @@ const groupItemsByDay = (
         type: 'lecture',
         start: DateTime.fromJSDate(lecture.startsAt, timeOptions),
         end: DateTime.fromJSDate(lecture.endsAt, timeOptions),
-        date: formatMachineDate(lecture.startsAt),
+        date: formatDay(lecture.startsAt),
         startTimestamp: lecture.startsAt.valueOf(),
         fromTime: formatHHmm(lecture.startsAt),
         toTime: formatHHmm(lecture.endsAt),
@@ -149,7 +150,7 @@ const groupItemsByDay = (
 
   const daysMap = new Map<string, AgendaDay>();
 
-  const today = DateTime.now().startOf('day');
+  const today = DateTime.now().setZone(APP_TIMEZONE).startOf('day');
   const todayString = today.toFormat('y-MM-dd');
 
   const agendaDays = agendaItems.reduce<Map<string, AgendaDay>>(
@@ -158,7 +159,7 @@ const groupItemsByDay = (
       if (!day) {
         day = {
           key: item.date,
-          date: DateTime.fromSQL(item.date),
+          date: DateTime.fromSQL(item.date, timeOptions),
           isToday: item.date === todayString,
           items: [],
         };

@@ -431,7 +431,10 @@ export const BookingSlotScreen = ({ route, navigation }: Props) => {
                 <Row style={{ marginVertical: 8, marginHorizontal: 16 }}>
                   {isFirstOfDay ? (
                     <Col style={styles.dayColumn}>
-                      {item.start.hasSame(DateTime.local(), 'day') ? (
+                      {item.start.hasSame(
+                        DateTime.now().setZone(APP_TIMEZONE),
+                        'day',
+                      ) ? (
                         <View style={[styles.dayBox, styles.todayBox]}>
                           <Text
                             variant="heading"
