@@ -66,14 +66,13 @@ export const dateFormatter = (format: string) => {
   };
 };
 
-const today = DateTime.now();
-
 export const isCurrentMonth = (date: DateTime): boolean => {
+  const today = DateTime.now();
   return today.year === date.year && today.month === date.month;
 };
 
 export const isCurrentYear = (date: DateTime): boolean => {
-  return today.year === date.year;
+  return DateTime.now().year === date.year;
 };
 
 export const convertMachineDateToFormatDate = (date: string) => {
