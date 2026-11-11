@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Platform, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -19,10 +19,12 @@ import {
 import {
   HeaderLogo,
   Icon,
+  Text,
   Theme,
   TranslucentView,
   tabBarStyle,
   useStylesheet,
+  useTextScale,
   useTheme,
 } from '@polito/lib/ui';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -45,6 +47,27 @@ import { AppPreferences } from '../types/preferences';
 
 const TabNavigator = createBottomTabNavigator<RootParamList>();
 const androidTabBarHeight = 60;
+// Room for the label at its 14 px cap under the 20 px icon
+const androidLargeTextTabBarHeight = 64;
+const tabBarIconSize = 20;
+
+// The label grows with the text size up to 14 px, as in the mockup, and
+// never hides. At 14 px the longest labels (Teaching, Didattica) are 66 px
+// wide. A tab is 72 dp wide on a 360 dp phone, but its button pads 5 px on
+// each side, so the label takes that padding back.
+const TabLabel = ({ color, children }: { color: string; children: string }) => (
+  <Text
+    variant="tabLabel"
+    maxFontSize={14}
+    numberOfLines={1}
+    style={[tabLabelStyles.label, { color }]}
+  >
+    {children}
+  </Text>
+);
+const tabLabelStyles = StyleSheet.create({
+  label: { marginHorizontal: -5 },
+});
 
 export const RootNavigator = ({
   versionModalIsOpen,
@@ -58,13 +81,12 @@ export const RootNavigator = ({
   const { username } = useApiContext();
   const { syncLocalFilesToDb } = useDownloadsContext();
   const { data: student } = useGetStudent();
-  const { updatePreference, accessibility } =
-    usePreferencesContext<AppPreferences>();
+  const { updatePreference } = usePreferencesContext<AppPreferences>();
+  const { isLarge } = useTextScale();
   const { getUnreadsCount } = useNotifications();
   const hasSyncedFiles = useRef(false);
   const campus = useGetCurrentCampus();
   const { data: sites } = useGetSites();
-  const [tabBarIconSize, setTabBarIconSize] = useState(20);
   const { isOnboardingVisible, closeOnboarding } =
     useModalManager(versionModalIsOpen);
   const profileMessages = useGetMessages();
@@ -84,14 +106,6 @@ export const RootNavigator = ({
     }
   }, [campus, sites?.data, student, updatePreference]);
 
-  useEffect(() => {
-    if (accessibility?.fontSize && accessibility.fontSize > 125) {
-      setTabBarIconSize(accessibility.fontSize === 150 ? 30 : 40);
-    } else {
-      setTabBarIconSize(20);
-    }
-  }, [accessibility?.fontSize]);
-
   const instantAnimation = {
     animation: 'timing' as const,
     config: { duration: 0 },
@@ -99,8 +113,14 @@ export const RootNavigator = ({
 
   const androidTabBarBottom = useMemo(
     () =>
-      Platform.select({ android: { height: androidTabBarHeight + bottom } }),
-    [bottom],
+      Platform.select({
+        android: {
+          height:
+            (isLarge ? androidLargeTextTabBarHeight : androidTabBarHeight) +
+            bottom,
+        },
+      }),
+    [bottom, isLarge],
   );
 
   return (
@@ -108,10 +128,7 @@ export const RootNavigator = ({
       <TabNavigator.Navigator
         backBehavior="history"
         screenOptions={{
-          tabBarShowLabel:
-            accessibility?.fontSize && accessibility.fontSize > 125
-              ? false
-              : true,
+          tabBarLabel: TabLabel,
           headerShown: false,
           tabBarHideOnKeyboard: true,
           tabBarVisibilityAnimationConfig: {
@@ -121,7 +138,6 @@ export const RootNavigator = ({
           tabBarStyle: [styles.tabBarStyle, androidTabBarBottom],
           tabBarBackground: () => <TranslucentView fallbackOpacity={1} />,
           tabBarItemStyle: styles.tabBarItemStyle,
-          tabBarLabelStyle: [styles.tabBarLabelStyle],
           tabBarInactiveTintColor: colors.tabBarInactive,
           tabBarBadgeStyle: styles.tabBarBadgeStyle,
         }}
@@ -130,7 +146,7 @@ export const RootNavigator = ({
           name="TeachingTab"
           component={TeachingNavigator}
           options={{
-            tabBarLabel: t('teachingScreen.title'),
+            title: t('teachingScreen.title'),
             tabBarIcon: ({ color }) => (
               <Icon icon={faBookOpen} color={color} size={tabBarIconSize} />
             ),
@@ -141,7 +157,7 @@ export const RootNavigator = ({
           name="AgendaTab"
           component={AgendaNavigator}
           options={{
-            tabBarLabel: t('agendaScreen.title'),
+            title: t('agendaScreen.title'),
             tabBarIcon: ({ color }) => (
               <Icon icon={faCalendar} color={color} size={tabBarIconSize} />
             ),
@@ -150,7 +166,7 @@ export const RootNavigator = ({
         <TabNavigator.Screen
           name="PlacesTab"
           options={{
-            tabBarLabel: t('placesScreen.title'),
+            title: t('placesScreen.title'),
             tabBarIcon: ({ color }) => (
               <Icon icon={faCompass} color={color} size={tabBarIconSize} />
             ),
@@ -163,7 +179,7 @@ export const RootNavigator = ({
           component={ServicesNavigator}
           options={{
             headerLeft: () => <HeaderLogo />,
-            tabBarLabel: t('common.services'),
+            title: t('common.services'),
             tabBarIcon: ({ color }) => (
               <Icon icon={faCircleInfo} color={color} size={tabBarIconSize} />
             ),
@@ -174,7 +190,7 @@ export const RootNavigator = ({
           name="ProfileTab"
           component={UserNavigator}
           options={{
-            tabBarLabel: t('profileScreen.title'),
+            title: t('profileScreen.title'),
             tabBarIcon: ({ color }) => (
               <Icon icon={faUser} color={color} size={tabBarIconSize} />
             ),
@@ -216,8 +232,5 @@ const createStyles = ({
       fontFamily: fontFamilies.body,
       fontWeight: fontWeights.semibold,
       fontSize: fontSizes.sm,
-    },
-    tabBarLabelStyle: {
-      width: 'auto',
     },
   });
