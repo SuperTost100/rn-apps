@@ -18,6 +18,7 @@ import { NavigationContainer } from '../navigation/NavigationContainer';
 import { fromUiTheme } from '../navigation/navigation-theme';
 import { darkTheme } from '../themes/dark';
 import { lightTheme } from '../themes/light';
+import { ThemeOverrides } from '../types/Theme';
 
 const PaperProviderWrapper = ({ children }: PropsWithChildren) => {
   const materialTheme = useMaterialTheme();
@@ -27,9 +28,12 @@ const PaperProviderWrapper = ({ children }: PropsWithChildren) => {
 type UiProviderProps<T extends ParamListBase = ParamListBase> =
   PropsWithChildren<{
     linking: LinkingOptions<T>;
+    /** Non-colour tokens that replace the shared ones in both colour schemes */
+    themeOverrides?: ThemeOverrides;
   }>;
 export const UiProvider = <T extends ParamListBase = ParamListBase>({
   linking,
+  themeOverrides,
   children,
 }: UiProviderProps<T>) => {
   const { colorScheme, language } = usePreferencesContext();
@@ -49,9 +53,10 @@ export const UiProvider = <T extends ParamListBase = ParamListBase>({
 
     return {
       ...(effectiveTheme === 'light' ? lightTheme : darkTheme),
+      ...themeOverrides,
       safeAreaInsets,
     };
-  }, [colorScheme, theme, safeAreaInsets]);
+  }, [colorScheme, theme, safeAreaInsets, themeOverrides]);
 
   const navigationTheme = useMemo(() => fromUiTheme(uiTheme), [uiTheme]);
 
