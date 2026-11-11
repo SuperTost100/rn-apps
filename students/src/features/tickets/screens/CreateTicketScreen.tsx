@@ -158,6 +158,7 @@ export const CreateTicketScreen = ({ navigation, route }: Props) => {
       );
       return;
     }
+    Alert.alert(t('common.error'), t('ticketScreen.sendError'));
   };
 
   return (
