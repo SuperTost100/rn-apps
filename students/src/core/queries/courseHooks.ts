@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { notNullish, pluckData, usePreferencesContext } from '@polito/lib/core';
@@ -216,7 +216,10 @@ export const useGetCourseEditions = (courseId: number) => {
 
 const courseFilesStaleTime = 60000; // 1 minute
 
-export const useGetCourseFiles = (courseId: number) => {
+export const useGetCourseFiles = <T = CourseDirectoryContentWithLocations[]>(
+  courseId: number,
+  select?: (files: CourseDirectoryContentWithLocations[]) => T,
+) => {
   const coursesClient = useCoursesClient();
 
   return useQuery({
@@ -228,27 +231,14 @@ export const useGetCourseFiles = (courseId: number) => {
         .then(computeFileLocations);
     },
     staleTime: courseFilesStaleTime,
+    select,
   });
 };
 
-export const useGetCourseFilesRecent = (courseId: number) => {
-  const filesQuery = useGetCourseFiles(courseId);
-
-  const recentFilesQuery = useQuery({
-    queryKey: [COURSE_QUERY_PREFIX, courseId, 'recentFiles'],
-    queryFn: () => sortRecentFiles(filesQuery.data!),
-    enabled: !!filesQuery.data && !filesQuery.isRefetching,
-    staleTime: courseFilesStaleTime,
-  });
-
-  return {
-    ...recentFilesQuery,
-    refetch: async () => {
-      await filesQuery.refetch();
-      return recentFilesQuery.refetch();
-    },
-  };
-};
+// Reads the files query through select, so it updates whenever that query does
+// and refetching it fetches the files
+export const useGetCourseFilesRecent = (courseId: number) =>
+  useGetCourseFiles(courseId, sortRecentFiles);
 
 const isFile = (
   item: CourseDirectoryEntry,
@@ -329,40 +319,18 @@ export const useGetCourseDirectory = (
   courseId: number,
   directoryId?: string,
 ) => {
-  const filesQuery = useGetCourseFiles(courseId);
-
-  const rootDirectoryContent = filesQuery.data;
-
-  const directoryQuery = useQuery({
-    queryKey: [
-      COURSE_QUERY_PREFIX,
-      courseId,
-      'directories',
-      directoryId ?? 'root',
-    ],
-    queryFn: () => {
+  const selectDirectory = useCallback(
+    (rootDirectoryContent: CourseDirectoryEntry[]) => {
       if (!directoryId) {
         // Root directory
-        return new Promise<CourseDirectoryEntry[]>(resolve => {
-          resolve(rootDirectoryContent!);
-        });
+        return rootDirectoryContent;
       }
-      const directory = findDirectory(directoryId, rootDirectoryContent!);
+      return findDirectory(directoryId, rootDirectoryContent);
+    },
+    [directoryId],
+  );
 
-      return new Promise<CourseDirectoryEntry[] | null>(resolve => {
-        resolve(directory);
-      });
-    },
-    enabled: !!rootDirectoryContent && !filesQuery.isRefetching,
-    staleTime: courseFilesStaleTime,
-  });
-  return {
-    ...directoryQuery,
-    refetch: async () => {
-      await filesQuery.refetch();
-      return directoryQuery.refetch();
-    },
-  };
+  return useGetCourseFiles(courseId, selectDirectory);
 };
 
 /**
@@ -517,7 +485,7 @@ export const useGetCourseRelatedVirtualClassrooms = (
 ) => {
   const coursesClient = useCoursesClient();
 
-  const queries = useQueries({
+  return useQueries({
     queries: (relatedVCs ?? []).map(relatedVC => {
       return {
         queryKey: [COURSE_QUERY_PREFIX, relatedVC.id, 'virtual-classrooms'],
@@ -529,13 +497,14 @@ export const useGetCourseRelatedVirtualClassrooms = (
             .then(pluckData),
       };
     }),
+    // The combined result is structurally shared, so `data` keeps its identity
+    // until one of the queries returns new data
+    combine: queries => ({
+      queries,
+      data: queries.map(q => q.data),
+      isLoading: queries.some(q => q.isLoading),
+    }),
   });
-
-  const isLoading = useMemo(() => {
-    return queries.some(q => q.isLoading);
-  }, [queries]);
-
-  return { queries, isLoading };
 };
 
 export const useGetCourseVideolectures = (courseId: number) => {
@@ -556,61 +525,86 @@ export const useGetCourseLectures = (courseId: number) => {
   const videoLecturesQuery = useGetCourseVideolectures(courseId);
   const virtualClassroomsQuery = useGetCourseVirtualClassrooms(courseId);
 
-  const vcPreviousYears = courseQuery.data?.vcPreviousYears ?? [];
-  const relatedVCDefinitions: (
-    | CourseModuleEdition
-    | CourseAllOfVcOtherCourses
-  )[] = [...vcPreviousYears, ...(courseQuery.data?.vcOtherCourses ?? [])];
+  const vcPreviousYears = courseQuery.data?.vcPreviousYears;
+  const vcOtherCourses = courseQuery.data?.vcOtherCourses;
+  const relatedVCDefinitions = useMemo(
+    (): (CourseModuleEdition | CourseAllOfVcOtherCourses)[] => [
+      ...(vcPreviousYears ?? []),
+      ...(vcOtherCourses ?? []),
+    ],
+    [vcPreviousYears, vcOtherCourses],
+  );
 
   const relatedVCQueries =
     useGetCourseRelatedVirtualClassrooms(relatedVCDefinitions);
 
   const { t } = useTranslation();
 
-  return useQuery<CourseLectureSection[]>({
-    queryKey: [COURSE_QUERY_PREFIX, courseId, 'lectures'],
-    queryFn: () => {
-      const lectureSections: CourseLectureSection[] = [];
+  const isLoading =
+    courseQuery.isLoading ||
+    videoLecturesQuery.isLoading ||
+    virtualClassroomsQuery.isLoading ||
+    relatedVCQueries.isLoading;
 
-      virtualClassroomsQuery.data?.length &&
-        lectureSections.push({
-          courseId,
-          title: t('common.virtualClassroom_plural'),
-          type: 'VirtualClassroom',
-          data: virtualClassroomsQuery.data,
-        });
+  // Built on every change of the source queries or of the language, so a
+  // refresh of the sources or a language switch shows up immediately
+  const data = useMemo(() => {
+    if (isLoading) return undefined;
+    const lectureSections: CourseLectureSection[] = [];
 
-      videoLecturesQuery.data?.length &&
-        lectureSections.push({
-          courseId,
-          title: t('common.videoLecture_plural'),
-          type: 'VideoLecture',
-          data: videoLecturesQuery.data,
-        });
-
-      relatedVCDefinitions.forEach((d, index) => {
-        const relatedVCs = relatedVCQueries.queries[index].data;
-        relatedVCs?.length &&
-          lectureSections.push({
-            courseId: d.id,
-            title:
-              index < vcPreviousYears.length
-                ? `${t('common.virtualClassroom_plural')} - ${d.year}`
-                : `${d.name} ${d.year}`,
-            type: 'VirtualClassroom',
-            data: relatedVCs,
-          });
+    virtualClassroomsQuery.data?.length &&
+      lectureSections.push({
+        courseId,
+        title: t('common.virtualClassroom_plural'),
+        type: 'VirtualClassroom',
+        data: virtualClassroomsQuery.data,
       });
 
-      return lectureSections;
-    },
-    enabled: !(
-      courseQuery.isLoading ||
-      videoLecturesQuery.isLoading ||
-      virtualClassroomsQuery.isLoading ||
-      relatedVCQueries.isLoading
-    ),
-  });
+    videoLecturesQuery.data?.length &&
+      lectureSections.push({
+        courseId,
+        title: t('common.videoLecture_plural'),
+        type: 'VideoLecture',
+        data: videoLecturesQuery.data,
+      });
+
+    relatedVCDefinitions.forEach((d, index) => {
+      const relatedVCs = relatedVCQueries.data[index];
+      relatedVCs?.length &&
+        lectureSections.push({
+          courseId: d.id,
+          title:
+            index < (vcPreviousYears?.length ?? 0)
+              ? `${t('common.virtualClassroom_plural')} - ${d.year}`
+              : `${d.name} ${d.year}`,
+          type: 'VirtualClassroom',
+          data: relatedVCs,
+        });
+    });
+
+    return lectureSections;
+  }, [
+    isLoading,
+    courseId,
+    t,
+    virtualClassroomsQuery.data,
+    videoLecturesQuery.data,
+    relatedVCDefinitions,
+    relatedVCQueries.data,
+    vcPreviousYears,
+  ]);
+
+  return {
+    data,
+    isLoading,
+    // The queries the lectures are built from, for pull-to-refresh
+    queries: [
+      courseQuery,
+      videoLecturesQuery,
+      virtualClassroomsQuery,
+      ...relatedVCQueries.queries,
+    ],
+  };
 };
 export const useGetCourseExams = (
   courseId: number,
