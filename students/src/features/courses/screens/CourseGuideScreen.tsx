@@ -33,7 +33,7 @@ export const CourseGuideScreen = ({ route }: Props) => {
     });
 
     return sections;
-  }, [guideQuery]);
+  }, [guideQuery.data]);
 
   return (
     <ScrollView

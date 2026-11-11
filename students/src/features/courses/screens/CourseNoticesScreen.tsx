@@ -44,7 +44,7 @@ export const CourseNoticesScreen = () => {
         ...notice,
         title: getHtmlTextContent(notice.content),
       })) ?? [],
-    [noticesQuery],
+    [noticesQuery.data],
   );
   const noticesNotificationScope = useMemo(
     () => ['teaching', 'courses', `${courseId}`, 'notices'] as const,
