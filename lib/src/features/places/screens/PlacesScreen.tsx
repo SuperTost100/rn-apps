@@ -286,8 +286,7 @@ export const PlacesScreen = ({ navigation, route }: Props) => {
   }, [search, triggerSearch]);
 
   useEffect(() => {
-    if (campus)
-      setFloorId(campus.floors[campus?.floors.findIndex(f => f.level >= 0)].id);
+    if (campus) setFloorId(campus.floors?.find(f => f.level >= 0)?.id);
   }, [campus]);
   const floorSelectorButton = (
     <TranslucentCard
