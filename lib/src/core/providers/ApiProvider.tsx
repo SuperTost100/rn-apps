@@ -169,7 +169,7 @@ export const ApiProvider = <Prefs extends object = {}>({
           persister: queryPersister.persisterFn,
         },
         mutations: {
-          retry: 1,
+          retry: 0,
           onError(error) {
             if (isResponseError(error)) {
               globalQueryErrorHandler(error, client);
