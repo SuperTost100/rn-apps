@@ -126,7 +126,8 @@ export const TeachingScreen = ({ navigation }: Props) => {
         .filter(
           e =>
             !hiddenCourses.includes(e.uniqueShortcode) &&
-            e.examEndsAt!.valueOf() > DateTime.now().toJSDate().valueOf(),
+            (!e.examEndsAt ||
+              e.examEndsAt.valueOf() > DateTime.now().toJSDate().valueOf()),
         )
         .sort((a, b) => {
           const status =
@@ -134,7 +135,8 @@ export const TeachingScreen = ({ navigation }: Props) => {
             (b.status === ExamStatusEnum.Booked ? 1 : 0);
           return status !== 0
             ? status
-            : a.examStartsAt!.valueOf() - b.examStartsAt!.valueOf();
+            : (a.examStartsAt?.valueOf() ?? Number.MAX_SAFE_INTEGER) -
+                (b.examStartsAt?.valueOf() ?? Number.MAX_SAFE_INTEGER);
         })
         .slice(0, 4) ?? []
     );
