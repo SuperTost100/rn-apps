@@ -351,7 +351,7 @@ export const CoursePreferencesScreen = ({ navigation, route }: Props) => {
                   }}
                   disabled={
                     !coursePrefs?.itemsToHideInAgenda?.length &&
-                    !coursePrefs.singleItemsToHideInAgenda?.length
+                    !coursePrefs?.singleItemsToHideInAgenda?.length
                   }
                   trailingItem={
                     <Icon icon={faChevronRight} size={fontSizes.xl} />
