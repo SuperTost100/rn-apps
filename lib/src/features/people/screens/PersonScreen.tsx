@@ -227,9 +227,13 @@ export const PersonScreen = ({
           <Section>
             <SectionHeader
               title={t('personScreen.contacts')}
-              accessibilityLabel={`${t('personScreen.contacts')}. ${
-                phoneNumbers?.length && t('common.phoneContacts')
-              }. ${t('personScreen.sentEmail')}`}
+              accessibilityLabel={[
+                t('personScreen.contacts'),
+                phoneNumbers?.length ? t('common.phoneContacts') : '',
+                t('personScreen.sentEmail'),
+              ]
+                .filter(Boolean)
+                .join('. ')}
             />
             <OverviewList indented loading={personQuery.isLoading}>
               {phoneNumbers?.map(renderPhoneNumber)}
@@ -238,7 +242,9 @@ export const PersonScreen = ({
                 leadingItem={<Icon icon={faEnvelope} size={fontSizes.xl} />}
                 title={t('common.email')}
                 subtitle={person?.email}
-                onPress={() => Linking.openURL(`mailto:${person?.email}`)}
+                onPress={() => {
+                  if (person?.email) Linking.openURL(`mailto:${person.email}`);
+                }}
               />
             </OverviewList>
           </Section>
