@@ -6,7 +6,7 @@ import {
   useState,
 } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert } from 'react-native';
+import { Alert, AppState } from 'react-native';
 
 import NetInfo from '@react-native-community/netinfo';
 import * as Sentry from '@sentry/react-native';
@@ -15,6 +15,7 @@ import {
   QueryCache,
   QueryClient,
   QueryClientProvider,
+  focusManager,
   onlineManager,
 } from '@tanstack/react-query';
 
@@ -248,6 +249,16 @@ export const ApiProvider = <Prefs extends object = {}>({
       });
     });
   }, [setFeedback, t]);
+
+  useEffect(() => {
+    // Tell react-query when the app comes back to the foreground
+    focusManager.setEventListener(setFocused => {
+      const subscription = AppState.addEventListener('change', status =>
+        setFocused(status === 'active'),
+      );
+      return () => subscription.remove();
+    });
+  }, []);
 
   // Initialization completed, splash can be hidden
   useEffect(() => {
