@@ -23,7 +23,7 @@ export const GroupCoursesExpanded = ({ courses, disabled }: Props) => {
               screen: 'DegreeCourse',
               params: {
                 courseShortcode: course.shortcode,
-                teachingYear: year,
+                year,
               },
             }}
             trailingItem={<CourseTrailingItem cfu={course.cfu} />}

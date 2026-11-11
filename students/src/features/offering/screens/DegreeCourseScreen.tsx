@@ -248,7 +248,7 @@ export const DegreeCourseScreen = ({ route }: Props) => {
                       screen: 'Staff',
                       params: {
                         courseShortcode: offeringCourse.shortcode,
-                        year: initialYear,
+                        year: selectedYear,
                         staff: offeringCourse.staff,
                       },
                     }
@@ -273,7 +273,7 @@ export const DegreeCourseScreen = ({ route }: Props) => {
                   screen: 'DegreeCourseGuide',
                   params: {
                     courseShortcode: offeringCourse?.shortcode,
-                    year: initialYear,
+                    year: selectedYear,
                   },
                 }}
               />
