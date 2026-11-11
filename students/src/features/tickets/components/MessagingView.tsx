@@ -124,7 +124,6 @@ export const MessagingView = ({
         multiple: false,
         cropping: true,
         freeStyleCropEnabled: true,
-        includeBase64: true,
       });
       onAttachmentChange?.({
         uri: picture.path,

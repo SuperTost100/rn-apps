@@ -39,7 +39,6 @@ export const CourseAssignmentUploadScreen = ({ navigation, route }: Props) => {
       mediaType: 'photo',
       cropping: true,
       freeStyleCropEnabled: true,
-      includeBase64: true,
     });
 
   const handlePickedFile = (file: Assignment) => {

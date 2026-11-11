@@ -75,7 +75,6 @@ export const CourseAssignmentPdfCreationScreen = ({
       mediaType: 'photo',
       cropping: true,
       freeStyleCropEnabled: true,
-      includeBase64: true,
     })
       .then(image => {
         setImageUris(oldUris => [...oldUris, image.path]);
