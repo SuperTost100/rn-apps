@@ -11,6 +11,7 @@ import {
   useDownloadsContext,
 } from '../contexts/DownloadsContext';
 import { FileRecord, getFileDatabase } from '../database/FileDatabase';
+import { PROGRESS_UPDATE_THROTTLE_MS } from '../providers/downloads/downloadsQueue';
 import {
   type DownloadProgressData,
   createResumableDownload,
@@ -44,6 +45,7 @@ export const useDownloadFile = (
   const fileDatabase = getFileDatabase();
   const currentJobIdRef = useRef<number | undefined>(undefined);
   const isStoppedRef = useRef<boolean>(false);
+  const lastProgressUpdateRef = useRef(0);
   const [isCheckingDownloadStatus, setIsCheckingDownloadStatus] =
     useState(true);
   const [isOutdated, setIsOutdated] = useState(false);
@@ -165,6 +167,17 @@ export const useDownloadFile = (
                 currentJobIdRef.current === jobId &&
                 totalBytesExpectedToWrite > 0
               ) {
+                const now = Date.now();
+                const isLastChunk =
+                  totalBytesWritten >= totalBytesExpectedToWrite;
+                if (
+                  !isLastChunk &&
+                  now - lastProgressUpdateRef.current <
+                    PROGRESS_UPDATE_THROTTLE_MS
+                ) {
+                  return;
+                }
+                lastProgressUpdateRef.current = now;
                 updateDownload({
                   downloadProgress:
                     totalBytesWritten / totalBytesExpectedToWrite,
