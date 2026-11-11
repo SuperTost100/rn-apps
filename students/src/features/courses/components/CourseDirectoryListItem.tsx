@@ -156,6 +156,11 @@ export const CourseDirectoryListItem = ({
       sizeInKiloBytes?: number;
       checksum?: string;
     }> = [];
+    // `location` is the folder's full path (e.g. "/Labs/Week 1"), set by
+    // useGetCourseFiles; the name alone is wrong for nested folders.
+    const { location } = item as CourseDirectory & { location?: string };
+    const basePath =
+      location?.replace(/^\//, '') ?? stripIdInParentheses(item.name);
 
     if (courseFilesQuery.data) {
       const findDirectoryRecursive = (
@@ -180,24 +185,12 @@ export const CourseDirectoryListItem = ({
       );
 
       if (fullDirectory) {
-        collectAllFilesRecursively(
-          fullDirectory,
-          stripIdInParentheses(item.name),
-          allFiles,
-        );
+        collectAllFilesRecursively(fullDirectory, basePath, allFiles);
       } else {
-        collectAllFilesRecursively(
-          item,
-          stripIdInParentheses(item.name),
-          allFiles,
-        );
+        collectAllFilesRecursively(item, basePath, allFiles);
       }
     } else {
-      collectAllFilesRecursively(
-        item,
-        stripIdInParentheses(item.name),
-        allFiles,
-      );
+      collectAllFilesRecursively(item, basePath, allFiles);
     }
 
     return allFiles;
