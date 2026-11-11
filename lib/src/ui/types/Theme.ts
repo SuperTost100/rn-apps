@@ -4,12 +4,45 @@ export interface Theme {
   dark: boolean;
   colors: Colors;
   palettes: Palettes;
+  /** Corner radii */
   shapes: {
     sm: number;
     md: number;
     lg: number;
     xl: number;
+    /** Fully round ends, for chips and badges */
+    pill: number;
   };
+  elevation: {
+    none: Elevation;
+    /** Cards on the page: a soft shadow in light, none in dark */
+    card: Elevation;
+    /** Dialogs, sheets and snackbars over a scrim */
+    overlay: Elevation;
+  };
+  controls: {
+    /** Minimum size of anything that can be tapped */
+    touchTarget: number;
+    buttonHeight: number;
+    inputHeight: number;
+    chipHeight: number;
+    rowMinHeight: number;
+    /** Width of the leading column of a list row */
+    leadingSize: number;
+    courseTileSize: number;
+    iconSize: number;
+    iconStrokeWidth: number;
+  };
+  layout: {
+    /** From the screen edge to cards, section headers and buttons */
+    gutter: number;
+    /** Between the leading column and the text of a row */
+    leadingGap: number;
+    rowPaddingVertical: number;
+    cardPadding: number;
+    sectionGap: number;
+  };
+  textVariants: Record<TextVariant, TextVariantStyle>;
   spacing: {
     [0]: number;
     [0.5]: number;
@@ -75,6 +108,52 @@ export interface Theme {
   };
 }
 
+export type TextVariant =
+  | 'display'
+  | 'largeTitle'
+  | 'cardTitle'
+  | 'heading'
+  | 'subHeading'
+  | 'title'
+  | 'prose'
+  | 'longProse'
+  | 'secondaryText'
+  | 'caption'
+  | 'link'
+  | 'number'
+  | 'button'
+  | 'label'
+  | 'tabLabel'
+  | 'chip';
+
+export interface TextVariantStyle {
+  fontFamily: keyof Theme['fontFamilies'];
+  fontWeight: keyof Theme['fontWeights'];
+  /** In px at 100% text size */
+  fontSize: number;
+  /** In px at 100% text size, on the 4 px grid */
+  lineHeight: number;
+  textTransform?: TextStyle['textTransform'];
+  letterSpacing?: number;
+}
+
+export interface Elevation {
+  shadowColor: string;
+  shadowOpacity: number;
+  shadowRadius: number;
+  shadowOffset: { width: number; height: number };
+  /** Android elevation */
+  elevation: number;
+}
+
+/**
+ * Non-colour tokens an app can replace for both colour schemes,
+ * e.g. to keep its own text variants
+ */
+export type ThemeOverrides = Partial<
+  Omit<Theme, 'dark' | 'colors' | 'palettes' | 'safeAreaInsets'>
+>;
+
 export interface Colors {
   background: string;
   surface: string;
@@ -104,6 +183,73 @@ export interface Colors {
   yellow: string;
   black: string;
   readMore: string;
+
+  // Surfaces
+  surfaceSunken: string;
+  selectedRow: string;
+  cardBorder: string;
+  scrim: string;
+  skeleton: string;
+  // The navy header of the main screens
+  header: string;
+  headerSunken: string;
+  onHeader: string;
+  onHeaderMuted: string;
+  heroAccent: string;
+  thread: string;
+  focusOnHeader: string;
+  // Controls
+  controlBorder: string;
+  primary: string;
+  onPrimary: string;
+  primaryPressed: string;
+  disabledBg: string;
+  onDisabled: string;
+  focus: string;
+  selectedChip: string;
+  onSelectedChip: string;
+  // Orange: the section mark and "now"
+  accent: string;
+  accentText: string;
+  nowMark: string;
+  nowText: string;
+  nowBg: string;
+  // States
+  badge: string;
+  onBadge: string;
+  successBg: string;
+  successText: string;
+  warningBg: string;
+  warningText: string;
+  infoBg: string;
+  infoText: string;
+  neutralChipBg: string;
+  neutralChipText: string;
+  dangerText: string;
+  dangerBg: string;
+  dangerSolid: string;
+  onDangerSolid: string;
+  // Tab bar and course tabs
+  tabBarBackground: string;
+  tabIndicator: string;
+  tabText: string;
+  onTabSelected: string;
+  tabUnderline: string;
+  // Transcript rings
+  ringTrack: string;
+  ringFill: string;
+  ringAttended: string;
+  // Snackbar
+  snackbar: string;
+  onSnackbar: string;
+  snackbarAction: string;
+  // Agenda week grid, ticket thread, map placeholder
+  weekToday: string;
+  msgMe: string;
+  onMsgMe: string;
+  mapBg: string;
+  mapLine: string;
+  mapText: string;
 }
 
 export interface Palettes {
