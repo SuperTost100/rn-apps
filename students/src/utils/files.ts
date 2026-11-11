@@ -1,5 +1,6 @@
 import { extension, lookup } from 'react-native-mime-types';
 
+import { API_BASE_PATH } from '@env';
 import { BASE_PATH } from '@polito/student-api-client';
 
 import { makeDirectoryAsync } from '../core/storage/fileSystem';
@@ -128,5 +129,5 @@ export const buildCourseFileUrl = (
   courseId: number,
   fileId: string,
 ): string => {
-  return `${BASE_PATH}/courses/${courseId}/files/${fileId}`;
+  return `${API_BASE_PATH ?? BASE_PATH}/courses/${courseId}/files/${fileId}`;
 };
