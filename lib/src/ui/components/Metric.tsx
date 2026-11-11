@@ -24,7 +24,7 @@ export const Metric = ({
   valueNumberOfLines,
   ...rest
 }: CardProps & Props) => {
-  const { dark, palettes, fontSizes, fontWeights } = useTheme();
+  const { colors, fontSizes, fontWeights } = useTheme();
 
   return (
     <View {...rest}>
@@ -36,7 +36,7 @@ export const Metric = ({
           ellipsizeMode={valueNumberOfLines != null ? 'tail' : undefined}
           style={[
             {
-              color: color ?? palettes.secondary[dark ? 500 : 600],
+              color: color ?? colors.accentText,
               fontSize: fontSizes.lg,
               fontWeight: fontWeights.semibold,
             },

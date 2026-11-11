@@ -75,15 +75,15 @@ export const CtaButton = ({
       if (dark) return shadeColor(colors.background, 20);
       else return shadeColor(colors.background, -10);
     } else {
-      if (destructive) return palettes.danger[700];
-      return palettes.primary[500];
+      if (destructive) return palettes.danger[dark ? 200 : 800];
+      return colors.primaryPressed;
     }
   }, [
     colors.background,
+    colors.primaryPressed,
     dark,
     destructive,
     palettes.danger,
-    palettes.primary,
     variant,
   ]);
 
@@ -91,16 +91,18 @@ export const CtaButton = ({
     if (success) {
       return dark ? palettes.success[400] : palettes.success[700];
     }
-    if (destructive) return palettes.danger[600];
-    return palettes.primary[400];
+    if (destructive) return colors.dangerSolid;
+    return colors.primary;
   }, [
+    colors.dangerSolid,
+    colors.primary,
     dark,
     destructive,
-    palettes.danger,
-    palettes.primary,
     palettes.success,
     success,
   ]);
+
+  const onFilledColor = destructive ? colors.onDangerSolid : colors.onPrimary;
 
   return (
     <View
@@ -151,15 +153,7 @@ export const CtaButton = ({
         <View>
           <View style={styles.stack}>
             {loading && (
-              <ActivityIndicator
-                color={
-                  outlined
-                    ? destructive
-                      ? palettes.danger[600]
-                      : palettes.primary[500]
-                    : 'white'
-                }
-              />
+              <ActivityIndicator color={outlined ? color : onFilledColor} />
             )}
           </View>
           {/* {!loading && ( */}
@@ -186,16 +180,16 @@ export const CtaButton = ({
                   <IconWithProgress
                     icon={icon}
                     size={fontSizes.xl}
-                    color={variant === 'filled' ? colors.white : color}
+                    color={variant === 'filled' ? onFilledColor : color}
                     progress={progress}
-                    progressColor={variant === 'filled' ? colors.white : color}
+                    progressColor={variant === 'filled' ? onFilledColor : color}
                   />
                 </View>
               ) : (
                 <Icon
                   icon={icon}
                   size={fontSizes.xl}
-                  color={variant === 'filled' ? colors.white : color}
+                  color={variant === 'filled' ? onFilledColor : color}
                   style={{
                     marginRight: title ? spacing[2] : 0,
                     paddingHorizontal: spacing[1],
@@ -210,7 +204,7 @@ export const CtaButton = ({
                     borderColor: palettes.primary[400],
                   },
                   {
-                    color: variant === 'filled' ? colors.white : color,
+                    color: variant === 'filled' ? onFilledColor : color,
                   },
                   disabled
                     ? { color: success ? color : colors.disableTitle }
@@ -219,7 +213,7 @@ export const CtaButton = ({
                 ]}
                 baseStyle={{
                   fontWeight: fontWeights.medium,
-                  color: variant === 'filled' ? colors.white : color,
+                  color: variant === 'filled' ? onFilledColor : color,
                   ...(disabled && {
                     color: success ? color : colors.disableTitle,
                   }),

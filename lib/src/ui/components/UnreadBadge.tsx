@@ -26,7 +26,7 @@ export const UnreadBadge = ({
   isNumeric = false,
 }: Props) => {
   const { t } = useTranslation();
-  const { colors, palettes, spacing } = useTheme();
+  const { colors, spacing } = useTheme();
   const styles = useStylesheet(createStyles);
   const isOutlined = useMemo(() => variant === 'outlined', [variant]);
   const isDigit = isNumber(text);
@@ -52,15 +52,10 @@ export const UnreadBadge = ({
       flexShrink={0}
       style={[
         styles.badge,
-        {
-          backgroundColor:
-            isDigit || isNumeric ? palettes.rose[600] : palettes.orange[600],
-        },
         !text && styles.dotBadge,
         isOutlined && {
           backgroundColor: colors.surface,
-          borderColor:
-            isDigit || isNumeric ? palettes.rose[600] : palettes.orange[600],
+          borderColor: isDigit || isNumeric ? colors.badge : colors.accentText,
 
           borderWidth: 2,
         },
@@ -71,7 +66,7 @@ export const UnreadBadge = ({
         <Text
           style={[
             styles.badgeText,
-            isOutlined && { color: palettes.orange[600] },
+            isOutlined && { color: colors.accentText },
             styless,
           ]}
         >
@@ -87,25 +82,20 @@ export const UnreadBadge = ({
   );
 };
 
-const createStyles = ({ fontSizes, fontWeights, shapes, palettes }: Theme) => {
+const createStyles = ({ colors, fontSizes, fontWeights, shapes }: Theme) => {
   return StyleSheet.create({
     badge: {
       borderRadius: shapes.xl,
       minWidth: 19,
       minHeight: 19,
+      backgroundColor: colors.badge,
     },
     dotBadge: {
       minWidth: 12,
       minHeight: 12,
-      backgroundColor: palettes.rose[600],
     },
-    badgeNumber: {
-      backgroundColor: palettes.rose[600],
-    },
-    // Theme-independent hardcoded color
-    // eslint-disable-next-line react-native/no-color-literals
     badgeText: {
-      color: 'white',
+      color: colors.onBadge,
       fontWeight: fontWeights.semibold,
       fontSize: fontSizes.sm,
       textTransform: 'uppercase',
