@@ -31,7 +31,7 @@ export const SurveysScreen = (_: Props) => {
       .filter(survey => !survey.isCompiled)
       .sort(
         (a, b) =>
-          b.startsAt.getTime() - a.startsAt.getTime() &&
+          b.startsAt.getTime() - a.startsAt.getTime() ||
           b.title.localeCompare(a.title),
       );
 
@@ -59,7 +59,7 @@ export const SurveysScreen = (_: Props) => {
       .filter(survey => survey.isCompiled)
       .sort(
         (a, b) =>
-          b.startsAt.getTime() - a.startsAt.getTime() &&
+          b.startsAt.getTime() - a.startsAt.getTime() ||
           b.title.localeCompare(a.title),
       );
 
