@@ -116,7 +116,7 @@ export const CourseLecturesScreen = () => {
       ref={sectionListRef}
       contentInsetAdjustmentBehavior="automatic"
       sections={lectures}
-      refreshControl={<RefreshControl queries={[courseLecturesQuery]} />}
+      refreshControl={<RefreshControl queries={courseLecturesQuery.queries} />}
       stickySectionHeadersEnabled={true}
       ListEmptyComponent={() => {
         if (!courseLecturesQuery.isLoading) {
