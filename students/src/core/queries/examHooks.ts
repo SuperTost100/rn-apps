@@ -27,10 +27,10 @@ const mapApiExamToExam = (exam: ApiExam): Exam => {
   };
 };
 
-export const useGetExams = () => {
+export const useGetExams = <T = Exam[]>(select?: (exams: Exam[]) => T) => {
   const examsClient = useExamsClient();
 
-  return useQuery<Exam[]>({
+  return useQuery<Exam[], Error, T>({
     queryKey: EXAMS_QUERY_KEY,
     queryFn: () =>
       examsClient
@@ -47,6 +47,7 @@ export const useGetExams = () => {
                   : a.examStartsAt.valueOf() - b.examStartsAt.valueOf(),
             ),
         ),
+    select,
   });
 };
 

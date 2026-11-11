@@ -25,7 +25,7 @@ import { stripIdInParentheses } from '~/utils/files';
 
 import { CourseLectureSection } from '../../features/courses/types/CourseLectureSections';
 import { isCourseDetailed } from '../../features/courses/utils/courses';
-import { CourseOverview } from '../types/api';
+import { CourseOverview, Exam } from '../types/api';
 import {
   CourseDirectoryContentWithLocations,
   CourseFileOverviewWithLocation,
@@ -124,18 +124,21 @@ const setupCourses = (
   return updatedCourses;
 };
 
-export const useGetCourses = () => {
+export const useGetCourses = <T = CourseOverview[]>(
+  select?: (courses: CourseOverview[]) => T,
+) => {
   const coursesClient = useCoursesClient();
   const { courses: coursePreferences, updatePreference } =
     usePreferencesContext<AppPreferences>();
 
-  return useQuery<CourseOverview[]>({
+  return useQuery<CourseOverview[], Error, T>({
     queryKey: COURSES_QUERY_KEY,
     queryFn: () =>
       coursesClient
         .getCourses()
         .then(pluckData)
         .then(c => setupCourses(c, coursePreferences, updatePreference)),
+    select,
   });
 };
 
@@ -178,17 +181,15 @@ export const useGetCourse = (courseId: number) => {
   });
 };
 
+// Reads the courses query through select, so the editions follow its data
 export const useGetCourseEditions = (courseId: number) => {
-  const coursesQuery = useGetCourses();
-
-  return useQuery({
-    queryKey: getCourseKey(courseId, CourseSectionEnum.Editions),
-    queryFn: () => {
-      const coursesModules = coursesQuery.data
-        ?.flatMap(c => c.modules)
-        .concat(coursesQuery.data)
+  const selectEditions = useCallback(
+    (courses: CourseOverview[]) => {
+      const coursesModules = courses
+        .flatMap(c => c.modules)
+        .concat(courses)
         .filter(notNullish);
-      const course = coursesModules?.find(
+      const course = coursesModules.find(
         c =>
           c.id === courseId || c.previousEditions.some(e => +e.id === courseId),
       );
@@ -210,8 +211,10 @@ export const useGetCourseEditions = (courseId: number) => {
       }
       return editions;
     },
-    enabled: !!coursesQuery.data,
-  });
+    [courseId],
+  );
+
+  return useGetCourses(selectEditions);
 };
 
 const courseFilesStaleTime = 60000; // 1 minute
@@ -610,15 +613,14 @@ export const useGetCourseExams = (
   courseId: number,
   courseShortcode: string | undefined,
 ) => {
-  const { data: exams } = useGetExams();
-  return useQuery({
-    queryKey: getCourseKey(courseId, CourseSectionEnum.Exams),
-    queryFn: () =>
-      exams!.filter(exam => {
-        return exam.courseShortcode === courseShortcode;
-      }),
-    enabled: courseShortcode !== undefined && exams !== undefined,
-  });
+  const selectCourseExams = useCallback(
+    (exams: Exam[]) =>
+      courseShortcode === undefined
+        ? undefined
+        : exams.filter(exam => exam.courseShortcode === courseShortcode),
+    [courseShortcode],
+  );
+  return useGetExams(selectCourseExams);
 };
 
 export const useUpdateCoursePreferences = (courseId: number) => {
