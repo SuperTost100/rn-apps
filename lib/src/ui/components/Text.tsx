@@ -1,12 +1,7 @@
-import { useEffect, useState } from 'react';
-import {
-  Text as RNText,
-  TextProps as RNTextProps,
-  StyleSheet,
-} from 'react-native';
+import { useMemo } from 'react';
+import { Text as RNText, TextProps as RNTextProps } from 'react-native';
 
 import { usePreferencesContext } from '../../core/contexts/PreferencesContext';
-import { useStylesheet } from '../hooks/useStylesheet';
 import { useTheme } from '../hooks/useTheme';
 import { Theme } from '../types/Theme';
 
@@ -59,12 +54,10 @@ export const Text = ({
   ...rest
 }: TextProps) => {
   const { colors, fontFamilies, fontWeights, fontSizes } = useTheme();
-  const styles = useStylesheet(createStyles);
   const fontFamilyName =
     variant === 'heading' ? fontFamilies.heading : fontFamilies.body;
   const textWeight = fontWeights[weight ?? defaultWeights[variant]];
-  const { accessibility, updatePreference } = usePreferencesContext();
-  const [styless, setStyless] = useState(styles);
+  const { accessibility } = usePreferencesContext();
   const wordSpacing = fontSizes.md * 0.16;
 
   const addWordSpacing = (text: string, space: number) => {
@@ -72,12 +65,7 @@ export const Text = ({
     else return text;
   };
 
-  useEffect(() => {
-    if (accessibility?.fontSize === undefined)
-      updatePreference('accessibility', {
-        ...accessibility,
-        fontSize: accessibility?.fontSize ?? 100,
-      });
+  const styless = useMemo(() => {
     const getfontStyle = () => {
       if (variant === 'longProse')
         return {
@@ -109,54 +97,51 @@ export const Text = ({
             : {}),
         };
     };
-    const changeStyle = () => {
-      setStyless({
-        heading: {
-          fontSize: calculateValueOfPercentage(
-            accessibility?.fontSize ?? 100,
-            fontSizes.md,
-          ),
-        },
-        subHeading: {
-          fontSize: calculateValueOfPercentage(
-            accessibility?.fontSize ?? 100,
-            fontSizes.md,
-          ),
-          textTransform: 'uppercase',
-        },
-        title: {
-          fontSize: calculateValueOfPercentage(
-            accessibility?.fontSize ?? 100,
-            fontSizes.xl,
-          ),
-        },
-        headline: {
-          fontSize: calculateValueOfPercentage(
-            accessibility?.fontSize ?? 100,
-            fontSizes.md,
-          ),
-        },
-        caption: {
-          fontSize: calculateValueOfPercentage(
-            accessibility?.fontSize ?? 100,
-            fontSizes.sm,
-          ),
-          textTransform: 'uppercase',
-        },
-        prose: {
-          fontSize: calculateValueOfPercentage(
-            accessibility?.fontSize ?? 100,
-            fontSizes.md,
-          ),
-        },
-        longProse: {
-          fontSize: fontSizes.md,
-          ...getfontStyle(),
-        },
-      } as any);
-    };
-    changeStyle();
-  }, [accessibility, fontSizes, variant, updatePreference]);
+    return {
+      heading: {
+        fontSize: calculateValueOfPercentage(
+          accessibility?.fontSize ?? 100,
+          fontSizes.md,
+        ),
+      },
+      subHeading: {
+        fontSize: calculateValueOfPercentage(
+          accessibility?.fontSize ?? 100,
+          fontSizes.md,
+        ),
+        textTransform: 'uppercase',
+      },
+      title: {
+        fontSize: calculateValueOfPercentage(
+          accessibility?.fontSize ?? 100,
+          fontSizes.xl,
+        ),
+      },
+      headline: {
+        fontSize: calculateValueOfPercentage(
+          accessibility?.fontSize ?? 100,
+          fontSizes.md,
+        ),
+      },
+      caption: {
+        fontSize: calculateValueOfPercentage(
+          accessibility?.fontSize ?? 100,
+          fontSizes.sm,
+        ),
+        textTransform: 'uppercase',
+      },
+      prose: {
+        fontSize: calculateValueOfPercentage(
+          accessibility?.fontSize ?? 100,
+          fontSizes.md,
+        ),
+      },
+      longProse: {
+        fontSize: fontSizes.md,
+        ...getfontStyle(),
+      },
+    } as any;
+  }, [accessibility, fontSizes, variant]);
   return (
     <RNText
       style={[
@@ -192,36 +177,4 @@ export const Text = ({
         : children}
     </RNText>
   );
-};
-
-const createStyles = ({ fontSizes }: Theme) => {
-  // const { accessibility } = usePreferencesContext()
-
-  return StyleSheet.create({
-    heading: {
-      fontSize: fontSizes.md,
-    },
-    subHeading: {
-      fontSize: fontSizes.md,
-      textTransform: 'uppercase',
-    },
-    title: {
-      fontSize: fontSizes.xl,
-    },
-    headline: {
-      fontSize: fontSizes.md,
-    },
-    caption: {
-      fontSize: fontSizes.sm,
-      textTransform: 'uppercase',
-    },
-    prose: {
-      fontSize: fontSizes.md,
-    },
-    longProse: {
-      fontSize: fontSizes.md,
-    },
-    secondaryText: {},
-    link: {},
-  });
 };
