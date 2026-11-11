@@ -53,7 +53,7 @@ export const ScreenDateTime = ({
         </Row>
       </Row>
       {time && isLarge && (
-        <Row>
+        <Row gap={2} align="center">
           <Icon icon={faClock} color={color} size={fontSizes.md} />
           <Text style={{ fontSize: fontSizes.md, color }}>{time ?? ''}</Text>
         </Row>

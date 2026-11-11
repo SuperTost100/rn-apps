@@ -5,7 +5,6 @@ import { StyleSheet, TextProps } from 'react-native';
 import { isNumber } from 'lodash';
 
 import { useStylesheet } from '../hooks/useStylesheet';
-import { useTextScale } from '../hooks/useTextScale';
 import { useTheme } from '../hooks/useTheme';
 import { Theme } from '../types/Theme';
 import { Row } from './Row';
@@ -26,11 +25,10 @@ export const UnreadBadge = ({
   isNumeric = false,
 }: Props) => {
   const { t } = useTranslation();
-  const { colors, spacing } = useTheme();
+  const { colors } = useTheme();
   const styles = useStylesheet(createStyles);
   const isOutlined = useMemo(() => variant === 'outlined', [variant]);
   const isDigit = isNumber(text);
-  const { isLarge } = useTextScale();
   return (
     <Row
       ph={1}
@@ -51,11 +49,7 @@ export const UnreadBadge = ({
     >
       {text && (
         <Text
-          style={[
-            styles.badgeText,
-            isOutlined && { color: colors.accentText },
-            { marginTop: isLarge ? -spacing[3] : 0 },
-          ]}
+          style={[styles.badgeText, isOutlined && { color: colors.accentText }]}
         >
           {text}
           {isDigit && (
