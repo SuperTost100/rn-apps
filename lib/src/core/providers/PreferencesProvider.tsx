@@ -16,6 +16,7 @@ import {
   objectPreferenceKeys as commonObjectPreferenceKeys,
 } from '../contexts/PreferencesContext';
 import { useDeviceLanguage } from '../hooks/useDeviceLanguage';
+import { Accessibility } from '../types/Accessibility';
 
 type PreferencesProviderProps<
   Extra,
@@ -133,6 +134,17 @@ export const PreferencesProvider = <Extra extends Record<string, any> = {}>({
           }
         }
       });
+
+      // Text and many screens read accessibility.fontSize, so store the
+      // default font size once when it was never set.
+      const accessibility = (preferences.accessibility ?? {}) as Accessibility;
+      if (accessibility.fontSize === undefined) {
+        preferences.accessibility = { ...accessibility, fontSize: 100 };
+        AsyncStorage.setItem(
+          'accessibility',
+          JSON.stringify(preferences.accessibility),
+        );
+      }
 
       setPreferencesContext(oldP => ({
         ...oldP,
