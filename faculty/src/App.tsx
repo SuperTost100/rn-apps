@@ -19,7 +19,13 @@ import {
   UnsupportedIdentityTypeError,
   mfaScreenTranslations,
 } from '@polito/lib/features/auth';
-import { FeedbackProvider, SplashProvider, UiProvider } from '@polito/lib/ui';
+import {
+  FeedbackProvider,
+  SplashProvider,
+  ThemeOverrides,
+  UiProvider,
+  textVariantsBeforeRedesign,
+} from '@polito/lib/ui';
 import Mapbox from '@rnmapbox/maps';
 
 import { updateGlobalApiConfiguration } from '~/config/api';
@@ -72,6 +78,10 @@ const appConfig = {
 } satisfies PolitoAppConfig;
 
 const createAuthClient = () => new AuthApi();
+// Faculty keeps the text sizes it had before the students redesign
+const themeOverrides: ThemeOverrides = {
+  textVariants: textVariantsBeforeRedesign,
+};
 const validateFacultyIdentity: AuthIdentityValidator = identity => {
   if (identity.type !== 'faculty') {
     throw new UnsupportedIdentityTypeError(
@@ -93,6 +103,7 @@ const App = () => {
           >
             <UiProvider<RootParamList>
               linking={createPolitoLinking<RootParamList>(appConfig)}
+              themeOverrides={themeOverrides}
             >
               <FeedbackProvider>
                 <ApiProvider<AppPreferences>

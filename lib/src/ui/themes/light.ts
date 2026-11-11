@@ -258,6 +258,34 @@ const textVariants: Theme['textVariants'] = {
   },
 };
 
+/**
+ * The text variants as they were before the redesign: heading 16,
+ * title 20 semibold, caption 14 bold. The faculty app passes them to
+ * UiProvider's themeOverrides to keep its sizes.
+ */
+export const textVariantsBeforeRedesign: Theme['textVariants'] = {
+  ...textVariants,
+  heading: {
+    fontFamily: 'heading',
+    fontWeight: 'semibold',
+    fontSize: 16,
+    lineHeight: 24,
+  },
+  title: {
+    fontFamily: 'body',
+    fontWeight: 'semibold',
+    fontSize: 20,
+    lineHeight: 28,
+  },
+  caption: {
+    fontFamily: 'body',
+    fontWeight: 'bold',
+    fontSize: 14,
+    lineHeight: 20,
+    textTransform: 'uppercase',
+  },
+};
+
 export const lightTheme: Theme = {
   dark: false,
   colors: {
