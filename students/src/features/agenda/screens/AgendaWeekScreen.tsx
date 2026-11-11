@@ -43,6 +43,7 @@ import { WeekFilter } from '../components/WeekFilter';
 import { useProcessedLectures } from '../hooks/useProcessedLectures.ts';
 import {
   getAgendaWeekQueryKey,
+  refreshAgendaQueries,
   useGetAgendaWeek,
 } from '../queries/agendaHooks';
 import { AgendaItem } from '../types/AgendaItem';
@@ -80,12 +81,10 @@ export const AgendaWeekScreen = ({ navigation, route }: Props) => {
   );
 
   const [dataPickerIsOpened, setDataPickerIsOpened] = useState<boolean>(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const {
-    data: weekData,
-    isFetching /* , fetchPreviousPage, fetchNextPage*/,
-    refetch,
-  } = useGetAgendaWeek(currentWeek);
+  const { data: weekData, isFetching /* , fetchPreviousPage, fetchNextPage*/ } =
+    useGetAgendaWeek(currentWeek);
 
   const calendarData = useMemo(() => {
     return weekData?.data?.flatMap(week => week.items) ?? [];
@@ -185,7 +184,10 @@ export const AgendaWeekScreen = ({ navigation, route }: Props) => {
           switchToDaily();
           break;
         case 'refresh':
-          refetch();
+          setIsRefreshing(true);
+          refreshAgendaQueries(queryClient).finally(() =>
+            setIsRefreshing(false),
+          );
           break;
         case 'hide-event':
           navigateToHideEventScreen();
@@ -223,7 +225,7 @@ export const AgendaWeekScreen = ({ navigation, route }: Props) => {
     t,
     agendaScreen,
     selectedDate,
-    refetch,
+    queryClient,
     screenOptions,
     updatePreference,
   ]);
@@ -295,7 +297,7 @@ export const AgendaWeekScreen = ({ navigation, route }: Props) => {
         }}
       >
         {!calendarHeight ||
-          (isFetching && (
+          ((isFetching || isRefreshing) && (
             <ActivityIndicator size="large" style={styles.loader} />
           ))}
         {calendarHeight && (
