@@ -106,6 +106,15 @@ export const reducer = (state: State, action: Action): State => {
       };
     }
     case 'UPDATE_DOWNLOAD': {
+      const current = state.downloads[action.key];
+      const updateKeys = Object.keys(action.updates) as Array<
+        keyof typeof action.updates
+      >;
+      // Rows report their status on every mount; keeping the same state
+      // object when nothing changed avoids re-rendering every consumer.
+      if (current && updateKeys.every(k => current[k] === action.updates[k])) {
+        return state;
+      }
       const wasDownloaded = state.downloads[action.key]?.isDownloaded === true;
       const isNowDownloaded = action.updates.isDownloaded === true;
       const justCompleted =

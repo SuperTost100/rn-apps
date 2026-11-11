@@ -404,30 +404,26 @@ export const DownloadsProvider = ({ children }: PropsWithChildren) => {
       ...Object.keys(state.downloads),
       ...Object.keys(progresses),
     ]);
-    return Array.from(allKeys).reduce(
-      (acc, key) => {
-        const download = state.downloads[key] ?? {};
-        const progressValue = throttledProgresses[key] ?? progresses[key];
-        const hasProgress = progressValue != null;
-        const isDownloaded = download.isDownloaded ?? false;
-        const hasJobId = download.jobId !== undefined;
-        const shouldShowProgress =
-          !isDownloaded &&
-          hasProgress &&
-          hasJobId &&
-          (download.phase === DownloadPhase.Downloading ||
-            download.phase === undefined);
-        return {
-          ...acc,
-          [key]: {
-            ...download,
-            isDownloaded: download.isDownloaded ?? false,
-            downloadProgress: shouldShowProgress ? progressValue : undefined,
-          },
-        };
-      },
-      {} as Record<string, Download>,
-    );
+    const result: Record<string, Download> = {};
+    for (const key of allKeys) {
+      const download = state.downloads[key] ?? {};
+      const progressValue = throttledProgresses[key] ?? progresses[key];
+      const hasProgress = progressValue != null;
+      const isDownloaded = download.isDownloaded ?? false;
+      const hasJobId = download.jobId !== undefined;
+      const shouldShowProgress =
+        !isDownloaded &&
+        hasProgress &&
+        hasJobId &&
+        (download.phase === DownloadPhase.Downloading ||
+          download.phase === undefined);
+      result[key] = {
+        ...download,
+        isDownloaded: download.isDownloaded ?? false,
+        downloadProgress: shouldShowProgress ? progressValue : undefined,
+      };
+    }
+    return result;
   }, [state.downloads, throttledProgresses, progresses]);
 
   const isDownloadingSnackbar =
