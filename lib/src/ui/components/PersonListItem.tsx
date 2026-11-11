@@ -33,7 +33,13 @@ export const PersonListItem = ({
       title={person ? `${person.firstName} ${person.lastName}` : ''}
       accessibilityLabel={
         person
-          ? `${subtitle}: ${person.firstName} ${person.lastName}`
+          ? [
+              typeof subtitle === 'string' && subtitle ? `${subtitle}:` : '',
+              person.firstName,
+              person.lastName,
+            ]
+              .filter(Boolean)
+              .join(' ')
           : undefined
       }
       linkTo={
