@@ -63,7 +63,7 @@ export const WeeklyAgenda = ({
           isEmptyWeek={agendaWeek.data.length === 1 && !day.items.length}
           onLayout={e => {
             day.date.weekday !== 1 &&
-              day.date.equals(newDay) &&
+              day.date.hasSame(newDay, 'day') &&
               setCurrentDayOffset &&
               setCurrentDayOffset(e.nativeEvent.layout.y);
           }}

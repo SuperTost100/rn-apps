@@ -79,7 +79,7 @@ import { BookingSlotsStatusLegend } from '../components/BookingSlotsStatusLegend
 const MIN_SLOT_HEIGHT = 40;
 const SMALL_SLOT_MAX_DURATION = 15;
 
-const START_DATE = DateTime.now().setZone(APP_TIMEZONE).startOf('day');
+const getStartDate = () => DateTime.now().setZone(APP_TIMEZONE).startOf('day');
 
 type Props = NativeStackScreenProps<ServiceStackParamList, 'BookingSlot'>;
 export type BookingCalendarEvent = BookingSlot & {
@@ -99,11 +99,11 @@ export const BookingSlotScreen = ({ route, navigation }: Props) => {
   const queryClient = useQueryClient();
 
   const [showAgenda, setShowAgenda] = useState<boolean | null>(null);
-  const [currentWeekStart, setCurrentWeekStart] = useState(
-    START_DATE.startOf('week'),
+  const [currentWeekStart, setCurrentWeekStart] = useState(() =>
+    getStartDate().startOf('week'),
   );
-  const [loadedWeeks, setLoadedWeeks] = useState<string[]>([
-    START_DATE.startOf('week').toISODate()!,
+  const [loadedWeeks, setLoadedWeeks] = useState<string[]>(() => [
+    getStartDate().startOf('week').toISODate()!,
   ]);
   const [eventsByWeek, setEventsByWeek] = useState<
     Record<string, BookingCalendarEvent[]>
@@ -243,7 +243,7 @@ export const BookingSlotScreen = ({ route, navigation }: Props) => {
     setLoadedWeeks(ws => (ws.includes(weekISO) ? ws : [...ws, weekISO]));
   }, [bookingSlots, currentWeekStart]);
   useEffect(() => {
-    setCurrentWeekStart(START_DATE.startOf('week'));
+    setCurrentWeekStart(getStartDate().startOf('week'));
   }, [showAgendaLayout]);
 
   const screenOptions = useMemo<AgendaOption[]>(
@@ -431,7 +431,10 @@ export const BookingSlotScreen = ({ route, navigation }: Props) => {
                 <Row style={{ marginVertical: 8, marginHorizontal: 16 }}>
                   {isFirstOfDay ? (
                     <Col style={styles.dayColumn}>
-                      {item.start.hasSame(DateTime.local(), 'day') ? (
+                      {item.start.hasSame(
+                        DateTime.now().setZone(APP_TIMEZONE),
+                        'day',
+                      ) ? (
                         <View style={[styles.dayBox, styles.todayBox]}>
                           <Text
                             variant="heading"

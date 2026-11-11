@@ -1,4 +1,4 @@
-import { isValidDate, pluckData } from '@polito/lib/core';
+import { APP_TIMEZONE, isValidDate, pluckData } from '@polito/lib/core';
 import {
   type Exam as ApiExam,
   type BookExamRequest,
@@ -6,6 +6,8 @@ import {
   type RescheduleExamRequest,
 } from '@polito/student-api-client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+
+import { DateTime } from 'luxon';
 
 import { Exam } from '../types/api';
 
@@ -19,7 +21,8 @@ const mapApiExamToExam = (exam: ApiExam): Exam => {
   return {
     ...exam,
     isTimeToBeDefined:
-      exam.examStartsAt !== null && exam.examStartsAt.getHours() === 0,
+      exam.examStartsAt !== null &&
+      DateTime.fromJSDate(exam.examStartsAt, { zone: APP_TIMEZONE }).hour === 0,
     uniqueShortcode: exam.courseShortcode + exam.moduleNumber,
   };
 };
