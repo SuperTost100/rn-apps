@@ -68,7 +68,7 @@ export const SectionHeader = ({
       }
     : {};
 
-  const Header = () => {
+  const renderHeader = () => {
     return (
       <View style={{ ...styles.innerContainer }}>
         <View style={styles.titleContainer}>
@@ -145,7 +145,7 @@ export const SectionHeader = ({
         accessibilityRole={linkTo ? 'button' : 'header'}
         accessibilityLabel={accessibilityLabel}
       >
-        <Header />
+        {renderHeader()}
       </View>
     );
   }
@@ -166,7 +166,7 @@ export const SectionHeader = ({
         }
       }}
     >
-      <Header />
+      {renderHeader()}
     </TouchableOpacity>
   );
 };
