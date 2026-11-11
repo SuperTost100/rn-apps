@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 
 import {
   AuthApi,
@@ -138,16 +138,14 @@ export const useGetStudent = () => {
     gcTime: Infinity,
   });
 
-  // Handle success logic with useEffect or similar pattern if needed
-  if (query.data && query.isSuccess) {
-    Sentry.setTag('student_degree_id', query.data.degreeName);
-    Sentry.setTag('student_degree_name', query.data.degreeId);
-    Sentry.setTag('student_status', query.data.state?.label);
-    Sentry.setTag(
-      'student_is_currently_enrolled',
-      query.data.isCurrentlyEnrolled,
-    );
-  }
+  const student = query.data;
+  useEffect(() => {
+    if (!student) return;
+    Sentry.setTag('student_degree_id', student.degreeId);
+    Sentry.setTag('student_degree_name', student.degreeName);
+    Sentry.setTag('student_status', student.state?.label);
+    Sentry.setTag('student_is_currently_enrolled', student.isCurrentlyEnrolled);
+  }, [student]);
 
   return query;
 };
