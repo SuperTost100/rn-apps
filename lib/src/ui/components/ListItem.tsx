@@ -15,7 +15,6 @@ import { GlobalStyles } from '@polito/lib/ui';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import { usePreferencesContext } from '../../core/contexts/PreferencesContext';
 import { useStylesheet } from '../hooks/useStylesheet';
 import { useTheme } from '../hooks/useTheme';
 import { Theme } from '../types/Theme';
@@ -75,7 +74,6 @@ export const ListItem = ({
   const { fontSizes, fontFamilies, fontWeights, colors, spacing } = useTheme();
   const styles = useStylesheet(createStyles);
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
-  const { accessibility } = usePreferencesContext();
   const titleElement =
     typeof title === 'string' ? (
       <Row align="center" gap={2}>
@@ -87,10 +85,8 @@ export const ListItem = ({
             {
               fontSize: fontSizes.md,
               fontFamily: fontFamilies.title,
-              lineHeight:
-                accessibility?.fontSize && accessibility.fontSize <= 125
-                  ? fontSizes.sm * 1.4
-                  : fontSizes.sm * 2,
+              // Text scales it with the in-app text size
+              lineHeight: fontSizes.sm * 1.4,
             },
             unread && {
               fontWeight: fontWeights.semibold,
@@ -120,10 +116,7 @@ export const ListItem = ({
         style={[
           {
             fontSize: fontSizes.sm,
-            lineHeight:
-              accessibility?.fontSize && accessibility.fontSize <= 125
-                ? fontSizes.sm * 1.4
-                : fontSizes.sm * 2.5,
+            lineHeight: fontSizes.sm * 1.4,
           },
           subtitleStyle,
         ]}

@@ -2,8 +2,8 @@ import { StyleSheet } from 'react-native';
 
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 
-import { usePreferencesContext } from '../../core/contexts/PreferencesContext';
 import { useStylesheet } from '../hooks/useStylesheet';
+import { useTextScale } from '../hooks/useTextScale';
 import { Theme } from '../types/Theme';
 import { Icon } from './Icon';
 import { PillButton, PillButtonProps } from './PillButton';
@@ -20,13 +20,11 @@ export const PillIconButton = ({
   ...props
 }: PillIconButtonProps) => {
   const styles = useStylesheet(createStyles);
-  const { accessibility } = usePreferencesContext();
+  const { isLarge } = useTextScale();
   return (
     <PillButton
       {...props}
-      {...(accessibility?.fontSize && accessibility.fontSize >= 150
-        ? { style: { paddingVertical: 0 } }
-        : {})}
+      {...(isLarge ? { style: { paddingVertical: 0 } } : {})}
     >
       <Row align="center" gap={1.5}>
         {icon && <Icon icon={icon} color="white" />}

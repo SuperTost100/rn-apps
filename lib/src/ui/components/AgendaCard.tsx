@@ -8,8 +8,8 @@ import {
   faVideo,
 } from '@fortawesome/free-solid-svg-icons';
 
-import { usePreferencesContext } from '../../core/contexts/PreferencesContext';
 import { useStylesheet } from '../hooks/useStylesheet';
+import { useTextScale } from '../hooks/useTextScale';
 import { useTheme } from '../hooks/useTheme';
 import { Theme } from '../types/Theme';
 import { AgendaIcon } from './AgendaIcon';
@@ -99,7 +99,7 @@ export const AgendaCard = ({
 }: PropsWithChildren<AgendaCardProps>) => {
   const styles = useStylesheet(createStyles);
   const { colors, dark, palettes, shapes, spacing, fontSizes } = useTheme();
-  const { accessibility } = usePreferencesContext();
+  const { isLarge } = useTextScale();
   const isTablet = useMemo(() => isTabletHelper(), []);
   const showsIcon = useMemo(() => iconColor && icon, [icon, iconColor]);
 
@@ -157,42 +157,37 @@ export const AgendaCard = ({
                     style={[
                       styles.time,
                       secondaryIfLecture,
-                      accessibility?.fontSize &&
-                      Number(accessibility?.fontSize) >= 150
-                        ? { marginTop: 30 }
-                        : undefined,
+                      isLarge ? { marginTop: 30 } : undefined,
                     ]}
                   >
                     {time && time}
                   </Text>
                   {!isCompact && live && <LiveIndicator showText />}
                 </Row>
-                {accessibility?.fontSize &&
-                  Number(accessibility?.fontSize) < 150 && (
-                    <Text
-                      uppercase
-                      variant="caption"
-                      numberOfLines={1}
-                      ellipsizeMode="tail"
-                      style={[secondaryIfLecture, styles.typeMeta]}
-                    >
-                      {type}
-                    </Text>
-                  )}
+                {!isLarge && (
+                  <Text
+                    uppercase
+                    variant="caption"
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                    style={[secondaryIfLecture, styles.typeMeta]}
+                  >
+                    {type}
+                  </Text>
+                )}
               </Row>
               <Row style={{ flex: 1 }}>
-                {accessibility?.fontSize &&
-                  Number(accessibility?.fontSize) >= 150 && (
-                    <Text
-                      uppercase
-                      variant="caption"
-                      numberOfLines={1}
-                      ellipsizeMode="tail"
-                      style={[secondaryIfLecture, styles.typeMetaFullWidth]}
-                    >
-                      {type}
-                    </Text>
-                  )}
+                {isLarge && (
+                  <Text
+                    uppercase
+                    variant="caption"
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                    style={[secondaryIfLecture, styles.typeMetaFullWidth]}
+                  >
+                    {type}
+                  </Text>
+                )}
               </Row>
             </>
           )}
@@ -281,10 +276,6 @@ export const AgendaCard = ({
                     ? isTablet
                       ? styles.titleCompactTablet
                       : styles.titleCompact
-                    : undefined,
-                  accessibility?.fontSize &&
-                  Number(accessibility?.fontSize) >= 150
-                    ? { lineHeight: 30 }
                     : undefined,
                 ]}
                 numberOfLines={isCompact ? (isTablet ? 2 : 3) : undefined}

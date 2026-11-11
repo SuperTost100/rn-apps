@@ -14,9 +14,9 @@ import { Props as FAProps } from '@fortawesome/react-native-fontawesome';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import { usePreferencesContext } from '../../core/contexts/PreferencesContext';
 import { To } from '../../core/utils/resolveLinkTo';
 import { useStylesheet } from '../hooks/useStylesheet';
+import { useTextScale } from '../hooks/useTextScale';
 import { Theme } from '../types/Theme';
 import { IconButton } from './IconButton';
 import { Separator } from './Separator';
@@ -60,7 +60,7 @@ export const SectionHeader = ({
   const styles = useStylesheet(createStyles);
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
-  const { accessibility } = usePreferencesContext();
+  const { isLarge } = useTextScale();
   const ellipsis: Partial<TextProps> = ellipsizeTitle
     ? {
         numberOfLines: 1,
@@ -87,10 +87,7 @@ export const SectionHeader = ({
             {trailingIcon && (
               <IconButton
                 {...{
-                  size:
-                    accessibility?.fontSize && accessibility.fontSize >= 150
-                      ? 40
-                      : 16,
+                  size: isLarge ? 40 : 16,
                   ...trailingIcon,
                   noPadding: true,
                 }}

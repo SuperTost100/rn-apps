@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 
 import { faCalendar, faClock } from '@fortawesome/free-regular-svg-icons';
 
-import { usePreferencesContext } from '../../core/contexts/PreferencesContext';
+import { useTextScale } from '../hooks/useTextScale';
 import { useTheme } from '../hooks/useTheme';
 import { Icon } from './Icon';
 import { Row } from './Row';
@@ -24,7 +24,7 @@ export const ScreenDateTime = ({
   inListItem = false,
 }: Props) => {
   const { colors, dark, fontSizes, palettes } = useTheme();
-  const { accessibility } = usePreferencesContext();
+  const { isLarge } = useTextScale();
   const color = useMemo(() => {
     if (!inListItem) return colors.prose;
     return dark ? palettes.gray[400] : palettes.gray[500];
@@ -42,7 +42,7 @@ export const ScreenDateTime = ({
           <Text style={{ fontSize: fontSizes.md, color }}>{date ?? ''}</Text>
         </Row>
         <Row gap={2} align="center">
-          {time && Number(accessibility?.fontSize) < 150 && (
+          {time && !isLarge && (
             <>
               <Icon icon={faClock} color={color} size={fontSizes.md} />
               <Text style={{ fontSize: fontSizes.md, color }}>
@@ -52,7 +52,7 @@ export const ScreenDateTime = ({
           )}
         </Row>
       </Row>
-      {time && Number(accessibility?.fontSize) >= 150 && (
+      {time && isLarge && (
         <Row>
           <Icon icon={faClock} color={color} size={fontSizes.md} />
           <Text style={{ fontSize: fontSizes.md, color }}>{time ?? ''}</Text>

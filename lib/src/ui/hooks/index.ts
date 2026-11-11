@@ -6,6 +6,7 @@ export * from './useBottomModal';
 export * from './useHideTabs';
 export * from './useSafeAreaSpacing';
 export * from './useStylesheet';
+export * from './useTextScale';
 export * from './useTheme';
 export * from './useTitlesStyles';
 export * from './useSafeBottomBarHeight';

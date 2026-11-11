@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, TextProps } from 'react-native';
 
 import { isNumber } from 'lodash';
 
-import { usePreferencesContext } from '../../core/contexts/PreferencesContext';
 import { useStylesheet } from '../hooks/useStylesheet';
+import { useTextScale } from '../hooks/useTextScale';
 import { useTheme } from '../hooks/useTheme';
 import { Theme } from '../types/Theme';
 import { Row } from './Row';
@@ -30,20 +30,7 @@ export const UnreadBadge = ({
   const styles = useStylesheet(createStyles);
   const isOutlined = useMemo(() => variant === 'outlined', [variant]);
   const isDigit = isNumber(text);
-  const [styless, setStyless] = useState();
-  const { accessibility } = usePreferencesContext();
-
-  useEffect(() => {
-    const changeStyle = () => {
-      setStyless({
-        marginTop:
-          accessibility?.fontSize && accessibility.fontSize > 125
-            ? -spacing[3]
-            : 0,
-      } as any);
-    };
-    changeStyle();
-  }, [spacing, accessibility]);
+  const { isLarge } = useTextScale();
   return (
     <Row
       ph={1}
@@ -67,7 +54,7 @@ export const UnreadBadge = ({
           style={[
             styles.badgeText,
             isOutlined && { color: colors.accentText },
-            styless,
+            { marginTop: isLarge ? -spacing[3] : 0 },
           ]}
         >
           {text}

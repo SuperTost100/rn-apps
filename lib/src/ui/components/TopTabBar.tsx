@@ -1,6 +1,6 @@
 import { MaterialTopTabBarProps } from '@react-navigation/material-top-tabs';
 
-import { usePreferencesContext } from '../../core/contexts/PreferencesContext';
+import { useTextScale } from '../hooks/useTextScale';
 import { HeaderAccessory } from './HeaderAccessory';
 import { Tab } from './Tab';
 import { Tabs } from './Tabs';
@@ -10,7 +10,7 @@ export const TopTabBar = ({
   descriptors,
   navigation,
 }: MaterialTopTabBarProps) => {
-  const { accessibility } = usePreferencesContext();
+  const { isLarge } = useTextScale();
   return (
     <HeaderAccessory>
       <Tabs>
@@ -64,11 +64,7 @@ export const TopTabBar = ({
               onPress={onPress}
               onLongPress={onLongPress}
               badge={badgeText}
-              style={
-                accessibility?.fontSize && accessibility.fontSize > 125
-                  ? { paddingVertical: 0 }
-                  : undefined
-              }
+              style={isLarge ? { paddingVertical: 0 } : undefined}
             >
               {label as string}
             </Tab>

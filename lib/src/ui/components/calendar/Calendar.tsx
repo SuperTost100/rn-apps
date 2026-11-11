@@ -3,7 +3,7 @@ import { ViewStyle } from 'react-native';
 
 import { DateTime } from 'luxon';
 
-import { usePreferencesContext } from '../../../core/contexts/PreferencesContext';
+import { useTextScale } from '../../hooks/useTextScale';
 import {
   CalendarCellStyle,
   CalendarCellTextStyle,
@@ -130,7 +130,7 @@ export const Calendar = <T extends ICalendarEventBase>({
   locale,
 }: CalendarContainerProps<T>) => {
   const [targetDate, setTargetDate] = useState(date);
-  const { accessibility } = usePreferencesContext();
+  const { isLarge } = useTextScale();
 
   useEffect(() => {
     if (date) {
@@ -170,10 +170,10 @@ export const Calendar = <T extends ICalendarEventBase>({
     [mode, weekEndsOn, weekStartsOn],
   );
   const cellHeight = useMemo(() => {
-    return accessibility?.fontSize && Number(accessibility?.fontSize) < 150
+    return !isLarge
       ? Math.max(cellMaxHeight, height / hours?.length)
       : Math.max(cellMaxHeight, (height / hours?.length) * 3);
-  }, [height, cellMaxHeight, hours, accessibility?.fontSize]);
+  }, [height, cellMaxHeight, hours, isLarge]);
 
   const onSwipeHorizontal = useCallback(
     (direction: HorizontalDirection) => {

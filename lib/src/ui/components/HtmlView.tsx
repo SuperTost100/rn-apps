@@ -22,6 +22,7 @@ import { parseDocument } from 'htmlparser2';
 
 import { usePreferencesContext } from '../../core/contexts/PreferencesContext';
 import { useStylesheet } from '../hooks/useStylesheet';
+import { useTextScale } from '../hooks/useTextScale';
 import { useTheme } from '../hooks/useTheme';
 import { Theme } from '../types/Theme';
 import { ActivityIndicator } from './ActivityIndicator';
@@ -324,11 +325,10 @@ export const HtmlView = ({ variant, props }: HtmlViewProps) => {
   const { colors, palettes, spacing, fontSizes } = useTheme();
   const { width } = useWindowDimensions();
   const styles = useStylesheet(createStyles);
-  const { accessibility } = usePreferencesContext();
+  const { isLarge } = useTextScale();
 
   const processedSource =
-    variant === 'longProse' ||
-    (variant === 'cta' && Number(accessibility?.fontSize) >= 150)
+    variant === 'longProse' || (variant === 'cta' && isLarge)
       ? {
           ...props.source,
           html:

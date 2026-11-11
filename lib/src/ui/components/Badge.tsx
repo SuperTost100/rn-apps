@@ -2,7 +2,7 @@ import { ViewProps } from 'react-native';
 
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 
-import { usePreferencesContext } from '../../core/contexts/PreferencesContext';
+import { useTextScale } from '../hooks/useTextScale';
 import { useTheme } from '../hooks/useTheme';
 import { Icon } from './Icon';
 import { Row } from './Row';
@@ -23,7 +23,7 @@ export const Badge = ({
   style,
 }: Props) => {
   const { spacing, shapes, fontSizes, fontFamilies } = useTheme();
-  const { accessibility } = usePreferencesContext();
+  const { isLarge } = useTextScale();
   return (
     <Row
       gap={2}
@@ -35,10 +35,9 @@ export const Badge = ({
           paddingVertical: spacing[1],
           borderRadius: shapes.xl,
         },
-        accessibility?.fontSize &&
-          accessibility.fontSize >= 150 && {
-            alignSelf: 'flex-start',
-          },
+        isLarge && {
+          alignSelf: 'flex-start',
+        },
         !icon && {
           paddingRight: spacing[1.5],
         },

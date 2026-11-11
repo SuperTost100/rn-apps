@@ -11,9 +11,9 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useFeedbackContext } from '../../core/contexts/FeedbackContext';
-import { usePreferencesContext } from '../../core/contexts/PreferencesContext';
 import { useSafeBottomBarHeight } from '../hooks/useSafeBottomBarHeight';
 import { useStylesheet } from '../hooks/useStylesheet';
+import { useTextScale } from '../hooks/useTextScale';
 import { useTheme } from '../hooks/useTheme';
 import { Theme } from '../types/Theme';
 import { shadeColor } from '../utils/colors';
@@ -66,7 +66,7 @@ export const CtaButton = ({
   const { left, right } = useSafeAreaInsets();
   const bottomBarHeight = useSafeBottomBarHeight();
   const { isFeedbackVisible } = useFeedbackContext();
-  const { accessibility } = usePreferencesContext();
+  const { isLarge } = useTextScale();
 
   const outlined = variant === 'outlined';
 
@@ -167,7 +167,7 @@ export const CtaButton = ({
             }}
           >
             {icon &&
-              Number(accessibility?.fontSize) < 150 &&
+              !isLarge &&
               (progress !== undefined ? (
                 <View
                   style={{
