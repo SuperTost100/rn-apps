@@ -29,7 +29,7 @@ export const SurveyListScreen = ({ route }: Props) => {
     .filter(survey => survey.isCompiled === isCompiled)
     .sort(
       (a, b) =>
-        b.startsAt.getTime() - a.startsAt.getTime() &&
+        b.startsAt.getTime() - a.startsAt.getTime() ||
         b.title.localeCompare(a.title),
     );
 
