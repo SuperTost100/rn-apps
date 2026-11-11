@@ -96,7 +96,14 @@ export const FileListItem = ({
   return (
     <ListItem
       accessible={true}
-      accessibilityLabel={`${rest.title} ${subtitle}.${mimeType} ${downloadLabel}`}
+      accessibilityLabel={[
+        typeof rest.title === 'string' ? rest.title : undefined,
+        subtitle,
+        mimeType,
+        downloadLabel,
+      ]
+        .filter(Boolean)
+        .join(' ')}
       leadingItem={
         <View>
           <Icon
