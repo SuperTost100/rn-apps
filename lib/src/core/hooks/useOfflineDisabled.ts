@@ -1,21 +1,13 @@
-import { useState } from 'react';
+import { useSyncExternalStore } from 'react';
 
 import { onlineManager } from '@tanstack/react-query';
+
+const getIsOnline = () => onlineManager.isOnline();
 
 export const useOfflineDisabled = (
   isDataMissingCallback: () => boolean = () => true,
 ) => {
-  const [isDisabled, setIsDisabled] = useState(
-    !onlineManager.isOnline() && isDataMissingCallback(),
-  );
+  const isOnline = useSyncExternalStore(onlineManager.subscribe, getIsOnline);
 
-  onlineManager.subscribe(() => {
-    if (onlineManager.isOnline()) {
-      setIsDisabled(false);
-    } else {
-      setIsDisabled(isDataMissingCallback());
-    }
-  });
-
-  return isDisabled;
+  return !isOnline && isDataMissingCallback();
 };
