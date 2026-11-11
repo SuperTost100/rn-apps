@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Platform,
@@ -68,7 +68,6 @@ export const CourseInfoScreen = () => {
   const { spacing, palettes } = useTheme();
   const { getUnreadsCount, getUnreadsCountPerCourse } = useNotifications();
   const { fontSizes } = useTheme();
-  const [staff, setStaff] = useState<StaffMember[]>([]);
   const { data: editions } = useGetCourseEditions(courseId);
   const courseQuery = useGetCourse(courseId);
   const coursesQuery = useGetCourses();
@@ -140,14 +139,12 @@ export const CourseInfoScreen = () => {
       } as MenuAction;
     });
   }, [editions, lockEdition, courseId, palettes, getUnreadsCount]);
-  useEffect(() => {
-    if (!courseQuery.data || isStaffLoading) {
-      return;
-    }
+  const staff = useMemo(() => {
+    if (!courseQuery.data || isStaffLoading) return [];
     const staffData: StaffMember[] = [];
 
     staffQueries.forEach((staffQuery, index) => {
-      if (!staffQuery.data || isStaffLoading) return;
+      if (!staffQuery.data) return;
 
       staffData.push({
         ...staffQuery.data,
@@ -158,9 +155,8 @@ export const CourseInfoScreen = () => {
       });
     });
 
-    setStaff(staffData);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [courseQuery.data, isStaffLoading]);
+    return staffData;
+  }, [courseQuery.data, isStaffLoading, staffQueries]);
 
   const queryClient = useQueryClient();
   const isGuideDataMissing = useCallback(
@@ -302,7 +298,7 @@ export const CourseInfoScreen = () => {
             indented
             loading={
               !courseQuery?.data ||
-              ((courseQuery.data?.staff?.length ?? 0) > 0 && staff.length === 0)
+              ((courseQuery.data?.staff?.length ?? 0) > 0 && isStaffLoading)
             }
           >
             {staff.map(member => (
