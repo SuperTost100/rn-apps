@@ -46,10 +46,21 @@ export const useInitFirebaseMessaging = () => {
     [queryClient],
   );
   useEffect(() => {
+    let cancelled = false;
+    const unsubscribers: (() => void)[] = [];
+    // The setup is async, so a listener may be added after the cleanup ran
+    const addListener = (unsubscribe: () => void) => {
+      if (cancelled) {
+        unsubscribe();
+      } else {
+        unsubscribers.push(unsubscribe);
+      }
+    };
+
     (async () => {
       const messaging = getMessaging();
 
-      onTokenRefresh(messaging, updateAppInfo);
+      addListener(onTokenRefresh(messaging, updateAppInfo));
 
       if ((await checkNotifications()).status !== RESULTS.GRANTED) {
         await requestNotifications();
@@ -60,27 +71,27 @@ export const useInitFirebaseMessaging = () => {
         alert: true,
         sound: true,
       });
+      if (cancelled) return;
       if (authorizationStatus !== AuthorizationStatus.DENIED) {
-        const unsubscribeOnNotificationOpenedApp = onNotificationOpenedApp(
-          messaging,
-          remoteMessage => {
+        addListener(
+          onNotificationOpenedApp(messaging, remoteMessage => {
             navigateToUpdate(remoteMessage as RemoteMessage);
-          },
+          }),
         );
 
         getInitialNotification(messaging).then(remoteMessage => {
           navigateToUpdate(remoteMessage as RemoteMessage);
         });
 
-        const unsubscribeOnMessage = onMessage(messaging, onMessageHandler);
+        addListener(onMessage(messaging, onMessageHandler));
 
         setBackgroundMessageHandler(messaging, onMessageHandler);
-
-        return () =>
-          [unsubscribeOnMessage, unsubscribeOnNotificationOpenedApp].forEach(
-            fn => fn(),
-          );
       }
     })();
+
+    return () => {
+      cancelled = true;
+      unsubscribers.forEach(fn => fn());
+    };
   }, [navigateToUpdate, updateAppInfo, queryClient, onMessageHandler]);
 };
