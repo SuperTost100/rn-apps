@@ -27,7 +27,7 @@ export const NoticeScreen = ({ route }: Props) => {
             '',
         ),
       ),
-    [noticesQuery, noticeId],
+    [noticesQuery.data, noticeId],
   );
 
   useFocusEffect(
