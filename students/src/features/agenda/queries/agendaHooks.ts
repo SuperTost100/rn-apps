@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 
 import {
   APP_TIMEZONE,
@@ -8,7 +8,12 @@ import {
   usePreferencesContext,
 } from '@polito/lib/core';
 import { Booking, Deadline, ExamStatusEnum } from '@polito/student-api-client';
-import { useQueries, useQuery } from '@tanstack/react-query';
+import {
+  hashKey,
+  useQueries,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 
 import { AppPreferences, CoursesPreferences } from '~/core/types/preferences';
 
@@ -196,12 +201,17 @@ interface AgendaWeekQueryFnParams {
   bookingsData: Booking[];
   lecturesData: Lecture[];
   deadlinesData: Deadline[];
+  sources: string;
 }
 
 export const getAgendaWeekQueryKey = (
   filters: AgendaTypesFilterState,
   startDate: DateTime,
 ) => [AGENDA_QUERY_PREFIX, filters, startDate];
+
+// Agenda weeks are built from other queries without a network call. This maps
+// each cached week to the dataUpdatedAt of the source data it was built from.
+const agendaWeekSources = new Map<string, string>();
 
 const getAgendaWeekQueryFn = async ({
   preferences,
@@ -210,7 +220,12 @@ const getAgendaWeekQueryFn = async ({
   bookingsData,
   lecturesData,
   deadlinesData,
+  sources,
 }: AgendaWeekQueryFnParams): Promise<AgendaWeek> => {
+  agendaWeekSources.set(
+    hashKey(getAgendaWeekQueryKey(preferences.agendaScreen.filters, startDate)),
+    sources,
+  );
   let queryFilters: AgendaTypesFilterState;
 
   // if all filters are set to false, set all query filters to true
@@ -271,6 +286,24 @@ const getAgendaWeekQueryFn = async ({
   };
 };
 
+// Rebuilds the weeks whose source data changed. Call it after the agenda
+// queries, so their latest queryFn has reached the cache when this effect runs.
+const useRebuildChangedAgendaWeeks = (
+  filters: AgendaTypesFilterState,
+  weeks: { startDate: DateTime; sources: string; hasData: boolean }[],
+) => {
+  const client = useQueryClient();
+
+  useEffect(() => {
+    weeks.forEach(({ startDate, sources, hasData }) => {
+      const queryKey = getAgendaWeekQueryKey(filters, startDate);
+      if (hasData && agendaWeekSources.get(hashKey(queryKey)) !== sources) {
+        client.invalidateQueries({ queryKey, exact: true });
+      }
+    });
+  });
+};
+
 export const useGetAgendaWeek = (startDate: DateTime = thisMonday) => {
   const preferences = usePreferencesContext<AppPreferences>();
 
@@ -278,8 +311,11 @@ export const useGetAgendaWeek = (startDate: DateTime = thisMonday) => {
   const bookingsQuery = useGetBookings();
   const lecturesQuery = useGetLectureWeek(preferences.courses, startDate);
   const deadlinesQuery = useGetDeadlineWeek(startDate);
+  const sources = [examsQuery, bookingsQuery, lecturesQuery, deadlinesQuery]
+    .map(q => q.dataUpdatedAt)
+    .join();
 
-  return useQuery<AgendaWeek>({
+  const agendaWeekQuery = useQuery<AgendaWeek>({
     queryKey: getAgendaWeekQueryKey(
       preferences.agendaScreen.filters,
       startDate,
@@ -292,6 +328,7 @@ export const useGetAgendaWeek = (startDate: DateTime = thisMonday) => {
         bookingsData: bookingsQuery.data!,
         lecturesData: lecturesQuery.data!,
         deadlinesData: deadlinesQuery.data!,
+        sources,
       }),
     enabled:
       !!lecturesQuery.data &&
@@ -301,6 +338,12 @@ export const useGetAgendaWeek = (startDate: DateTime = thisMonday) => {
     networkMode: 'always',
     staleTime: 300000, // TODO define
   });
+
+  useRebuildChangedAgendaWeeks(preferences.agendaScreen.filters, [
+    { startDate, sources, hasData: agendaWeekQuery.data !== undefined },
+  ]);
+
+  return agendaWeekQuery;
 };
 
 export const useGetAgendaWeeks = (mondays: DateTime[]) => {
@@ -310,6 +353,14 @@ export const useGetAgendaWeeks = (mondays: DateTime[]) => {
   const bookingsQuery = useGetBookings();
   const lecturesQueries = useGetLectureWeeks(preferences.courses, mondays);
   const deadlinesQueries = useGetDeadlineWeeks(mondays);
+  const sources = mondays.map((_, index) =>
+    [
+      examsQuery.dataUpdatedAt,
+      bookingsQuery.dataUpdatedAt,
+      lecturesQueries.dataUpdatedAt[index],
+      deadlinesQueries.dataUpdatedAt[index],
+    ].join(),
+  );
 
   const queries = useQueries({
     queries: mondays.map((monday, index) => ({
@@ -322,6 +373,7 @@ export const useGetAgendaWeeks = (mondays: DateTime[]) => {
           bookingsData: bookingsQuery.data!,
           lecturesData: lecturesQueries.data[index],
           deadlinesData: deadlinesQueries.data[index],
+          sources: sources[index],
         }),
       enabled:
         !!examsQuery.data &&
@@ -331,6 +383,15 @@ export const useGetAgendaWeeks = (mondays: DateTime[]) => {
       staleTime: Infinity,
     })),
   });
+
+  useRebuildChangedAgendaWeeks(
+    preferences.agendaScreen.filters,
+    mondays.map((startDate, index) => ({
+      startDate,
+      sources: sources[index],
+      hasData: queries[index].data !== undefined,
+    })),
+  );
 
   const isLoading = useMemo(() => {
     if (!mondays?.length) return true;

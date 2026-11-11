@@ -280,6 +280,7 @@ export const useGetDeadlineWeeks = (
 
   return {
     data: queries.map(query => query.data!),
+    dataUpdatedAt: queries.map(query => query.dataUpdatedAt),
     isLoading,
   };
 };
