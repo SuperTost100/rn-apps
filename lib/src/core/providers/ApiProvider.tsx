@@ -231,8 +231,11 @@ export const ApiProvider = <Prefs extends object = {}>({
         });
         return;
       }
-      // Nothing to show: a region that renders states says so itself
-      if (presentation === 'states') return;
+      // Nothing to show: a region that renders states says so itself. A
+      // timeout without data raises no alert, as other network failures:
+      // regions show it, and an inline lookup (FAQ suggestions) just stays
+      // empty
+      if (presentation === 'states' || !isResponseError(error)) return;
       Alert.alert(t('common.error'), t('states.loadFailed'), [
         { text: t('states.close'), style: 'cancel' },
         { text: t('states.tryAgain'), onPress: retry },

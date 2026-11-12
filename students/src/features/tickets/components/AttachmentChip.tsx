@@ -12,6 +12,8 @@ import {
   useTheme,
 } from '@polito/lib/ui';
 
+import { wrappableFileName } from '~/utils/files';
+
 import { formatFileSize } from '../../../utils/files';
 import { Attachment } from '../../services/types/Attachment';
 
@@ -65,9 +67,10 @@ export const AttachmentChip = ({
           variant="secondaryText"
           weight="semibold"
           numberOfLines={3}
+          keepWords
           style={{ color: fg }}
         >
-          {name}
+          {wrappableFileName(name)}
         </Text>
         {showSize && !!attachment.size && (
           <Text variant="caption" style={{ color: fg }}>

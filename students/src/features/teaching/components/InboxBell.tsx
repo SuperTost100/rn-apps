@@ -54,11 +54,12 @@ export const InboxBell = ({ color }: Props) => {
 };
 
 const styles = StyleSheet.create({
-  // Its bottom left corner sits just past the bell's centre, so a badge that
-  // grows with the text size grows up and to the right, away from the bell
+  // Anchored by its bottom edge just below the top of the bell, so a badge
+  // that grows with the text size grows upwards, over the handle only, and
+  // stays inside the screen on the right
   badge: {
     position: 'absolute',
-    left: '56%',
-    bottom: '56%',
+    right: -4,
+    bottom: '62%',
   },
 });
