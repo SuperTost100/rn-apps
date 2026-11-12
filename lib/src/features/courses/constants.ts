@@ -593,14 +593,3 @@ export const courseColors = [
   { name: 'colors.warmGray', color: '#737373', tile: '#404040' },
   { name: 'colors.coolGray', color: '#5C778A', tile: '#415462' },
 ];
-
-export const MENU_ACTIONS = {
-  SELECT: 'select',
-  SELECT_ALL: 'selectAll',
-  TOGGLE_FOLDERS: 'toggleFolders',
-} as const;
-
-export const ITEM_TYPES = {
-  DIRECTORY: 'directory',
-  FILE: 'file',
-} as const;
