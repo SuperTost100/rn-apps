@@ -16,6 +16,7 @@ import { useHeaderHeight } from '@react-navigation/elements';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { isEmpty } from 'lodash';
+import { DateTime } from 'luxon';
 
 import { useGetBookingSeats } from '../../../core/queries/bookingHooks';
 import { ServiceStackParamList } from '../../services/components/ServicesNavigator';
@@ -31,8 +32,15 @@ type Props = NativeStackScreenProps<
   'BookingSeatSelection'
 >;
 export const BookingSeatSelectionScreen = ({ route }: Props) => {
-  const { slotId, topicId, hasSeatSelection, startHour, endHour, day } =
-    route.params;
+  const {
+    slotId,
+    topicId,
+    hasSeatSelection,
+    startHour,
+    endHour,
+    day,
+    startsAt,
+  } = route.params;
   const { t } = useTranslation();
   const bookingSeatsQuery = useGetBookingSeats(topicId, slotId);
   const styles = useStylesheet(createStyles);
@@ -154,7 +162,7 @@ export const BookingSeatSelectionScreen = ({ route }: Props) => {
       <BookingSeatsCta
         seatId={seat?.id?.toString()}
         slotId={slotId}
-        absolute={false}
+        startsAt={startsAt ? DateTime.fromISO(startsAt) : undefined}
         modal={false}
         hasSeatSelection={hasSeatSelection}
         style={[styles.ctaButtonContainer, { bottom: bottomTabBarHeight }]}

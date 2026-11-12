@@ -1,15 +1,9 @@
-import { useTranslation } from 'react-i18next';
-
 import { BookingsApi } from '@polito/student-api-client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { DateTime } from 'luxon';
 
-import {
-  pluckData,
-  setTimeoutAccessibilityInfoHelper,
-  toOASTruncable,
-} from '../../../../lib/src/core/utils';
+import { pluckData, toOASTruncable } from '../../../../lib/src/core/utils';
 
 export const BOOKINGS_QUERY_KEY = ['bookings'];
 const BOOKINGS_TOPICS_QUERY_KEY = ['booking', 'topics'];
@@ -159,15 +153,11 @@ export const useCreateBooking = () => {
 export const useDeleteBooking = (bookingId: number) => {
   const bookingClient = useBookingClient();
   const client = useQueryClient();
-  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: () => bookingClient.deleteBookingRaw({ bookingId }),
     onSuccess() {
-      setTimeoutAccessibilityInfoHelper(
-        t('bookingScreen.cancelFeedback'),
-        1200,
-      );
+      // The screen says it was cancelled, in a message screen readers read
       return Promise.all([
         client.invalidateQueries({ queryKey: BOOKINGS_QUERY_KEY }),
         client.invalidateQueries({ queryKey: BOOKINGS_SLOTS_QUERY_KEY }),

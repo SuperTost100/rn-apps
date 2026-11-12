@@ -6,13 +6,7 @@ import {
   useState,
 } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  Platform,
-  Pressable,
-  SectionList,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { Pressable, SectionList, StyleSheet, View } from 'react-native';
 
 import { faEllipsisVertical } from '@fortawesome/free-solid-svg-icons';
 import {
@@ -27,10 +21,11 @@ import {
   HeaderAccessory,
   Icon,
   IconButton,
+  OutlineIcon,
   RegionStateBlock,
   Row,
-  Tabs,
   Text,
+  Theme,
   WeekNum,
   faSeat,
   useBottomModal,
@@ -67,18 +62,17 @@ import {
 } from '../../../core/queries/bookingHooks';
 import {
   canBeBookedWithSeatSelection,
-  getBookingSlotStatus,
   getBookingStyle,
   getCalendarHours,
   getCalendarPropsFromTopic,
+  getSlotStatus,
   isPastSlot,
 } from '../../../utils/bookings';
 import { WeekFilter } from '../../agenda/components/WeekFilter';
 import { AgendaOption } from '../../agenda/types/AgendaOption';
 import { ServiceStackParamList } from '../../services/components/ServicesNavigator';
 import { BookingSlotModal } from '../components/BookingSlotModal';
-import { BookingSlotsLegendModal } from '../components/BookingSlotsLegendModal';
-import { BookingSlotsStatusLegend } from '../components/BookingSlotsStatusLegend';
+import { BookingSlotsLegendContent } from '../components/BookingSlotsLegendContent';
 
 const MIN_SLOT_HEIGHT = 40;
 const SMALL_SLOT_MAX_DURATION = 15;
@@ -94,8 +88,8 @@ export type BookingCalendarEvent = BookingSlot & {
 };
 
 export const BookingSlotScreen = ({ route, navigation }: Props) => {
-  const { topicId } = route.params;
-  const { palettes, colors, dark, fontSizes } = useTheme();
+  const { topicId, topicName } = route.params;
+  const { colors, fontSizes } = useTheme();
   const styles = useStylesheet(createStyles);
   const { t } = useTranslation();
   const isOffline = useOfflineDisabled();
@@ -210,18 +204,27 @@ export const BookingSlotScreen = ({ route, navigation }: Props) => {
           day: evt.start.toFormat('d MMMM'),
           hasSeatSelection: evt.hasSeatSelection,
           topicId,
+          startsAt: evt.start.toISO() ?? undefined,
         });
         return;
       }
       showBottomModal(
         <BookingSlotModal
           topicId={topicId}
+          topicName={topicName}
           item={evt}
           close={closeBottomModal}
         />,
       );
     },
-    [myBookings, navigation, showBottomModal, topicId, closeBottomModal],
+    [
+      myBookings,
+      navigation,
+      showBottomModal,
+      topicId,
+      topicName,
+      closeBottomModal,
+    ],
   );
 
   useLayoutEffect(() => {
@@ -289,21 +292,13 @@ export const BookingSlotScreen = ({ route, navigation }: Props) => {
     [refetch, defaultAgendaLayout],
   );
 
-  const onPressLegend = useCallback(() => {
-    if (Platform.OS === 'android') {
-      showBottomModal(<BookingSlotsLegendModal close={closeBottomModal} />);
-      return;
-    }
-    navigation.navigate('BookingSlotsLegend');
-  }, [closeBottomModal, navigation, showBottomModal]);
-
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
         <MenuView actions={screenOptions} onPressAction={onPressOption}>
           <IconButton
             icon={faEllipsisVertical}
-            color={palettes.primary['500']}
+            color={colors.link}
             size={fontSizes.lg}
             adjustSpacing="right"
             accessibilityLabel={t('common.options')}
@@ -311,7 +306,7 @@ export const BookingSlotScreen = ({ route, navigation }: Props) => {
         </MenuView>
       ),
     });
-  }, [navigation, palettes, screenOptions, onPressOption, fontSizes.lg, t]);
+  }, [navigation, colors, screenOptions, onPressOption, fontSizes.lg, t]);
 
   const hours = useMemo(
     () =>
@@ -347,10 +342,8 @@ export const BookingSlotScreen = ({ route, navigation }: Props) => {
   return (
     <>
       <BottomModal dismissable {...bottomModal} />
-      <HeaderAccessory justify="space-between">
-        <Tabs>
-          <BookingSlotsStatusLegend onPress={onPressLegend} />
-        </Tabs>
+      <HeaderAccessory style={styles.accessory}>
+        <BookingSlotsLegendContent style={styles.legend} />
         {!showAgendaLayout && (
           <WeekFilter
             current={currentWeekStart}
@@ -426,20 +419,13 @@ export const BookingSlotScreen = ({ route, navigation }: Props) => {
 
               const { backgroundColor: borderColor, color } = getBookingStyle(
                 item,
-                palettes,
                 colors,
-                dark,
               );
               const timeRange =
                 item.start.toFormat('HH:mm') +
                 ' – ' +
                 item.end.toFormat('HH:mm');
-              const statusLabel = t(
-                getBookingSlotStatus(
-                  item,
-                  'bookingScreen.bookingStatus.notAvailable',
-                ),
-              );
+              const statusLabel = t(`bookings.status.${getSlotStatus(item)}`);
 
               return (
                 <Row style={{ marginVertical: 8, marginHorizontal: 16 }}>
@@ -502,8 +488,11 @@ export const BookingSlotScreen = ({ route, navigation }: Props) => {
                           color={color}
                           style={{ marginRight: 10 }}
                         />
-                        <Text>
-                          {item.bookedPlaces} / {item.places || 0}
+                        <Text style={styles.number}>
+                          {t('bookings.placesLeftValue', {
+                            left: Math.max(0, item.places - item.bookedPlaces),
+                            total: item.places || 0,
+                          })}
                         </Text>
                       </Row>
                     </AgendaCard>
@@ -557,7 +546,7 @@ export const BookingSlotScreen = ({ route, navigation }: Props) => {
               date={currentWeekStart}
               locale={language}
               hours={hours}
-              bodyContainerStyle={{ backgroundColor: colors.yellow }}
+              bodyContainerStyle={{ backgroundColor: colors.surface }}
               cellMaxHeight={calendarCellHeight}
               showAllDayEventCell={false}
               swipeEnabled={false}
@@ -570,18 +559,18 @@ export const BookingSlotScreen = ({ route, navigation }: Props) => {
               startHour={currentTopic.startHour || 8}
               renderEvent={(item, touchableOpacityProps, key) => {
                 const isMini = item.duration <= 15;
+                const status = getSlotStatus(item);
+                const statusLabel = t(`bookings.status.${status}`);
                 const { color, backgroundColor } = getBookingStyle(
                   item,
-                  palettes,
                   colors,
-                  dark,
                 );
                 const dateStart = formatDate(
                   currentTopic.startDate ?? item.start.toJSDate(),
                 );
                 const timeStart = item.start.toFormat('HH:mm');
                 const timeEnd = item.end.toFormat('HH:mm');
-                const timeMessage = ` ${dateStart}, ${t('common.fromTime')} ${timeStart}, ${t('common.toTime')} ${timeEnd}`;
+                const places = `${item.bookedPlaces}/${item.places || 0}`;
                 return (
                   <Pressable
                     key={key}
@@ -592,20 +581,31 @@ export const BookingSlotScreen = ({ route, navigation }: Props) => {
                       { backgroundColor },
                     ]}
                     accessibilityRole="button"
-                    accessibilityLabel={
-                      t(
-                        getBookingSlotStatus(
-                          item,
-                          'bookingScreen.bookingStatus.notAvailable',
-                        ),
-                      ) + timeMessage
-                    }
+                    accessibilityLabel={[
+                      statusLabel,
+                      dateStart,
+                      `${timeStart} - ${timeEnd}`,
+                      t('bookings.placesLeftValue', {
+                        left: Math.max(0, item.places - item.bookedPlaces),
+                        total: item.places || 0,
+                      }),
+                    ].join(', ')}
                     onPress={() => handlePress(item)}
                   >
-                    {!isMini && <Icon icon={faSeat} color={color} />}
-                    <Text style={styles.placesText}>
-                      {item.bookedPlaces} / {item.places || 0}
-                    </Text>
+                    {/* The state in words where it fits, a mark where not */}
+                    {!isMini && (
+                      <Text
+                        style={[styles.cellText, { color }]}
+                        numberOfLines={1}
+                      >
+                        {statusLabel}
+                      </Text>
+                    )}
+                    {status === 'booked' ? (
+                      <OutlineIcon name="check" size={14} color={color} />
+                    ) : (
+                      <Text style={[styles.cellText, { color }]}>{places}</Text>
+                    )}
                   </Pressable>
                 );
               }}
@@ -620,14 +620,29 @@ export const BookingSlotScreen = ({ route, navigation }: Props) => {
 
 const createStyles = ({
   fontSizes,
-  palettes,
   colors,
   spacing,
   fontWeights,
   shapes,
-}: any) =>
+  layout,
+}: Theme) =>
   StyleSheet.create({
     container: { flex: 1, width: '100%' },
+    accessory: {
+      flexDirection: 'column',
+      alignItems: 'stretch',
+    },
+    legend: {
+      paddingHorizontal: layout.gutter,
+      paddingVertical: spacing[2],
+    },
+    number: {
+      fontVariant: ['tabular-nums'],
+    },
+    cellText: {
+      fontSize: fontSizes.xs,
+      fontVariant: ['tabular-nums'],
+    },
     loader: {
       position: 'absolute',
       top: 0,
@@ -637,24 +652,19 @@ const createStyles = ({
       zIndex: 1,
     },
     eventCellStyle: {
-      borderColor: palettes.gray['400'],
+      borderColor: colors.divider,
       borderWidth: StyleSheet.hairlineWidth,
     },
     event: {
       justifyContent: 'center',
       alignItems: 'center',
-      borderColor: palettes.gray['400'],
+      borderColor: colors.divider,
       borderWidth: StyleSheet.hairlineWidth,
     },
     dayHeader: {
       flexDirection: 'row',
       justifyContent: 'center',
       alignItems: 'center',
-    },
-    placesText: {
-      fontSize: fontSizes.xs,
-      fontWeight: fontWeights.normal,
-      marginTop: spacing[1],
     },
     dayColumn: {
       width: '15%',

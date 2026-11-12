@@ -25,14 +25,16 @@ export const BookingField = ({
   value,
   emptyText,
 }: BookingDetailProps) => {
-  const { palettes } = useTheme();
+  const { colors } = useTheme();
   const { t } = useTranslation();
   const styles = useStylesheet(createStyles);
   return (
     <Col flex={1} style={styles.container} accessible>
       <Row align="center">
-        <Icon icon={icon} color={palettes.primary['500']} size={16} />
-        <Text style={styles.text}>{label}</Text>
+        <Icon icon={icon} color={colors.secondaryText} size={16} />
+        <Text variant="secondaryText" style={styles.text}>
+          {label}
+        </Text>
       </Row>
       <Row mt={0.5}>
         {value ? (
@@ -41,7 +43,7 @@ export const BookingField = ({
           </Text>
         ) : (
           <Text
-            numberOfLines={1}
+            variant="secondaryText"
             style={StyleSheet.compose(styles.empty, styles.value)}
           >
             {emptyText || t('common.noValue')}
@@ -76,6 +78,6 @@ const createStyles = ({
       marginLeft: spacing[1],
     },
     empty: {
-      opacity: 0.6,
+      color: colors.secondaryText,
     },
   });

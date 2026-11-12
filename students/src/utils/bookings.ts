@@ -1,5 +1,5 @@
 import { APP_TIMEZONE } from '@polito/lib/core';
-import { Theme } from '@polito/lib/ui';
+import { OutlineIconName, StatusChipTone, Theme } from '@polito/lib/ui';
 import { Booking, BookingTopic } from '@polito/student-api-client';
 
 import { inRange } from 'lodash';
@@ -43,73 +43,79 @@ export const canBeBookedWithSeatSelection = (slot: BookingCalendarEvent) => {
   );
 };
 
-export const getBookingStyle = (
-  item: BookingCalendarEvent,
-  palettes: Theme['palettes'],
-  colors: Theme['colors'],
-  dark: boolean,
-) => {
-  const isBooked = item.isBooked;
-  const isFull = isSlotFull(item);
-  const canBeBooked = isSlotBookable(item);
-  const notYetBookable = item.start > DateTime.now().setZone(APP_TIMEZONE);
-  const isPast = isPastSlot(item);
+export type SlotStatus =
+  | 'available'
+  | 'booked'
+  | 'full'
+  | 'notAvailable'
+  | 'concluded';
 
-  if (isBooked && !isPast) {
-    return {
-      backgroundColor: palettes.tertiary[dark ? '700' : '100'],
-      color: palettes.tertiary[dark ? '100' : '700'],
-    };
-  }
-  if (canBeBooked) {
-    return {
-      backgroundColor: dark ? palettes.navy[500] + '99' : palettes.navy[50],
-      color: palettes.navy[dark ? '50' : '600'],
-    };
-  }
-  if (isPast) {
-    return {
-      backgroundColor: colors.background,
-      color: palettes.gray[dark ? 500 : 400],
-    };
-  }
-  if (isFull) {
-    return {
-      backgroundColor: dark ? palettes.rose[800] + 'CC' : palettes.rose['200'],
-      color: palettes.rose[dark ? '200' : '600'],
-    };
-  }
-  if (notYetBookable) {
-    return {
-      backgroundColor: dark
-        ? palettes.darkOrange[800] + 'CC'
-        : palettes.orange['100'],
-      color: palettes.orange[dark ? '200' : '700'],
-    };
-  }
-  return {
-    backgroundColor: palettes.rose[dark ? '600' : '200'],
-    color: palettes.rose[dark ? '200' : '600'],
-  };
+/** The state of a slot, as the legend names it */
+export const getSlotStatus = (item: BookingCalendarEvent): SlotStatus => {
+  const isPast = isPastSlot(item);
+  if (item.isBooked && !isPast) return 'booked';
+  if (isPast) return 'concluded';
+  if (isSlotBookable(item)) return 'available';
+  if (isSlotFull(item)) return 'full';
+  return 'notAvailable';
 };
 
-export const getBookingSlotStatus = (
+/** The order of the legend, and the tone of each state */
+export const slotStatusTones: Record<SlotStatus, StatusChipTone> = {
+  available: 'info',
+  booked: 'success',
+  full: 'neutral',
+  notAvailable: 'warning',
+  concluded: 'neutral',
+};
+
+/** The colours of a slot in the grid: the tint of its legend chip */
+export const getBookingStyle = (
   item: BookingCalendarEvent,
-  defaultMessage = 'bookingScreen.bookingStatus.notAvailable',
+  colors: Theme['colors'],
 ) => {
-  const isBooked = item.isBooked;
-  const isFull = item.bookedPlaces === item.places;
-  const canBeBooked = item.canBeBooked;
-  if (isBooked) {
-    return 'bookingScreen.bookingStatus.booked';
+  const status = getSlotStatus(item);
+  if (status === 'concluded') {
+    return { backgroundColor: colors.background, color: colors.secondaryText };
   }
-  if (isFull) {
-    return 'bookingScreen.bookingStatus.full';
-  }
-  if (canBeBooked) {
-    return 'bookingScreen.bookingStatus.available';
-  }
-  return defaultMessage;
+  const tone = slotStatusTones[status];
+  const [bg, fg] = {
+    info: [colors.infoBg, colors.infoText],
+    success: [colors.successBg, colors.successText],
+    neutral: [colors.neutralChipBg, colors.neutralChipText],
+    warning: [colors.warningBg, colors.warningText],
+    danger: [colors.dangerBg, colors.dangerText],
+  }[tone];
+  return { backgroundColor: bg, color: fg };
+};
+
+/**
+ * A link rather than a room. The type says so; a location that comes
+ * without it counts as a link when it has a URL and no building
+ */
+export const isVirtualPlace = (location: Booking['location']) =>
+  location.type === 'virtualPlace' ||
+  (!location.type && 'url' in location && !('buildingId' in location));
+
+/** The glyph of a booking row: a desk, an online meeting, or an office */
+export const getBookingIconName = (booking: Booking): OutlineIconName => {
+  if (booking.seat) return 'seat';
+  if (booking.location && isVirtualPlace(booking.location)) return 'video';
+  return 'door';
+};
+
+/**
+ * The glyph of a topic in the new booking list.
+ * shortcut: the API says nothing about the kind of topic, so this reads its
+ * words; use a field for it if the API ever adds one
+ */
+export const getTopicIconName = (
+  topic: Pick<BookingTopic, 'title' | 'description'>,
+): OutlineIconName => {
+  const words = `${topic.title} ${topic.description}`.toLowerCase();
+  if (/aul[ae] studio|study room|posti|seat|desk/.test(words)) return 'seat';
+  if (/online|video|teams|zoom|remot/.test(words)) return 'video';
+  return 'door';
 };
 
 export const canBeCancelled = (booking?: Booking) => {
@@ -141,3 +147,22 @@ export const getCalendarPropsFromTopic = (
     ...topic,
   };
 };
+
+/** "Fri 13 Nov", in the app time zone and language */
+export const formatBookingDay = (date: Date | DateTime, language: string) => {
+  const day = (
+    date instanceof DateTime
+      ? date.setZone(APP_TIMEZONE)
+      : DateTime.fromJSDate(date, { zone: APP_TIMEZONE })
+  )
+    .setLocale(language)
+    .toFormat('ccc d LLL');
+  return day.charAt(0).toUpperCase() + day.slice(1);
+};
+
+/** "10:30", in the app time zone */
+export const formatBookingTime = (date: Date | DateTime) =>
+  (date instanceof DateTime
+    ? date.setZone(APP_TIMEZONE)
+    : DateTime.fromJSDate(date, { zone: APP_TIMEZONE })
+  ).toFormat('HH:mm');

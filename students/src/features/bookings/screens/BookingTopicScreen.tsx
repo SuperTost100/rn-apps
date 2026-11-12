@@ -1,201 +1,151 @@
-import { useCallback, useEffect, useState } from 'react';
+import { ReactElement, useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  Pressable,
-  SafeAreaView,
-  SectionList,
-  TouchableHighlight,
-  View,
-} from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
+import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
+import { getHtmlTextContent } from '@polito/lib/core';
 import {
-  faChevronDown,
-  faChevronRight,
-  faChevronUp,
-} from '@fortawesome/free-solid-svg-icons';
-import { sanitizeHtml } from '@polito/lib/core';
-import {
+  BottomBarSpacer,
   Icon,
-  IndentedDivider,
+  ListItem,
+  OutlineIcon,
   OverviewList,
   RefreshControl,
-  Row,
+  Section,
   SectionHeader,
-  Text,
+  Theme,
+  useStylesheet,
   useTheme,
 } from '@polito/lib/ui';
-import { BookingSubtopic } from '@polito/student-api-client';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { useGetBookingTopics } from '../../../core/queries/bookingHooks';
+import { getTopicIconName } from '../../../utils/bookings';
 import { ServiceStackParamList } from '../../services/components/ServicesNavigator';
-
-type TopicSection = {
-  title: string;
-  topicId: string;
-  topicTitle: string;
-  isExpanded: boolean;
-  index: number;
-  data: BookingSubtopic[];
-};
 
 type Props = NativeStackScreenProps<ServiceStackParamList, 'BookingTopic'>;
 
+/**
+ * What can be booked, in one card. A topic with subtopics opens in place;
+ * one without opens its slots. Closed ones are shown, disabled, with why.
+ */
 export const BookingTopicScreen = ({ navigation }: Props) => {
   const topicsQuery = useGetBookingTopics();
-
   const { t } = useTranslation();
-  const safeAreaInsets = useSafeAreaInsets();
-
-  const [sections, setSections] = useState<TopicSection[]>([]);
-  const { colors, fontWeights, spacing, shapes } = useTheme();
-
-  useEffect(() => {
-    if (topicsQuery.data) {
-      setSections(
-        topicsQuery?.data?.map((topic, index) => {
-          return {
-            title: topic.title,
-            isExpanded: false,
-            topicId: topic.id,
-            topicTitle: topic.title,
-            index: index,
-            data: topic.subtopics,
-          };
-        }) || [],
-      );
-    }
-  }, [topicsQuery?.data]);
-
-  const toggleSection = (toggleIndex: number) => {
-    setSections(oldSections =>
-      oldSections.map((section, index) => ({
-        ...section,
-        isExpanded: index === toggleIndex ? !section.isExpanded : false,
-      })),
-    );
-  };
+  const { colors } = useTheme();
+  const styles = useStylesheet(createStyles);
+  const [expanded, setExpanded] = useState<string>();
 
   const onSelectTopic = useCallback(
     (topicId: string, topicTitle: string) => {
-      navigation.navigate('BookingSlot', {
-        topicId: topicId,
-        topicName: topicTitle,
-      });
+      navigation.navigate('BookingSlot', { topicId, topicName: topicTitle });
     },
     [navigation],
   );
 
+  const closedText = t('bookings.notOpen');
+
+  const rows: ReactElement[] = [];
+  topicsQuery.data?.forEach(topic => {
+    const title = getHtmlTextContent(topic.title || topic.id);
+    const description = getHtmlTextContent(topic.description ?? '');
+    const leading = (
+      <OutlineIcon
+        name={getTopicIconName({ title, description })}
+        color={colors.secondaryText}
+      />
+    );
+    const hasSubtopics = topic.subtopics?.length > 0;
+
+    if (!hasSubtopics) {
+      const closed = !topic.isEnabled;
+      rows.push(
+        <ListItem
+          key={topic.id}
+          title={title}
+          subtitle={closed ? closedText : description || undefined}
+          leadingItem={leading}
+          disabled={closed}
+          isAction={!closed}
+          onPress={() => onSelectTopic(topic.id, title)}
+        />,
+      );
+      return;
+    }
+
+    const isExpanded = expanded === topic.id;
+    rows.push(
+      <ListItem
+        key={topic.id}
+        title={title}
+        subtitle={description || undefined}
+        leadingItem={leading}
+        trailingItem={
+          <Icon
+            icon={isExpanded ? faChevronUp : faChevronDown}
+            color={colors.secondaryText}
+          />
+        }
+        onPress={() =>
+          setExpanded(current => (current === topic.id ? undefined : topic.id))
+        }
+        accessibilityRole="button"
+        accessibilityLabel={[title, description].filter(Boolean).join(', ')}
+        accessibilityState={{ expanded: isExpanded }}
+      />,
+    );
+    if (!isExpanded) return;
+    topic.subtopics.forEach(subtopic => {
+      const subTitle = getHtmlTextContent(subtopic.title);
+      const closed = !subtopic.isEnabled;
+      rows.push(
+        <ListItem
+          key={`${topic.id}-${subtopic.id}`}
+          title={subTitle}
+          subtitle={closed ? closedText : undefined}
+          // An empty slot keeps the subtopics under their topic's text
+          leadingItem={<View style={styles.indent} />}
+          disabled={closed}
+          isAction={!closed}
+          onPress={() => onSelectTopic(subtopic.id, subTitle)}
+        />,
+      );
+    });
+  });
+
   return (
-    <SafeAreaView>
-      <OverviewList
-        queries={topicsQuery}
-        indented
-        skeleton={{ count: 5, subtitle: false }}
-        emptyState={{
-          title: t('states.bookings.noTopicsTitle'),
-          text: t('states.bookings.noTopicsText'),
-        }}
-        errorState={{ title: t('states.bookings.failedTopicsTitle') }}
-      >
-        <SectionList
-          refreshControl={<RefreshControl manual queries={[topicsQuery]} />}
-          stickySectionHeadersEnabled
-          sections={sections}
-          keyExtractor={(item, index) => `${item.id}-${index}`}
-          renderSectionFooter={({ section: { index } }) =>
-            index !== sections.length - 1 ? (
-              <IndentedDivider indent={14} />
-            ) : null
-          }
-          renderSectionHeader={({
-            section: {
-              title,
-              topicTitle,
-              topicId,
-              index,
-              isExpanded,
-              data: subtopics,
-            },
-          }) => (
-            <Pressable
-              onPress={() => {
-                subtopics?.length > 0
-                  ? toggleSection(index)
-                  : onSelectTopic(topicId, topicTitle);
-              }}
-              accessibilityLabel={[
-                title,
-                t(`common.openedStatus.${isExpanded}`),
-                t(`common.openedStatusAction.${isExpanded}`),
-              ].join(', ')}
-            >
-              <View
-                style={{
-                  paddingLeft: safeAreaInsets.left,
-                  paddingRight: safeAreaInsets.right,
-                  paddingVertical: spacing[3],
-                  backgroundColor: colors.surface,
-                }}
-              >
-                <SectionHeader
-                  title={sanitizeHtml(title || topicId)}
-                  titleStyle={{
-                    fontWeight: fontWeights.medium,
-                  }}
-                  separator={false}
-                  trailingItem={
-                    subtopics?.length > 0 ? (
-                      <Icon
-                        icon={isExpanded ? faChevronUp : faChevronDown}
-                        color={colors.secondaryText}
-                      />
-                    ) : (
-                      <Icon
-                        icon={faChevronRight}
-                        color={colors.secondaryText}
-                      />
-                    )
-                  }
-                />
-              </View>
-            </Pressable>
-          )}
-          renderItem={({ section, item: subtopic, index }) => {
-            const isFirstItem = index === 0;
-            const isLastItem = index === section.data.length - 1;
-            return section?.isExpanded ? (
-              <TouchableHighlight
-                underlayColor={colors.touchableHighlight}
-                onPress={() => onSelectTopic(subtopic.id, subtopic.title)}
-                style={{
-                  marginHorizontal: spacing[4],
-                  marginBottom: isLastItem ? spacing[2] : 0,
-                  backgroundColor: colors.background,
-                  paddingVertical: spacing[2.5],
-                  borderTopLeftRadius: isFirstItem ? shapes.lg : 0,
-                  borderTopRightRadius: isFirstItem ? shapes.lg : 0,
-                  borderBottomRightRadius: isLastItem ? shapes.lg : 0,
-                  borderBottomLeftRadius: isLastItem ? shapes.lg : 0,
-                }}
-              >
-                <Row
-                  justify="space-between"
-                  align="center"
-                  key={subtopic.id}
-                  ph={3}
-                >
-                  <Text variant="prose" style={{ flexShrink: 1 }}>
-                    {sanitizeHtml(subtopic.title)}
-                  </Text>
-                  <Icon icon={faChevronRight} color={colors.secondaryText} />
-                </Row>
-              </TouchableHighlight>
-            ) : null;
-          }}
+    <ScrollView
+      contentInsetAdjustmentBehavior="automatic"
+      refreshControl={<RefreshControl manual queries={[topicsQuery]} />}
+    >
+      <Section style={styles.section}>
+        <SectionHeader
+          title={t('bookings.whatToBook')}
+          ellipsizeTitle={false}
         />
-      </OverviewList>
-    </SafeAreaView>
+        <OverviewList
+          queries={topicsQuery}
+          skeleton={{ count: 3, leading: 'icon', subtitleLines: 1 }}
+          emptyState={{
+            title: t('states.bookings.noTopicsTitle'),
+            text: t('states.bookings.noTopicsText'),
+          }}
+          errorState={{ title: t('states.bookings.failedTopicsTitle') }}
+        >
+          {rows}
+        </OverviewList>
+      </Section>
+      <BottomBarSpacer />
+    </ScrollView>
   );
 };
+
+const createStyles = ({ spacing }: Theme) =>
+  StyleSheet.create({
+    section: {
+      paddingTop: spacing[5],
+    },
+    indent: {
+      width: 24,
+    },
+  });

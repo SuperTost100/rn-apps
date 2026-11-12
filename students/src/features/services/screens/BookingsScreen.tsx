@@ -1,17 +1,18 @@
-import { useEffect } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { SafeAreaView, ScrollView } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { faPlus } from '@fortawesome/free-solid-svg-icons';
-import { setTimeoutAccessibilityInfoHelper } from '@polito/lib/core';
+import { useIsOnline } from '@polito/lib/core';
 import {
-  BottomBarSpacer,
+  BottomActionBar,
   CtaButton,
   OverviewList,
   RefreshControl,
   Section,
   SectionHeader,
-  useTheme,
+  Theme,
+  useStylesheet,
 } from '@polito/lib/ui';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
@@ -20,64 +21,81 @@ import { BookingListItem } from '../../bookings/components/BookingListItem';
 import { ServiceStackParamList } from '../components/ServicesNavigator';
 
 type Props = NativeStackScreenProps<ServiceStackParamList, 'Bookings'>;
-const createBookingEnabled = true;
 
-export const BookingsScreen = ({ navigation }: Props) => {
+/**
+ * The upcoming bookings in one card, and New booking in a bar under the
+ * list. After a booking the new row is highlighted (route param newId)
+ */
+export const BookingsScreen = ({ navigation, route }: Props) => {
   const bookingsQuery = useGetBookings();
   const { t } = useTranslation();
-  const { spacing } = useTheme();
+  const styles = useStylesheet(createStyles);
+  const isOnline = useIsOnline();
+  const newId = route.params?.newId;
 
-  useEffect(() => {
-    if (
-      !bookingsQuery?.isLoading &&
-      !bookingsQuery?.isError &&
-      bookingsQuery?.isSuccess &&
-      bookingsQuery?.data?.length === 0
-    ) {
-      setTimeoutAccessibilityInfoHelper(t('bookingsScreen.emptyState'), 500);
-    }
-  }, [bookingsQuery, t]);
+  const bookings = useMemo(
+    () =>
+      bookingsQuery.data
+        ?.slice()
+        .sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime()),
+    [bookingsQuery.data],
+  );
 
   return (
-    <>
+    <View style={styles.screen}>
       <ScrollView
+        style={styles.screen}
         contentInsetAdjustmentBehavior="automatic"
         refreshControl={<RefreshControl queries={[bookingsQuery]} manual />}
       >
-        <SafeAreaView>
-          <Section style={{ marginTop: spacing[2] }}>
-            <SectionHeader title={t('bookingsScreen.sectionTitle')} />
-            <OverviewList
-              queries={bookingsQuery}
-              skeleton={{ count: 2, subtitleLines: 2 }}
-              emptyState={{
-                title: t('states.bookings.emptyTitle'),
-                text: t('states.bookings.emptyText'),
-              }}
-              errorState={{ title: t('states.bookings.failedTitle') }}
-            >
-              {bookingsQuery?.data?.map((booking, index) => (
-                <BookingListItem
-                  booking={booking}
-                  key={booking.id}
-                  index={index}
-                  totalData={bookingsQuery.data?.length || 0}
-                />
-              ))}
-            </OverviewList>
-          </Section>
-          <BottomBarSpacer />
-        </SafeAreaView>
+        <Section style={styles.section}>
+          <SectionHeader
+            title={t('bookings.upcoming')}
+            ellipsizeTitle={false}
+          />
+          <OverviewList
+            queries={bookingsQuery}
+            skeleton={{ count: 3, leading: 'tile', subtitleLines: 2 }}
+            emptyState={{
+              title: t('states.bookings.emptyTitle'),
+              text: t('bookings.emptyText'),
+            }}
+            errorState={{ title: t('states.bookings.failedTitle') }}
+          >
+            {bookings?.map(booking => (
+              <BookingListItem
+                key={booking.id}
+                booking={booking}
+                selected={booking.id === newId}
+              />
+            ))}
+          </OverviewList>
+        </Section>
       </ScrollView>
-      {createBookingEnabled && (
+      <BottomActionBar>
         <CtaButton
-          action={() => {
-            navigation.navigate('BookingTopic');
-          }}
-          title={t('bookingsScreen.newBooking')}
+          absolute={false}
+          containerStyle={{ padding: 0 }}
+          action={() => navigation.navigate('BookingTopic')}
+          title={
+            isOnline
+              ? t('bookingsScreen.newBooking')
+              : t('bookings.needsConnection')
+          }
           icon={faPlus}
+          disabled={!isOnline}
         />
-      )}
-    </>
+      </BottomActionBar>
+    </View>
   );
 };
+
+const createStyles = ({ spacing }: Theme) =>
+  StyleSheet.create({
+    screen: {
+      flex: 1,
+    },
+    section: {
+      paddingTop: spacing[5],
+    },
+  });

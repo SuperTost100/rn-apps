@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Linking } from 'react-native';
 
@@ -12,14 +12,28 @@ type Coordinates = {
   longitude: number;
 };
 
-Geolocation.setRNConfiguration({
-  skipPermissionRequests: false,
-  authorizationLevel: 'whenInUse',
-  enableBackgroundLocationUpdates: true,
-  locationProvider: 'auto',
-});
+/** The error codes of Geolocation.getCurrentPosition */
+const PERMISSION_DENIED = 1;
+const POSITION_UNAVAILABLE = 2;
 
-const openSettings = () => {
+let isConfigured = false;
+
+/**
+ * Set on first use, not at import: the permission is asked only when the
+ * user taps an action that needs the position
+ */
+const configure = () => {
+  if (isConfigured) return;
+  Geolocation.setRNConfiguration({
+    skipPermissionRequests: false,
+    authorizationLevel: 'whenInUse',
+    enableBackgroundLocationUpdates: true,
+    locationProvider: 'auto',
+  });
+  isConfigured = true;
+};
+
+const openLocationSettings = () => {
   if (IS_ANDROID) {
     Linking.sendIntent('android.settings.LOCATION_SOURCE_SETTINGS').catch(
       console.error,
@@ -27,6 +41,10 @@ const openSettings = () => {
   } else {
     Linking.openURL('app-settings:').catch(console.error);
   }
+};
+
+const openAppSettings = () => {
+  Linking.openSettings().catch(console.error);
 };
 
 const computeDistance = (a?: Coordinates, b?: Coordinates) => {
@@ -38,45 +56,44 @@ const computeDistance = (a?: Coordinates, b?: Coordinates) => {
   return pointA.distanceTo(pointB, true);
 };
 
+/**
+ * The phone's position, read on demand. The system asks for the permission
+ * the first time getCurrentPosition runs; a denial or location turned off is
+ * explained once, in a message that goes away, with a way to the settings.
+ */
 export const useGeolocation = () => {
   const { setFeedback } = useFeedbackContext();
   const { t } = useTranslation();
 
   const getCurrentPosition = useCallback(() => {
+    configure();
     return new Promise<Coordinates>((resolve, reject) => {
       Geolocation.getCurrentPosition(
         ({ coords: { latitude, longitude } }) => {
           resolve({ latitude, longitude });
         },
         error => {
-          if (error.code === 2) {
+          if (error.code === PERMISSION_DENIED) {
             setFeedback({
-              text: t('common.enableLocationServiceFeedback'),
-              isPersistent: false,
+              text: t('bookings.locationPermissionNeeded'),
+              action: {
+                label: t('common.openSettings'),
+                onPress: openAppSettings,
+              },
+            });
+          } else if (error.code === POSITION_UNAVAILABLE) {
+            setFeedback({
+              text: t('bookings.locationOff'),
+              action: {
+                label: t('common.openSettings'),
+                onPress: openLocationSettings,
+              },
             });
           }
           reject(error);
         },
       );
     });
-  }, [t, setFeedback]);
-
-  useEffect(() => {
-    Geolocation.requestAuthorization(
-      () => console.debug('Geolocation permission granted'),
-      error => {
-        if (error.code === 1) {
-          setFeedback({
-            text: t('common.enableLocationPermissionFeedback'),
-            action: {
-              label: t('common.openSettings'),
-              onPress: openSettings,
-            },
-            isPersistent: true,
-          });
-        }
-      },
-    );
   }, [t, setFeedback]);
 
   return {

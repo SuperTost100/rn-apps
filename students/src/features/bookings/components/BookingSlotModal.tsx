@@ -1,221 +1,137 @@
-import { useCallback, useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
 
-import {
-  faCalendar,
-  faClock,
-  faFrown,
-} from '@fortawesome/free-regular-svg-icons';
-import {
-  faHourglassEnd,
-  faHourglassStart,
-} from '@fortawesome/free-solid-svg-icons';
 import {
   APP_TIMEZONE,
+  getHtmlTextContent,
   setTimeoutAccessibilityInfoHelper,
+  usePreferencesContext,
 } from '@polito/lib/core';
-import {
-  EmptyState,
-  ModalContent,
-  Row,
-  Text,
-  Theme,
-  useStylesheet,
-  useTheme,
-} from '@polito/lib/ui';
+import { ModalContent, StateBlock, Theme, useStylesheet } from '@polito/lib/ui';
 
-import { inRange } from 'lodash';
 import { DateTime } from 'luxon';
 
-import { isSlotBookable, isSlotFull } from '../../../utils/bookings';
+import { AppPreferences } from '../../../core/types/preferences';
+import {
+  formatBookingTime,
+  isSlotBookable,
+  isSlotFull,
+} from '../../../utils/bookings';
 import { BookingCalendarEvent } from '../screens/BookingSlotScreen';
-import { BookingField } from './BookingField';
+import { BookingFacts } from './BookingFacts';
 import { BookingSeatsCta } from './BookingSeatsCta';
 
 type Props = {
   close: () => void;
   item: BookingCalendarEvent;
   topicId: string;
+  /** What is being booked, as the topic list names it */
+  topicName?: string;
 };
 
-export const BookingSlotModal = ({ close, item }: Props) => {
+/**
+ * The sheet that confirms a slot: what, when, where and the places left,
+ * then Confirm booking and Cancel. A slot that can't be booked says why.
+ */
+export const BookingSlotModal = ({ close, item, topicName }: Props) => {
   const { t } = useTranslation();
   const styles = useStylesheet(createStyles);
-  const { fontSizes, spacing } = useTheme();
-  const now = DateTime.now().setZone(APP_TIMEZONE).toJSDate();
+  const { language } = usePreferencesContext<AppPreferences>();
+  const now = DateTime.now().setZone(APP_TIMEZONE);
 
+  const canBeBooked = isSlotBookable(item) && !!item.id;
   const isFull = isSlotFull(item);
-  const bookingNotYetOpen = !!(
-    item?.bookingStartsAt && item?.bookingStartsAt > now
-  );
+  const opensAt = item.bookingStartsAt
+    ? DateTime.fromJSDate(item.bookingStartsAt, { zone: APP_TIMEZONE })
+    : undefined;
+  const notYetOpen = !!opensAt && opensAt > now;
+  const closesAt = item.bookingEndsAt
+    ? DateTime.fromJSDate(item.bookingEndsAt, { zone: APP_TIMEZONE })
+    : undefined;
+  const isOpen = !!opensAt && !!closesAt && opensAt <= now && now < closesAt;
 
-  const canBeBooked = isSlotBookable(item);
-  const startHour = item.start.toFormat('HH:mm');
-  const endHour = item.end.toFormat('HH:mm');
-  const day = item.start.toFormat('d MMMM');
-
-  const findAccessibilityMessage = useCallback(() => {
-    if (
-      !canBeBooked &&
-      inRange(
-        DateTime.now().setZone(APP_TIMEZONE).valueOf(),
-        item.bookingStartsAt.valueOf(),
-        item.bookingEndsAt.valueOf(),
-      ) &&
-      !isFull
-    ) {
-      return item.feedback;
+  // Why the slot can't be booked, in the order the server decides it
+  const reason = useMemo(() => {
+    if (canBeBooked) return undefined;
+    if (isOpen && !isFull && item.feedback) return item.feedback;
+    if (isFull) return t('bookings.slotFull');
+    if (notYetOpen && opensAt) {
+      const format =
+        opensAt.hour === 0 && opensAt.minute === 0
+          ? 'ccc d LLL yyyy'
+          : 'ccc d LLL yyyy, HH:mm';
+      return t('bookings.slotOpensOn', {
+        date: opensAt.setLocale(language).toFormat(format),
+      });
     }
-    if (isFull) {
-      return t('bookingSeatScreen.noSeatsAvailable');
-    }
-    if (bookingNotYetOpen) {
-      const bookingDateTime = item?.bookingStartsAt
-        ? DateTime.fromJSDate(item?.bookingStartsAt, {
-            zone: APP_TIMEZONE,
-          })
-        : null;
-
-      const formatString =
-        bookingDateTime?.hour === 0 && bookingDateTime?.minute === 0
-          ? 'd MMMM yyyy'
-          : 'd MMMM yyyy HH:mm';
-
-      return [
-        t('bookingSeatScreen.slotBookableFrom'),
-        bookingDateTime?.toFormat(formatString) || ' - ',
-      ].join(' ');
-    }
+    return t('bookings.slotClosed');
   }, [
-    bookingNotYetOpen,
     canBeBooked,
+    isOpen,
     isFull,
-    item.bookingEndsAt,
-    item.bookingStartsAt,
     item.feedback,
+    notYetOpen,
+    opensAt,
+    language,
     t,
   ]);
 
   useEffect(() => {
-    const message = findAccessibilityMessage();
-    if (!message) return;
-    setTimeoutAccessibilityInfoHelper(message, 500);
-  }, [findAccessibilityMessage]);
+    if (reason) setTimeoutAccessibilityInfoHelper(reason, 500);
+  }, [reason]);
 
-  const NotBookableMessage = () => {
-    if (
-      !canBeBooked &&
-      inRange(
-        DateTime.now().setZone(APP_TIMEZONE).valueOf(),
-        item.bookingStartsAt.valueOf(),
-        item.bookingEndsAt.valueOf(),
-      ) &&
-      !isFull
-    ) {
-      return (
-        <EmptyState
-          icon={faHourglassEnd}
-          iconSize={fontSizes['4xl']}
-          message={item.feedback}
-        />
-      );
-    }
-    return isFull ? (
-      <EmptyState
-        icon={faFrown}
-        iconSize={fontSizes['4xl']}
-        message={t('bookingSeatScreen.noSeatsAvailable')}
-      />
-    ) : bookingNotYetOpen ? (
-      <EmptyState
-        icon={faHourglassStart}
-        iconSize={fontSizes['4xl']}
-        message={(() => {
-          const bookingDateTime = item?.bookingStartsAt
-            ? DateTime.fromJSDate(item?.bookingStartsAt, {
-                zone: APP_TIMEZONE,
-              })
-            : null;
-
-          const formatString =
-            bookingDateTime?.hour === 0 && bookingDateTime?.minute === 0
-              ? 'd MMMM yyyy'
-              : 'd MMMM yyyy HH:mm';
-
-          return [
-            t('bookingSeatScreen.slotBookableFrom'),
-            bookingDateTime?.toFormat(formatString) || ' - ',
-          ].join(' ');
-        })()}
-      />
-    ) : (
-      <EmptyState
-        icon={faHourglassEnd}
-        iconSize={fontSizes['4xl']}
-        message={t('bookingSeatScreen.deadlineExpired')}
-      />
+  if (reason) {
+    return (
+      <ModalContent close={close} title={t('bookings.slotUnavailableTitle')}>
+        <StateBlock title={reason} showIcon={false} />
+      </ModalContent>
     );
-  };
+  }
+
+  const day = item.start.setLocale(language).toFormat('ccc d LLL yyyy');
+  const where = [item.location?.name, item.location?.description]
+    .map(part => part?.trim())
+    .filter(Boolean)
+    .join(', ');
+  const what = getHtmlTextContent(topicName || item.description || '').trim();
+  const left = Math.max(0, item.places - item.bookedPlaces);
 
   return (
-    <ModalContent close={close} title={t('common.booking')}>
-      {item && canBeBooked && item.id ? (
-        <>
-          <View style={styles.spacer} />
-          {item.description && (
-            <Text variant="heading" style={styles.title}>
-              {item.description.trim()}
-            </Text>
-          )}
-          {item.location.description && (
-            <Text
-              variant="prose"
-              style={[styles.recapContainer, { marginBottom: spacing['2'] }]}
-            >
-              {item.location.description.trim()}
-            </Text>
-          )}
-
-          <BookingSeatsCta
-            slotId={item.id?.toString()}
-            hasSeatSelection={item.hasSeatSelection}
-            absolute={false}
-            modal={true}
-            onCloseModal={close}
-          >
-            <Row gap={4} style={styles.recapContainer}>
-              <BookingField
-                icon={faClock}
-                label={t('common.hour')}
-                value={`${startHour} - ${endHour}`}
-              />
-              <BookingField
-                icon={faCalendar}
-                value={day}
-                label={t('common.day')}
-              />
-            </Row>
-          </BookingSeatsCta>
-        </>
-      ) : (
-        <NotBookableMessage />
-      )}
+    <ModalContent close={close} title={t('bookings.confirmTitle')}>
+      <BookingFacts
+        style={styles.facts}
+        facts={[
+          ...(what ? [{ label: t('bookings.what'), value: what }] : []),
+          {
+            label: t('bookings.when'),
+            value: `${day.charAt(0).toUpperCase()}${day.slice(1)}, ${formatBookingTime(item.start)} - ${formatBookingTime(item.end)}`,
+          },
+          ...(where ? [{ label: t('bookings.where'), value: where }] : []),
+          {
+            label: t('bookings.placesLeft'),
+            value: t('bookings.placesOf', {
+              left,
+              total: item.places,
+            }),
+          },
+        ]}
+      />
+      <BookingSeatsCta
+        slotId={item.id.toString()}
+        startsAt={item.start}
+        hasSeatSelection={item.hasSeatSelection}
+        modal={true}
+        onCloseModal={close}
+      />
     </ModalContent>
   );
 };
 
-const createStyles = ({ spacing }: Theme) =>
+const createStyles = ({ layout, spacing }: Theme) =>
   StyleSheet.create({
-    spacer: {
-      height: spacing[6],
-    },
-    recapContainer: {
-      marginHorizontal: spacing[4],
-    },
-    title: {
-      padding: 0,
-      marginHorizontal: spacing[4],
-      marginBottom: spacing['2'],
+    facts: {
+      paddingHorizontal: layout.gutter,
+      paddingTop: spacing[4],
     },
   });

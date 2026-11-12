@@ -7,7 +7,6 @@ import { ReactNativeZoomableView } from '@openspacelabs/react-native-zoomable-vi
 import {
   APP_TIMEZONE,
   SCREEN_WIDTH,
-  useFeedbackContext,
   useOfflineDisabled,
 } from '@polito/lib/core';
 import {
@@ -27,9 +26,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { isEmpty } from 'lodash';
 import { DateTime } from 'luxon';
 
-import { useConfirmationDialog } from '../../../core/hooks/useConfirmationDialog';
 import {
-  useDeleteBooking,
   useGetBookingSeats,
   useGetBookings,
 } from '../../../core/queries/bookingHooks';
@@ -39,6 +36,7 @@ import { BookingDeskCell } from '../components/BookingDeskCell';
 import { BookingField } from '../components/BookingField';
 import { BookingSeatCell } from '../components/BookingSeatCell';
 import { useCalculateSeatsDimension } from '../hooks/useCalculateSeatsDimension';
+import { useCancelBooking } from '../hooks/useCancelBooking';
 
 type Props = NativeStackScreenProps<ServiceStackParamList, 'BookingSeat'>;
 
@@ -52,13 +50,11 @@ export const BookingSeatScreen = ({ route, navigation }: Props) => {
   const headerHeight = useHeaderHeight();
   const bottomTabBarHeight = useBottomTabBarHeight();
   const booking = bookingsQuery.data?.find((e: Booking) => e.id === bookingId);
-  const deleteBookingMutation = useDeleteBooking(bookingId);
-  const confirmCancel = useConfirmationDialog({
-    title: t('bookingScreen.cancelBooking'),
-    message: t('bookingScreen.cancelBookingText'),
-  });
+  // Back past the booking page too: the booking is gone
+  const { cancel, isPending } = useCancelBooking(bookingId, () =>
+    navigation.pop(2),
+  );
   const isDisabled = useOfflineDisabled();
-  const { setFeedback } = useFeedbackContext();
   const { seatSize, gap } = useCalculateSeatsDimension(
     bookingSeatsQuery.data,
     viewHeight,
@@ -79,19 +75,6 @@ export const BookingSeatScreen = ({ route, navigation }: Props) => {
     DateTime.fromJSDate(booking?.endsAt, timeOptions).toFormat('d MMMM');
 
   const cancelEnabled = useMemo(() => canBeCancelled(booking), [booking]);
-
-  const onPressDelete = async () => {
-    if (await confirmCancel()) {
-      navigation.goBack();
-      navigation.goBack();
-      return deleteBookingMutation
-        .mutateAsync()
-        .then(() => {
-          setFeedback({ text: t('bookingScreen.cancelFeedback') });
-        })
-        .then(() => setFeedback({ text: t('bookingScreen.cancelFeedback') }));
-    }
-  };
 
   return (
     <View
@@ -158,7 +141,11 @@ export const BookingSeatScreen = ({ route, navigation }: Props) => {
           <BookingField
             icon={faSeat}
             label={t('common.seat')}
-            value={`${booking?.seat?.row}${booking?.seat?.column}`}
+            value={
+              booking?.seat
+                ? `${booking.seat.row}${booking.seat.column}`
+                : undefined
+            }
             emptyText={t('bookingSeatScreen.noSeatSelected')}
           />
           <BookingField
@@ -175,10 +162,10 @@ export const BookingSeatScreen = ({ route, navigation }: Props) => {
         {cancelEnabled && (
           <CtaButton
             title={t('bookingScreen.cancelBooking')}
-            action={onPressDelete}
-            loading={deleteBookingMutation.isPending}
+            action={cancel}
+            loading={isPending}
             absolute={false}
-            disabled={isDisabled || deleteBookingMutation.isPending}
+            disabled={isDisabled || isPending}
             destructive={true}
           />
         )}

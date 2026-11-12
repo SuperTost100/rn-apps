@@ -1,13 +1,9 @@
 import { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Platform, SafeAreaView, ScrollView, StyleSheet } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import Barcode from 'react-native-barcode-svg';
 
-import {
-  faCheckCircle,
-  faLocationDot,
-  faVideo,
-} from '@fortawesome/free-solid-svg-icons';
+import { faCheckCircle } from '@fortawesome/free-solid-svg-icons';
 import {
   APP_TIMEZONE,
   useFeedbackContext,
@@ -17,18 +13,17 @@ import {
 import { useOpenInAppLink } from '@polito/lib/core';
 import { resolvePlaceId } from '@polito/lib/features/places';
 import {
+  BottomActionBar,
   BottomBarSpacer,
   Card,
   CtaButton,
-  CtaButtonContainer,
-  Icon,
   ListItem,
+  OutlineIcon,
   OverviewList,
   RefreshControl,
   Section,
   SectionHeader,
   Theme,
-  faSeat,
   isToday,
   useStylesheet,
   useTheme,
@@ -39,14 +34,18 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { inRange } from 'lodash';
 import { DateTime } from 'luxon';
 
-import { useConfirmationDialog } from '../../../core/hooks/useConfirmationDialog';
 import { useGeolocation } from '../../../core/hooks/useGeolocation';
 import {
-  useDeleteBooking,
   useGetBookings,
   useUpdateBooking,
 } from '../../../core/queries/bookingHooks';
 import { useGetProfile } from '../../../core/queries/studentHooks';
+import {
+  formatBookingDay,
+  formatBookingTime,
+  isVirtualPlace,
+} from '../../../utils/bookings';
+import { useCancelBooking } from '../../bookings/hooks/useCancelBooking';
 import { AgendaStackParamList } from '../components/AgendaNavigator';
 import { EventHead } from '../components/EventHead';
 import { placesStack } from '../utils/placesStack';
@@ -59,29 +58,20 @@ const bookingLocationHasValidCoordinates = (
   return !!location?.latitude && !!location?.longitude && !!location.radiusInKm;
 };
 
-/**
- * A link rather than a room. The type says so; a location that comes
- * without it counts as a link when it has a URL and no building
- */
-const isVirtualPlace = (location: Booking['location']) =>
-  location.type === 'virtualPlace' ||
-  (!location.type && 'url' in location && !('buildingId' in location));
-
 export const BookingScreen = ({ navigation, route }: Props) => {
   const { id } = route.params;
   const { t } = useTranslation();
   const { setFeedback } = useFeedbackContext();
   const { language } = usePreferencesContext();
   const { getCurrentPosition, computeDistance } = useGeolocation();
-  const { colors, palettes, spacing } = useTheme();
+  const { colors, palettes } = useTheme();
   const bookingsQuery = useGetBookings();
-  const deleteBookingMutation = useDeleteBooking(id);
+  const { cancel: onPressDelete, isPending: isCancelling } = useCancelBooking(
+    id,
+    () => navigation.goBack(),
+  );
   const updateBookingMutation = useUpdateBooking();
   const profileQuery = useGetProfile();
-  const confirmCancel = useConfirmationDialog({
-    title: t('bookingScreen.cancelBooking'),
-    message: t('bookingScreen.cancelBookingText'),
-  });
   const isDisabled = useOfflineDisabled();
   const styles = useStylesheet(createStyles);
   const openInAppLink = useOpenInAppLink();
@@ -129,8 +119,9 @@ export const BookingScreen = ({ navigation, route }: Props) => {
     if (!booking?.id) return;
     getCurrentPosition()
       .catch(error => {
-        // useGeolocation already says when location services are off
-        if (error?.code !== 2)
+        // useGeolocation already says when the permission is denied (1) or
+        // location services are off (2)
+        if (error?.code !== 1 && error?.code !== 2)
           setFeedback({ text: t('bookingScreen.locationUnavailable') });
         return undefined;
       })
@@ -146,10 +137,17 @@ export const BookingScreen = ({ navigation, route }: Props) => {
               bookingId: booking.id,
               isLocationChecked: true,
             })
-            .then(() => {
-              setFeedback({ text: t('bookingScreen.checkInFeedback') });
-              bookingsQuery.refetch();
-            });
+            .then(
+              () => {
+                setFeedback({ text: t('bookingScreen.checkInFeedback') });
+                bookingsQuery.refetch();
+              },
+              () =>
+                setFeedback({
+                  text: t('bookings.checkInFailed'),
+                  isError: true,
+                }),
+            );
         } else {
           setFeedback({ text: t('bookingScreen.checkLocationErrorFeedback') });
         }
@@ -173,15 +171,6 @@ export const BookingScreen = ({ navigation, route }: Props) => {
     }
   };
 
-  const onPressDelete = async () => {
-    if (await confirmCancel()) {
-      return deleteBookingMutation
-        .mutateAsync()
-        .then(() => navigation.goBack())
-        .then(() => setFeedback({ text: t('bookingScreen.cancelFeedback') }));
-    }
-  };
-
   const locationKind =
     booking && isVirtualPlace(booking.location) ? 'virtualPlace' : 'place';
   const locationAccessibilityLabel = booking
@@ -195,30 +184,51 @@ export const BookingScreen = ({ navigation, route }: Props) => {
     ? [t('common.seat'), `${booking.seat.row}${booking.seat.column}`].join(', ')
     : '';
 
+  // From the bookings list (Services) the agenda is one tap away; from the
+  // agenda it is where the user came from
+  const isInAgendaStack = navigation.getState().routeNames.includes('Agenda');
+  const openAgenda = () => {
+    if (!booking) return;
+    navigation.getParent()?.navigate('AgendaTab', {
+      screen: 'Agenda',
+      params: {
+        date: DateTime.fromJSDate(booking.startsAt, {
+          zone: APP_TIMEZONE,
+        }).toISODate(),
+        requestedAt: Date.now(),
+      },
+      pop: true,
+    });
+  };
+
+  const cancelUntil =
+    booking?.cancelableUntil && canBeCancelled
+      ? `${formatBookingDay(booking.cancelableUntil, language)}, ${formatBookingTime(booking.cancelableUntil)}`
+      : undefined;
+
+  const iconColor = colors.secondaryText;
+
   return (
-    <>
+    <View style={styles.screen}>
       <ScrollView
+        style={styles.screen}
         contentInsetAdjustmentBehavior="automatic"
         refreshControl={<RefreshControl manual queries={[bookingsQuery]} />}
       >
-        <SafeAreaView>
-          {booking && (
-            <EventHead
-              caption={
-                subTopicTitle
-                  ? `${t('common.booking')} · ${subTopicTitle}`
-                  : t('common.booking')
-              }
-              subtitle={description ? title : undefined}
-              date={DateTime.fromJSDate(booking.startsAt, {
-                zone: APP_TIMEZONE,
-              })
-                .setLocale(language)
-                .toFormat('ccc, d LLL yyyy')}
-              time={`${DateTime.fromJSDate(booking.startsAt, { zone: APP_TIMEZONE }).toFormat('HH:mm')} - ${DateTime.fromJSDate(booking.endsAt, { zone: APP_TIMEZONE }).toFormat('HH:mm')}`}
-            />
-          )}
-          <OverviewList indented style={{ marginTop: spacing[4] }}>
+        {booking && (
+          <EventHead
+            caption={
+              subTopicTitle
+                ? `${t('common.booking')} · ${subTopicTitle}`
+                : t('common.booking')
+            }
+            subtitle={description ? title : undefined}
+            date={formatBookingDay(booking.startsAt, language)}
+            time={`${formatBookingTime(booking.startsAt)} - ${formatBookingTime(booking.endsAt)}`}
+          />
+        )}
+        <Section style={styles.firstSection}>
+          <OverviewList indented>
             {booking?.location?.name && (
               <ListItem
                 isAction
@@ -227,112 +237,134 @@ export const BookingScreen = ({ navigation, route }: Props) => {
                 }
                 accessibilityLabel={locationAccessibilityLabel}
                 leadingItem={
-                  <Icon
-                    icon={
-                      locationKind === 'virtualPlace' ? faVideo : faLocationDot
-                    }
-                    size={24}
-                    color={colors.secondaryText}
+                  <OutlineIcon
+                    name={locationKind === 'virtualPlace' ? 'video' : 'pin'}
+                    color={iconColor}
                   />
                 }
                 title={booking.location.name}
+                multilineTitle
                 subtitle={t(`bookingScreen.locationAction.${locationKind}`)}
                 onPress={() => onPressLocation(booking?.location)}
               />
             )}
-            {!!booking && !!booking?.seat && (
+            {!!booking?.seat && (
               <ListItem
-                accessibilityRole="button"
+                isAction
                 accessibilityLabel={seatAccessibilityLabel}
-                leadingItem={
-                  <Icon icon={faSeat} size={24} color={colors.secondaryText} />
-                }
+                leadingItem={<OutlineIcon name="seat" color={iconColor} />}
                 title={`${booking.seat.row}${booking.seat.column}`}
                 subtitle={t('common.seat')}
                 onPress={() =>
                   booking?.seat?.id &&
-                  booking?.id &&
                   navigation.navigate('BookingSeat', {
                     bookingId: booking.id,
-                    slotId: String(booking?.id),
-                    seatId: booking?.seat?.id,
+                    slotId: String(booking.id),
+                    seatId: booking.seat.id,
                     topicId: booking.subtopic?.id || booking.topic.id,
                   })
                 }
+              />
+            )}
+            {!!cancelUntil && (
+              <ListItem
+                leadingItem={<OutlineIcon name="clock" color={iconColor} />}
+                title={cancelUntil}
+                subtitle={t('bookings.cancelUntil')}
+                accessibilityLabel={`${t('bookings.cancelUntil')}: ${cancelUntil}`}
+              />
+            )}
+            {!!booking && !isInAgendaStack && (
+              <ListItem
                 isAction
+                leadingItem={<OutlineIcon name="calendar" color={iconColor} />}
+                title={t('bookings.viewInAgenda')}
+                onPress={openAgenda}
               />
             )}
           </OverviewList>
-          <Section style={{ marginTop: spacing[4] }} mb={0} accessible>
-            <SectionHeader
-              title={t('bookingScreen.barCodeTitle')}
-              accessible={false}
-            />
-            <Card style={styles.barCodeCard} spaced>
-              {profileQuery.data && (
-                <Barcode
-                  value={profileQuery.data.username}
-                  format="CODE128"
-                  height={85}
-                  lineColor={palettes.primary[800]}
-                  singleBarWidth={1.8}
-                  backgroundColor="white"
-                />
-              )}
-            </Card>
-          </Section>
-        </SafeAreaView>
+        </Section>
+        <Section accessible>
+          <SectionHeader
+            title={t('bookingScreen.barCodeTitle')}
+            accessible={false}
+          />
+          <Card style={styles.barCodeCard}>
+            {profileQuery.data && (
+              <Barcode
+                value={profileQuery.data.username}
+                format="CODE128"
+                height={85}
+                lineColor={palettes.primary[800]}
+                singleBarWidth={1.8}
+                // The scanner needs dark bars on white, in dark mode too
+                backgroundColor="white"
+              />
+            )}
+          </Card>
+        </Section>
+        {!(hasCheckIn || canBeCancelled) && <BottomBarSpacer />}
       </ScrollView>
       {(hasCheckIn || canBeCancelled) && (
-        <>
-          <CtaButtonContainer absolute={false}>
-            {hasCheckIn && (
-              <CtaButton
-                title={
-                  completedCheckIn
-                    ? t('bookingScreen.checkInFeedback')
-                    : t('bookingScreen.checkIn')
-                }
-                action={onPressCheckIn}
-                loading={updateBookingMutation.isPending}
-                variant="outlined"
-                icon={completedCheckIn ? faCheckCircle : undefined}
-                absolute={false}
-                success={completedCheckIn}
-                disabled={
-                  isDisabled ||
-                  updateBookingMutation.isPending ||
-                  completedCheckIn
-                }
-                containerStyle={{ paddingVertical: 0 }}
-              />
-            )}
-            {canBeCancelled && (
-              <CtaButton
-                title={t('bookingScreen.cancelBooking')}
-                action={onPressDelete}
-                loading={deleteBookingMutation.isPending}
-                absolute={false}
-                disabled={isDisabled || deleteBookingMutation.isPending}
-                destructive={true}
-                containerStyle={{ paddingVertical: 0 }}
-              />
-            )}
-          </CtaButtonContainer>
-          <BottomBarSpacer />
-        </>
+        <BottomActionBar style={styles.actions}>
+          {hasCheckIn && (
+            <CtaButton
+              title={
+                completedCheckIn
+                  ? t('bookingScreen.checkInFeedback')
+                  : t('bookingScreen.checkIn')
+              }
+              action={onPressCheckIn}
+              loading={updateBookingMutation.isPending}
+              variant="outlined"
+              icon={completedCheckIn ? faCheckCircle : undefined}
+              absolute={false}
+              success={completedCheckIn}
+              disabled={
+                isDisabled ||
+                updateBookingMutation.isPending ||
+                completedCheckIn
+              }
+              containerStyle={styles.button}
+            />
+          )}
+          {canBeCancelled && (
+            <CtaButton
+              title={t('bookingScreen.cancelBooking')}
+              action={onPressDelete}
+              loading={isCancelling}
+              absolute={false}
+              disabled={isDisabled || isCancelling}
+              variant="outlined"
+              destructive={true}
+              containerStyle={styles.button}
+            />
+          )}
+        </BottomActionBar>
       )}
-    </>
+    </View>
   );
 };
 
-const createStyles = ({ spacing, fontSizes }: Theme) =>
+const createStyles = ({ layout, spacing }: Theme) =>
   StyleSheet.create({
+    screen: {
+      flex: 1,
+    },
+    firstSection: {
+      paddingTop: spacing[4],
+    },
     barCodeCard: {
-      padding: fontSizes.md,
+      padding: spacing[4],
       flexDirection: 'row',
       justifyContent: 'center',
       alignItems: 'center',
-      marginHorizontal: Platform.select({ ios: spacing[4] }),
+      marginHorizontal: layout.gutter,
+    },
+    actions: {
+      gap: spacing[3],
+    },
+    button: {
+      padding: 0,
     },
   });
