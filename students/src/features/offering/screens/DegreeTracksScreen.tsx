@@ -62,7 +62,10 @@ export const DegreeTracksScreen = () => {
 
   return (
     <OverviewList
-      loading={degreeQuery.isLoading}
+      queries={degreeQuery}
+      isEmpty={() => false}
+      skeleton={{ count: 6, subtitle: false }}
+      errorState={{ title: t('states.offering.failedDegreeTitle') }}
       indented={true}
       style={{
         marginTop: spacing[4],

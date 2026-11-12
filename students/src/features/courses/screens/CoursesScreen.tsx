@@ -1,10 +1,11 @@
 import { useTranslation } from 'react-i18next';
 import { SafeAreaView, ScrollView } from 'react-native';
 
-import { useAccessibility } from '@polito/lib/core';
+import { useAccessibility, useQueryStates } from '@polito/lib/core';
 import {
   BottomBarSpacer,
   OverviewList,
+  QueryStateView,
   RefreshControl,
   Section,
   SectionHeader,
@@ -19,6 +20,7 @@ export const CoursesScreen = () => {
   const { t } = useTranslation();
   const { spacing } = useTheme();
   const coursesQuery = useGetCourses();
+  const states = useQueryStates(coursesQuery);
   const { accessibilityListLabel } = useAccessibility();
 
   return (
@@ -30,7 +32,23 @@ export const CoursesScreen = () => {
       refreshControl={<RefreshControl queries={[coursesQuery]} manual />}
     >
       <SafeAreaView>
-        {coursesQuery.data &&
+        {states.status !== 'ready' && (
+          <Section>
+            <QueryStateView
+              states={states}
+              skeleton={{ count: 6, leading: 'tile' }}
+              emptyState={{
+                title: t('states.courses.emptyTitle'),
+                text: t('states.courses.emptyText'),
+              }}
+              errorState={{ title: t('states.courses.failedTitle') }}
+            >
+              {null}
+            </QueryStateView>
+          </Section>
+        )}
+        {states.status === 'ready' &&
+          coursesQuery.data &&
           (coursesQuery.data.length > 0 ? (
             Object.entries(
               coursesQuery.data.reduce(

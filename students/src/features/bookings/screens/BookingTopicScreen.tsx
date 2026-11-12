@@ -89,7 +89,16 @@ export const BookingTopicScreen = ({ navigation }: Props) => {
 
   return (
     <SafeAreaView>
-      <OverviewList loading={topicsQuery.isLoading} indented>
+      <OverviewList
+        queries={topicsQuery}
+        indented
+        skeleton={{ count: 5, subtitle: false }}
+        emptyState={{
+          title: t('states.bookings.noTopicsTitle'),
+          text: t('states.bookings.noTopicsText'),
+        }}
+        errorState={{ title: t('states.bookings.failedTopicsTitle') }}
+      >
         <SectionList
           refreshControl={<RefreshControl manual queries={[topicsQuery]} />}
           stickySectionHeadersEnabled

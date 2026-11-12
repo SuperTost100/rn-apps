@@ -5,6 +5,7 @@ import {
   FlatList,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   TouchableOpacity,
   View,
@@ -14,11 +15,13 @@ import Animated, {
   useAnimatedStyle,
 } from 'react-native-reanimated';
 
-import { usePreferencesContext } from '@polito/lib/core';
+import { usePreferencesContext, useQueryStates } from '@polito/lib/core';
 import {
   ChatBubble,
   GlobalStyles,
+  QueryStateView,
   RefreshControl,
+  SkeletonDetail,
   Text,
   type Theme,
   useSafeAreaSpacing,
@@ -57,6 +60,7 @@ export const TicketScreen = ({ route, navigation }: Props) => {
   const { id } = route.params;
   const styles = useStylesheet(createStyles);
   const ticketQuery = useGetTicket(id);
+  const states = useQueryStates(ticketQuery);
   const { mutate: markAsRead } = useMarkTicketAsRead(id);
   const { mutateAsync: markTicketAsClosed } = useMarkTicketAsClosed(id);
   const { spacing } = useTheme();
@@ -346,6 +350,29 @@ export const TicketScreen = ({ route, navigation }: Props) => {
   // TODO: traslucent does not work anymore because now views
   // are more linear: it's needed to recalculate layouts and set
   // the flatlist to be absolutely positioned
+
+  if (states.status !== 'ready') {
+    return (
+      <ScrollView contentInsetAdjustmentBehavior="automatic">
+        <QueryStateView
+          states={states}
+          skeleton={
+            <SkeletonDetail
+              title={false}
+              cards={[72, 140, 96]}
+              label={t('states.tickets.loadingOne')}
+            />
+          }
+          errorState={{
+            title: t('states.tickets.failedOneTitle'),
+            text: t('states.tickets.failedText'),
+          }}
+        >
+          {null}
+        </QueryStateView>
+      </ScrollView>
+    );
+  }
 
   return (
     <Animated.View style={[GlobalStyles.grow, animatedBottomPadding]}>

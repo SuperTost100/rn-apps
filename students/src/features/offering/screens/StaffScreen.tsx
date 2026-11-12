@@ -40,7 +40,10 @@ export const StaffScreen = ({ route }: Props) => {
     <ScrollView contentInsetAdjustmentBehavior="automatic">
       <SafeAreaView>
         <Section>
-          <OverviewList loading={isLoading}>
+          <OverviewList
+            loading={isLoading}
+            skeleton={{ count: staffIds?.length ?? 3, leading: 'avatar' }}
+          >
             {staffPeople.map(person => (
               <StaffListItem
                 key={`${person.id}${person.courseId}`}

@@ -1,7 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { SafeAreaView, ScrollView, StyleSheet } from 'react-native';
 
-import { useOfflineDisabled } from '@polito/lib/core';
 import {
   BottomBarSpacer,
   OverviewList,
@@ -25,8 +24,6 @@ export const GradesScreen = () => {
   const gradesQuery = useGetGrades();
   const provisionalGradesQuery = useGetProvisionalGrades();
 
-  const isOffline = useOfflineDisabled();
-
   return (
     <ScrollView
       contentInsetAdjustmentBehavior="automatic"
@@ -48,12 +45,12 @@ export const GradesScreen = () => {
             )}`}
           />
           <OverviewList
-            loading={!isOffline && provisionalGradesQuery.isLoading}
-            emptyStateText={
-              isOffline && provisionalGradesQuery.isLoading
-                ? t('common.cacheMiss')
-                : t('transcriptGradesScreen.provisionalEmptyState')
-            }
+            queries={provisionalGradesQuery}
+            skeleton={{ count: 1, trailing: 'value' }}
+            emptyState={{
+              title: t('transcriptGradesScreen.provisionalEmptyState'),
+            }}
+            errorState={{ title: t('states.grades.failedProvisionalTitle') }}
           >
             {provisionalGradesQuery.data?.map(grade => (
               <ProvisionalGradeListItem key={grade.id} grade={grade} />
@@ -69,12 +66,13 @@ export const GradesScreen = () => {
             )}`}
           />
           <OverviewList
-            loading={!isOffline && gradesQuery.isLoading}
-            emptyStateText={
-              isOffline && gradesQuery.isLoading
-                ? t('common.cacheMiss')
-                : t('transcriptGradesScreen.emptyState')
-            }
+            queries={gradesQuery}
+            skeleton={{ count: 8, trailing: 'value' }}
+            emptyState={{
+              title: t('states.grades.emptyTitle'),
+              text: t('states.grades.emptyText'),
+            }}
+            errorState={{ title: t('states.grades.failedTitle') }}
           >
             {gradesQuery.data?.map((grade, index) => (
               <RecordedGradeListItem grade={grade} key={index} />

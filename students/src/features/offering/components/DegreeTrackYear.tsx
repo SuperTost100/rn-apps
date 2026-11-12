@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
-import { useOfflineDisabled } from '@polito/lib/core';
 import {
   ListItem,
   OverviewList,
@@ -34,8 +33,6 @@ export const DegreeTrackYear = ({ item }: DegreeTrackYearProps) => {
     [courses],
   );
 
-  const isOffline = useOfflineDisabled();
-
   const { year } = useDegreeContext();
 
   const [expandedGroupIndex, setExpandedGroupIndex] = useState<number>();
@@ -63,7 +60,6 @@ export const DegreeTrackYear = ({ item }: DegreeTrackYearProps) => {
             }}
             accessibilityRole="button"
             trailingItem={<CourseTrailingItem cfu={course.cfu} />}
-            disabled={isOffline}
           />
         ))}
         {coursesByGroup.map((group, index) => (
@@ -76,7 +72,6 @@ export const DegreeTrackYear = ({ item }: DegreeTrackYearProps) => {
                 prevIndex !== index ? index : undefined,
               )
             }
-            disabled={isOffline}
           />
         ))}
       </OverviewList>

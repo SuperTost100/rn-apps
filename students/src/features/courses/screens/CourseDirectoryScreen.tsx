@@ -3,14 +3,18 @@ import { useTranslation } from 'react-i18next';
 import { FlatList, Platform, StyleSheet, View } from 'react-native';
 
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
-import { FileNavigatorID, usePreferencesContext } from '@polito/lib/core';
+import {
+  FileNavigatorID,
+  usePreferencesContext,
+  useQueryStates,
+} from '@polito/lib/core';
 import { ITEM_TYPES } from '@polito/lib/features/courses';
 import {
   ActivityIndicator,
   BottomBarSpacer,
   GlobalStyles,
   IndentedDivider,
-  OverviewList,
+  QueryStateView,
   RefreshControl,
   Row,
   Text,
@@ -61,6 +65,7 @@ const CourseDirectoryScreenContent = ({ route, navigation }: Props) => {
   const [checkCompleteCount, setCheckCompleteCount] = useState(0);
   const [checkTimeoutExpired, setCheckTimeoutExpired] = useState(false);
   const directoryQuery = useGetCourseDirectory(courseId, directoryId);
+  const states = useQueryStates(directoryQuery);
   const { paddingHorizontal } = useSafeAreaSpacing();
   const { updatePreference } = usePreferencesContext<AppPreferences>();
   const { spacing } = useTheme();
@@ -315,15 +320,32 @@ const CourseDirectoryScreenContent = ({ route, navigation }: Props) => {
               </>
             }
             ListEmptyComponent={
-              !directoryQuery.isLoading ? (
-                <OverviewList
-                  emptyStateText={
-                    isFileNavigator
-                      ? t('courseDirectoryScreen.emptyRootFolder')
-                      : t('courseDirectoryScreen.emptyFolder')
-                  }
-                />
-              ) : null
+              <QueryStateView
+                states={states}
+                skeleton={{
+                  count: 6,
+                  leading: 'icon',
+                  card: false,
+                  label: t('states.files.loading'),
+                }}
+                emptyState={
+                  isFileNavigator
+                    ? {
+                        title: t('states.files.emptyTitle'),
+                        text: t('states.files.emptyText'),
+                      }
+                    : {
+                        title: t('states.files.emptyFolderTitle'),
+                        text: t('states.files.emptyFolderText'),
+                      }
+                }
+                errorState={{
+                  title: t('states.files.failedTitle'),
+                  text: t('states.files.failedText'),
+                }}
+              >
+                {null}
+              </QueryStateView>
             }
           />
           {isCheckingInitial && (

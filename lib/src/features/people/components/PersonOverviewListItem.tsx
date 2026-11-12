@@ -1,4 +1,4 @@
-import { ReactElement, useCallback } from 'react';
+import { ReactElement } from 'react';
 import {
   Image,
   StyleProp,
@@ -11,17 +11,14 @@ import { faUser } from '@fortawesome/free-regular-svg-icons';
 import { PersonOverview } from '@polito/student-api-client';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useQueryClient } from '@tanstack/react-query';
 
 import { MAX_RECENT_SEARCHES } from '../../../core/constants';
 import { usePreferencesContext } from '../../../core/contexts/PreferencesContext';
 import { useAccessibility } from '../../../core/hooks/useAccessibility';
-import { useOfflineDisabled } from '../../../core/hooks/useOfflineDisabled';
 import { Icon } from '../../../ui/components/Icon';
 import { ListItem } from '../../../ui/components/ListItem';
 import { useStylesheet } from '../../../ui/hooks/useStylesheet';
 import { useTheme } from '../../../ui/hooks/useTheme';
-import { getPersonKey } from '../queries/peopleHooks';
 import { PeoplePreferences } from '../types';
 import { HighlightedText } from './HighlightedText';
 
@@ -69,14 +66,6 @@ export const PersonOverviewListItem = ({
     navigation.navigate('Person', { id: person.id });
   };
 
-  const queryClient = useQueryClient();
-
-  const isDataMissing = useCallback(
-    () => queryClient.getQueryData(getPersonKey(person!.id)) === undefined,
-    [person, queryClient],
-  );
-
-  const isDisabled = useOfflineDisabled(isDataMissing);
   return (
     <ListItem
       onPress={navigateToPerson}
@@ -97,7 +86,6 @@ export const PersonOverviewListItem = ({
         },
         containerStyle,
       ]}
-      disabled={isDisabled}
       {...rest}
     />
   );

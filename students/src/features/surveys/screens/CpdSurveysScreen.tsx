@@ -53,13 +53,12 @@ export const CpdSurveysScreen = ({ route }: Props) => {
       <SafeAreaView>
         <Section>
           <OverviewList
-            emptyStateText={
-              surveys && surveys.length === 0
-                ? t('cpdSurveysScreen.emptyState')
-                : undefined
-            }
+            queries={surveysQuery}
+            isEmpty={() => (surveys?.length ?? 0) === 0}
+            skeleton={{ count: 3 }}
+            emptyState={{ title: t('cpdSurveysScreen.emptyState') }}
+            errorState={{ title: t('states.surveys.failedTitle') }}
             indented
-            loading={surveysQuery.isLoading}
           >
             {surveys?.map((survey, index) => (
               <SurveyListItem

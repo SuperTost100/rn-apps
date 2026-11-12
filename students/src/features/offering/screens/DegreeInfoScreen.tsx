@@ -11,10 +11,11 @@ import { getHtmlTextContent } from '@polito/lib/core';
 import {
   BottomBarSpacer,
   Card,
-  LoadingContainer,
+  QueryStateView,
   RefreshControl,
   ScreenTitle,
   Section,
+  SkeletonDetail,
   Text,
   Theme,
   useStylesheet,
@@ -29,7 +30,6 @@ export const DegreeInfoScreen = () => {
   const styles = useStylesheet(createStyles);
   const degreeQuery = useGetOfferingDegree({ degreeId, year });
   const degree = degreeQuery?.data;
-  const isLoading = degreeQuery.isLoading;
 
   return (
     <ScrollView
@@ -37,7 +37,12 @@ export const DegreeInfoScreen = () => {
       refreshControl={<RefreshControl queries={[degreeQuery]} manual />}
     >
       <SafeAreaView>
-        <LoadingContainer loading={isLoading}>
+        <QueryStateView
+          queries={degreeQuery}
+          isEmpty={() => false}
+          skeleton={<SkeletonDetail cards={[120, 200]} />}
+          errorState={{ title: t('states.offering.failedDegreeTitle') }}
+        >
           <>
             <ScreenTitle
               style={styles.heading}
@@ -100,7 +105,7 @@ export const DegreeInfoScreen = () => {
               )}
             </Card>
           </Section>
-        </LoadingContainer>
+        </QueryStateView>
         <BottomBarSpacer />
       </SafeAreaView>
     </ScrollView>

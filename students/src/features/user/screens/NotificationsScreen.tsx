@@ -28,7 +28,7 @@ export const NotificationsScreen = () => {
 
   const query = useGetNotificationPreferences();
   const { mutate: updatePreference } = useUpdateNotificationPreference();
-  const { data, isLoading } = query;
+  const { data } = query;
 
   const { fontSizes } = useTheme();
   const isOffline = useOfflineDisabled();
@@ -45,11 +45,25 @@ export const NotificationsScreen = () => {
               title={t('notificationsScreen.globalTitle')}
               subtitle={t('notificationsScreen.globalSubtitle')}
             />
-            <OverviewList indented loading={isLoading}>
+            <OverviewList
+              indented
+              queries={query}
+              isEmpty={() => false}
+              skeleton={{
+                count: 2,
+                leading: 'icon',
+                trailing: 'value',
+                subtitle: false,
+              }}
+              errorState={{ title: t('states.notifications.failedTitle') }}
+            >
               <SwitchListItem
                 leadingItem={<Icon icon={faComments} size={fontSizes['2xl']} />}
                 title={t('common.ticket_plural')}
                 disabled={isOffline}
+                accessibilityHint={
+                  isOffline ? t('states.needsConnection') : undefined
+                }
                 value={data?.tickets}
                 onChange={() => {
                   updatePreference({
@@ -64,6 +78,9 @@ export const NotificationsScreen = () => {
                 }
                 title={t('common.booking_plural')}
                 disabled={isOffline}
+                accessibilityHint={
+                  isOffline ? t('states.needsConnection') : undefined
+                }
                 value={data?.bookings}
                 onChange={() => {
                   updatePreference({

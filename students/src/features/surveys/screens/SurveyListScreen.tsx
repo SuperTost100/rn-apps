@@ -2,11 +2,11 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, Platform } from 'react-native';
 
-import { useScreenTitle } from '@polito/lib/core';
+import { useQueryStates, useScreenTitle } from '@polito/lib/core';
 import {
   BottomBarSpacer,
   IndentedDivider,
-  OverviewList,
+  QueryStateView,
   RefreshControl,
   useSafeAreaSpacing,
 } from '@polito/lib/ui';
@@ -32,6 +32,9 @@ export const SurveyListScreen = ({ route }: Props) => {
         b.startsAt.getTime() - a.startsAt.getTime() ||
         b.title.localeCompare(a.title),
     );
+  const states = useQueryStates(surveysQuery, {
+    isEmpty: () => compiledSurveys.length === 0,
+  });
 
   const labels = useMemo(() => {
     return {
@@ -58,7 +61,14 @@ export const SurveyListScreen = ({ route }: Props) => {
       })}
       ListFooterComponent={<BottomBarSpacer />}
       ListEmptyComponent={
-        <OverviewList emptyStateText={t('surveysScreen.compiledEmptyState')} />
+        <QueryStateView
+          states={states}
+          skeleton={{ count: 6, card: false }}
+          emptyState={{ title: t('surveysScreen.compiledEmptyState') }}
+          errorState={{ title: t('states.surveys.failedTitle') }}
+        >
+          {null}
+        </QueryStateView>
       }
     />
   );

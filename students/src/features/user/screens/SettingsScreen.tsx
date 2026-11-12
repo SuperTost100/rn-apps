@@ -272,6 +272,7 @@ const LanguageListItem = () => {
       <ListItem
         isAction
         disabled={isDisabled}
+        accessibilityHint={isDisabled ? t('states.needsConnection') : undefined}
         title={t(`common.${language}`)}
         accessibilityLabel={`${t('common.language')}: ${t(
           `common.${language}`,

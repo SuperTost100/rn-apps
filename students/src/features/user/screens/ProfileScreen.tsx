@@ -29,7 +29,6 @@ import {
 } from '@polito/lib/ui';
 import { MenuAction, NativeActionEvent } from '@react-native-menu/menu';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useQueryClient } from '@tanstack/react-query';
 
 import {
   filterUnread,
@@ -40,7 +39,6 @@ import { useMfaChallengeHandler } from '../../../core/hooks/useMfaChallengeHandl
 import { useEscGet } from '../../../core/queries/escHooks';
 import { useSwitchCareer } from '../../../core/queries/studentAuthHooks';
 import {
-  MESSAGES_QUERY_KEY,
   useGetMessages,
   useGetProfile,
   useGetProfilePicture,
@@ -152,7 +150,6 @@ export const ProfileScreen = ({ navigation, route }: Props) => {
   const smartCardQuery = useGetSmartCard();
   const smartCardUrl = smartCardQuery.data?.url;
   const pictureQuery = useGetProfilePicture(profile?.username);
-  const queryClient = useQueryClient();
   const messages = useGetMessages();
   const mfaChallengeQuery = useMfaChallengeHandler();
 
@@ -160,12 +157,6 @@ export const ProfileScreen = ({ navigation, route }: Props) => {
     if (!student) return '...';
     return `${student.firstEnrollmentYear - 1}/${student.firstEnrollmentYear}`;
   }, [student]);
-
-  const areMessagesMissing = useCallback(
-    () => queryClient.getQueryData(MESSAGES_QUERY_KEY) === undefined,
-    [queryClient],
-  );
-  const areMessagesDisabled = useOfflineDisabled(areMessagesMissing);
 
   const isOffline = useOfflineDisabled();
 
@@ -241,7 +232,12 @@ export const ProfileScreen = ({ navigation, route }: Props) => {
               ) : undefined
             }
           />
-          <OverviewList>
+          <OverviewList
+            queries={studentQuery}
+            isEmpty={() => false}
+            skeleton={{ count: 1 }}
+            errorState={{ title: t('states.career.failedTitle') }}
+          >
             <ListItem
               title={student?.degreeLevel ?? ''}
               subtitle={t('profileScreen.cohort') + ' - ' + enrollmentYear}
@@ -275,7 +271,6 @@ export const ProfileScreen = ({ navigation, route }: Props) => {
               title={t('messagesScreen.title')}
               leadingItem={<Icon icon={faMessage} size={fontSizes.xl} />}
               linkTo="Messages"
-              disabled={areMessagesDisabled}
               trailingItem={
                 messages.data && hasUnreadMessages(messages.data) ? (
                   <UnreadBadge text={filterUnread(messages.data).length} />
@@ -293,7 +288,11 @@ export const ProfileScreen = ({ navigation, route }: Props) => {
               }
               titleStyle={{ color: colors.dangerText }}
               onPress={() => handleLogout()}
+              // Logging out tells the server: it needs the network
               disabled={isOffline}
+              accessibilityHint={
+                isOffline ? t('states.needsConnection') : undefined
+              }
             />
           </OverviewList>
         </Section>

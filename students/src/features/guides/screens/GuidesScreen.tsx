@@ -44,13 +44,14 @@ export const GuidesScreen = (_props: Props) => {
       <SafeAreaView>
         <Section>
           <OverviewList
-            emptyStateText={
-              guidesQuery.data && guidesQuery.data.length === 0
-                ? t('common.cacheMiss')
-                : undefined
-            }
+            queries={guidesQuery}
             indented
-            loading={guidesQuery.isLoading}
+            skeleton={{ count: 6, subtitle: false }}
+            emptyState={{
+              title: t('states.guides.emptyTitle'),
+              text: t('states.guides.emptyText'),
+            }}
+            errorState={{ title: t('states.guides.failedTitle') }}
           >
             {guidesQuery.data?.map((guide, index) => (
               <ListItem

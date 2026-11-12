@@ -1,12 +1,14 @@
+import { useTranslation } from 'react-i18next';
 import { Platform, SafeAreaView, ScrollView, StyleSheet } from 'react-native';
 
 import { getHtmlTextContent } from '@polito/lib/core';
 import {
   BottomBarSpacer,
   Card,
-  LoadingContainer,
+  QueryStateView,
   RefreshControl,
   Section,
+  SkeletonDetail,
   Text,
   Theme,
   useStylesheet,
@@ -17,10 +19,10 @@ import { useDegreeContext } from '../contexts/DegreeContext';
 
 export const DegreeJobOpportunitiesScreen = () => {
   const { degreeId, year } = useDegreeContext();
+  const { t } = useTranslation();
   const degreeQuery = useGetOfferingDegree({ degreeId, year });
   const styles = useStylesheet(createStyles);
   const degree = degreeQuery?.data;
-  const isLoading = degreeQuery.isLoading;
 
   return (
     <ScrollView
@@ -29,7 +31,12 @@ export const DegreeJobOpportunitiesScreen = () => {
       contentContainerStyle={styles.list}
     >
       <SafeAreaView>
-        <LoadingContainer loading={isLoading}>
+        <QueryStateView
+          queries={degreeQuery}
+          isEmpty={() => false}
+          skeleton={<SkeletonDetail title={false} cards={[240]} />}
+          errorState={{ title: t('states.offering.failedDegreeTitle') }}
+        >
           <Section>
             <Card padded>
               <Text variant="subHeading" style={styles.subHeading}>
@@ -40,7 +47,7 @@ export const DegreeJobOpportunitiesScreen = () => {
               </Text>
             </Card>
           </Section>
-        </LoadingContainer>
+        </QueryStateView>
       </SafeAreaView>
       <BottomBarSpacer />
     </ScrollView>

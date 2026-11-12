@@ -11,20 +11,25 @@ import {
   faFileAlt,
   faInfoCircle,
 } from '@fortawesome/free-solid-svg-icons';
-import { formatDate, formatDateFromString } from '@polito/lib/core';
+import {
+  formatDate,
+  formatDateFromString,
+  useQueryStates,
+} from '@polito/lib/core';
 import { useOpenInAppLink } from '@polito/lib/core';
 import {
-  ActivityIndicator,
   BottomBarSpacer,
   Card,
   Col,
   HtmlView,
   Icon,
   ImageLoader,
+  QueryStateView,
   RefreshControl,
   Row,
   ScreenTitle,
   Section,
+  SkeletonDetail,
   Text,
   Theme,
   useStylesheet,
@@ -42,7 +47,8 @@ export const NewsItemScreen = ({ route }: Props) => {
   const { palettes, spacing, colors } = useTheme();
   const { t } = useTranslation();
   const useNewsItemQuery = useGetNewsItem(id);
-  const { data: newsItem, isLoading } = useNewsItemQuery;
+  const { data: newsItem } = useNewsItemQuery;
+  const states = useQueryStates(useNewsItemQuery);
   const styles = useStylesheet(createStyles);
   const openInAppLink = useOpenInAppLink();
   const { title, eventStartTime, createdAt, htmlContent } = newsItem || {};
@@ -58,18 +64,11 @@ export const NewsItemScreen = ({ route }: Props) => {
       refreshControl={<RefreshControl queries={[useNewsItemQuery]} manual />}
     >
       <SafeAreaView>
-        <Section>
-          <ScreenTitle title={title ?? ''} style={styles.heading} />
-          {isLoading && (
-            <ActivityIndicator
-              style={{
-                marginVertical: spacing[6],
-              }}
-            />
-          )}
-        </Section>
-        {!isLoading && (
+        {states.status === 'ready' ? (
           <>
+            <Section>
+              <ScreenTitle title={title ?? ''} style={styles.heading} />
+            </Section>
             {createdAt && (
               <Card accessible padded>
                 <Text variant="heading" weight="semibold" numberOfLines={1}>
@@ -155,6 +154,19 @@ export const NewsItemScreen = ({ route }: Props) => {
               </Col>
             </Card>
           </>
+        ) : (
+          <QueryStateView
+            states={states}
+            skeleton={
+              <SkeletonDetail
+                cards={[56, 240]}
+                label={t('states.news.loadingOne')}
+              />
+            }
+            errorState={{ title: t('states.news.failedOneTitle') }}
+          >
+            {null}
+          </QueryStateView>
         )}
         <BottomBarSpacer />
       </SafeAreaView>

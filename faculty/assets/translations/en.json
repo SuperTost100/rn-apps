@@ -1109,6 +1109,12 @@
     "refreshFailedNoTime": "Couldn't refresh. Showing what was saved earlier.",
     "loadFailed": "Couldn't load this information. Try again in a moment.",
     "close": "Close",
-    "needsConnection": "Needs a connection"
+    "needsConnection": "Needs a connection",
+    "people": {
+      "emptyText": "Search looks at the first and last names of teaching and administrative staff.",
+      "failedTitle": "Couldn't search the contacts",
+      "failedOneTitle": "Couldn't load this contact",
+      "loadingOne": "Loading the contact"
+    }
   }
 }

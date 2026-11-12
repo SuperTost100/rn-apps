@@ -3,14 +3,16 @@ import { useTranslation } from 'react-i18next';
 import { Linking, SafeAreaView, ScrollView, StyleSheet } from 'react-native';
 import replace from 'react-string-replace';
 
-import { formatDate } from '@polito/lib/core';
+import { formatDate, useQueryStates } from '@polito/lib/core';
 import { useOpenInAppLink } from '@polito/lib/core';
 import {
   BottomBarSpacer,
   Card,
+  QueryStateView,
   RefreshControl,
   ScreenTitle,
   Section,
+  SkeletonDetail,
   Text,
   Theme,
   useStylesheet,
@@ -27,6 +29,7 @@ export const JobOfferScreen = ({ route }: Props) => {
   const { t } = useTranslation();
   const useGetJobOfferQuery = useGetJobOffer(id);
   const { data: jobOffer } = useGetJobOfferQuery;
+  const states = useQueryStates(useGetJobOfferQuery);
   const styles = useStylesheet(createStyles);
   const openInAppLink = useOpenInAppLink();
   const {
@@ -84,86 +87,107 @@ export const JobOfferScreen = ({ route }: Props) => {
       refreshControl={<RefreshControl queries={[useGetJobOfferQuery]} manual />}
     >
       <SafeAreaView>
-        <Section>
-          <ScreenTitle title={title ?? ''} style={styles.heading} />
-        </Section>
-        <Card accessible padded>
-          <Text variant="heading" weight="bold" numberOfLines={1}>
-            {companyName}
-          </Text>
-        </Card>
-        <Card accessible padded gapped>
-          {!!contractType && (
-            <Text variant="longProse" weight="semibold">
-              {t('jobOfferScreen.contractType')}
-              <Text>{contractType}</Text>
-            </Text>
-          )}
-          {!!salary && (
-            <Text variant="longProse" weight="semibold">
-              {t('jobOfferScreen.salary')}
-              <Text variant="longProse">{salary}</Text>
-            </Text>
-          )}
-          {!!location && (
-            <Text variant="longProse" weight="semibold">
-              {t('jobOfferScreen.location')}
-              <Text>{location}</Text>
-            </Text>
-          )}
-          {!!endsAtDate && (
-            <Text variant="longProse" weight="semibold">
-              {t('jobOfferScreen.endsAtDate')}
-              <Text>{formatDate(endsAtDate)}</Text>
-            </Text>
-          )}
-          {!!freePositions && (
-            <Text variant="longProse" weight="semibold">
-              {t('jobOfferScreen.freePositions')}
-              <Text>{freePositions}</Text>
-            </Text>
-          )}
-        </Card>
-        <Card accessible padded gapped>
+        {states.status === 'ready' ? (
           <>
-            <Text variant="subHeading">{t('jobOfferScreen.description')}</Text>
-            <Text variant="longProse">{companyMission ?? ' - '}</Text>
-          </>
-          <>
-            <Text variant="subHeading">{t('jobOfferScreen.requirements')}</Text>
-            <Text variant="longProse">
-              {requirements ? requirements : ' - '}
-            </Text>
-          </>
-          <>
-            {(contactInfo[0] || email || url) && (
-              <Text variant="subHeading">
-                {t('jobOfferScreen.application')}
+            <Section>
+              <ScreenTitle title={title ?? ''} style={styles.heading} />
+            </Section>
+            <Card accessible padded>
+              <Text variant="heading" weight="bold" numberOfLines={1}>
+                {companyName}
               </Text>
-            )}
-            {!!url && (
-              <Text
-                numberOfLines={1}
-                accessibilityRole="link"
-                weight="semibold"
-              >
-                {t('jobOfferScreen.url')}
-                <Text variant="link" onPress={() => onPressUrl(url)}>
-                  {url}
+            </Card>
+            <Card accessible padded gapped>
+              {!!contractType && (
+                <Text variant="longProse" weight="semibold">
+                  {t('jobOfferScreen.contractType')}
+                  <Text>{contractType}</Text>
                 </Text>
-              </Text>
-            )}
-            {!!contactInfo && <Text>{contactInfo}</Text>}
-            {!!email && (
-              <Text weight="semibold">
-                {t('jobOfferScreen.email')}
-                <Text variant="link" onPress={() => onPressEmail(email)}>
-                  {email}
+              )}
+              {!!salary && (
+                <Text variant="longProse" weight="semibold">
+                  {t('jobOfferScreen.salary')}
+                  <Text variant="longProse">{salary}</Text>
                 </Text>
-              </Text>
-            )}
+              )}
+              {!!location && (
+                <Text variant="longProse" weight="semibold">
+                  {t('jobOfferScreen.location')}
+                  <Text>{location}</Text>
+                </Text>
+              )}
+              {!!endsAtDate && (
+                <Text variant="longProse" weight="semibold">
+                  {t('jobOfferScreen.endsAtDate')}
+                  <Text>{formatDate(endsAtDate)}</Text>
+                </Text>
+              )}
+              {!!freePositions && (
+                <Text variant="longProse" weight="semibold">
+                  {t('jobOfferScreen.freePositions')}
+                  <Text>{freePositions}</Text>
+                </Text>
+              )}
+            </Card>
+            <Card accessible padded gapped>
+              <>
+                <Text variant="subHeading">
+                  {t('jobOfferScreen.description')}
+                </Text>
+                <Text variant="longProse">{companyMission ?? ' - '}</Text>
+              </>
+              <>
+                <Text variant="subHeading">
+                  {t('jobOfferScreen.requirements')}
+                </Text>
+                <Text variant="longProse">
+                  {requirements ? requirements : ' - '}
+                </Text>
+              </>
+              <>
+                {(contactInfo[0] || email || url) && (
+                  <Text variant="subHeading">
+                    {t('jobOfferScreen.application')}
+                  </Text>
+                )}
+                {!!url && (
+                  <Text
+                    numberOfLines={1}
+                    accessibilityRole="link"
+                    weight="semibold"
+                  >
+                    {t('jobOfferScreen.url')}
+                    <Text variant="link" onPress={() => onPressUrl(url)}>
+                      {url}
+                    </Text>
+                  </Text>
+                )}
+                {!!contactInfo && <Text>{contactInfo}</Text>}
+                {!!email && (
+                  <Text weight="semibold">
+                    {t('jobOfferScreen.email')}
+                    <Text variant="link" onPress={() => onPressEmail(email)}>
+                      {email}
+                    </Text>
+                  </Text>
+                )}
+              </>
+            </Card>
           </>
-        </Card>
+        ) : (
+          <QueryStateView
+            states={states}
+            skeleton={
+              <SkeletonDetail
+                cards={[96, 200]}
+                label={t('states.jobOffers.loadingOne')}
+              />
+            }
+            errorState={{ title: t('states.jobOffers.failedOneTitle') }}
+          >
+            {null}
+          </QueryStateView>
+        )}
         <BottomBarSpacer />
       </SafeAreaView>
     </ScrollView>

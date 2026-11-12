@@ -6,7 +6,7 @@ import {
   APP_TIMEZONE,
   formatDate,
   getHtmlTextContent,
-  useOfflineDisabled,
+  useQueryStates,
 } from '@polito/lib/core';
 import { useAccessibility } from '@polito/lib/core';
 import {
@@ -14,7 +14,7 @@ import {
   GlobalStyles,
   IndentedDivider,
   ListItem,
-  OverviewList,
+  QueryStateView,
   RefreshControl,
   useSafeAreaSpacing,
   useTheme,
@@ -35,9 +35,7 @@ export const CourseNoticesScreen = () => {
   const { accessibilityListLabel } = useAccessibility();
   const { getUnreadsCount, clearNotificationScope } = useNotifications();
   const { paddingHorizontal } = useSafeAreaSpacing();
-  const isCacheMissing = useOfflineDisabled(
-    () => noticesQuery.data === undefined,
-  );
+  const states = useQueryStates(noticesQuery);
   const notices = useMemo(
     () =>
       noticesQuery.data?.map(notice => ({
@@ -88,16 +86,26 @@ export const CourseNoticesScreen = () => {
       )}
       ListFooterComponent={<BottomBarSpacer />}
       ItemSeparatorComponent={() => <IndentedDivider indent={spacing[5]} />}
-      ListEmptyComponent={() => {
-        if (!noticesQuery.isLoading) {
-          return (
-            <OverviewList emptyStateText={t('courseNoticesTab.emptyState')} />
-          );
-        } else if (isCacheMissing) {
-          return <OverviewList emptyStateText={t('common.cacheMiss')} />;
-        }
-        return null;
-      }}
+      ListEmptyComponent={
+        <QueryStateView
+          states={states}
+          skeleton={{
+            count: 6,
+            card: false,
+            label: t('states.notices.loading'),
+          }}
+          emptyState={{
+            title: t('states.notices.emptyTitle'),
+            text: t('states.notices.emptyText'),
+          }}
+          errorState={{
+            title: t('states.notices.failedTitle'),
+            text: t('states.notices.failedText'),
+          }}
+        >
+          {null}
+        </QueryStateView>
+      }
     />
   );
 };

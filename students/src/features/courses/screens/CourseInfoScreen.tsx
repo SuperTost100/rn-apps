@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Platform,
@@ -11,7 +11,7 @@ import {
 import { faAngleDown } from '@fortawesome/free-solid-svg-icons';
 import { faLink } from '@fortawesome/free-solid-svg-icons';
 import { faCircle } from '@fortawesome/free-solid-svg-icons';
-import { useOfflineDisabled } from '@polito/lib/core';
+import { useQueryStates } from '@polito/lib/core';
 import { useOpenInAppLink } from '@polito/lib/core';
 import { useGetPersons } from '@polito/lib/features/people';
 import {
@@ -25,10 +25,12 @@ import {
   Metric,
   OverviewList,
   PersonListItem,
+  QueryStateView,
   RefreshControl,
   Row,
   Section,
   SectionHeader,
+  SkeletonDetail,
   StatefulMenuView,
   Text,
   Theme,
@@ -39,12 +41,9 @@ import { Person } from '@polito/student-api-client';
 import { MenuAction } from '@react-native-menu/menu';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useQueryClient } from '@tanstack/react-query';
 
 import { useNotifications } from '../../../core/hooks/useNotifications';
 import {
-  CourseSectionEnum,
-  getCourseKey,
   useGetCourse,
   useGetCourseEditions,
   useGetCourseExams,
@@ -70,6 +69,7 @@ export const CourseInfoScreen = () => {
   const { fontSizes } = useTheme();
   const { data: editions } = useGetCourseEditions(courseId);
   const courseQuery = useGetCourse(courseId);
+  const states = useQueryStates(courseQuery);
   const coursesQuery = useGetCourses();
   const {
     nextLecture,
@@ -94,8 +94,6 @@ export const CourseInfoScreen = () => {
   ]);
   const unreadsPrevEditions =
     (getUnreadsCountPerCourse(null, editions) ?? 0) - (unreadsCurrentYear ?? 0);
-
-  const isOffline = useOfflineDisabled();
 
   const isModule = useMemo(() => {
     if (!coursesQuery.data) return false;
@@ -158,15 +156,6 @@ export const CourseInfoScreen = () => {
     return staffData;
   }, [courseQuery.data, isStaffLoading, staffQueries]);
 
-  const queryClient = useQueryClient();
-  const isGuideDataMissing = useCallback(
-    () =>
-      queryClient.getQueryData(
-        getCourseKey(courseId, CourseSectionEnum.Guide),
-      ) === undefined,
-    [courseId, queryClient],
-  );
-  const isGuideDisabled = useOfflineDisabled(isGuideDataMissing);
   const isStatisticsDisabled = !courseQuery.data?.shortcode;
 
   return (
@@ -180,204 +169,218 @@ export const CourseInfoScreen = () => {
       }
     >
       <SafeAreaView>
-        <CourseHeading
-          name={courseQuery.data?.name}
-          shortcode={courseQuery.data?.shortcode}
-          cfu={courseQuery.data?.cfu}
-          parentCourseName={isModule ? parentCourse?.name : undefined}
-        />
-        <Card style={styles.metricsCard} accessible={true}>
-          <Grid>
-            <View
-              style={GlobalStyles.grow}
-              importantForAccessibility="yes"
-              accessibilityRole={lockEdition ? undefined : 'button'}
-              accessible={true}
-            >
-              <StatefulMenuView
-                actions={menuActions}
-                onPressAction={async ({ nativeEvent: { event } }) => {
-                  // replace current screen with same screen with event id as param
-                  (
-                    getParent()! as NativeStackNavigationProp<
-                      TeachingStackParamList,
-                      'Course'
-                    >
-                  ).replace('Course', {
-                    id: +event,
-                    animated: false,
-                  });
+        {states.status === 'ready' ? (
+          <>
+            <CourseHeading
+              name={courseQuery.data?.name}
+              shortcode={courseQuery.data?.shortcode}
+              cfu={courseQuery.data?.cfu}
+              parentCourseName={isModule ? parentCourse?.name : undefined}
+            />
+            <Card style={styles.metricsCard} accessible={true}>
+              <Grid>
+                <View
+                  style={GlobalStyles.grow}
+                  importantForAccessibility="yes"
+                  accessibilityRole={lockEdition ? undefined : 'button'}
+                  accessible={true}
+                >
+                  <StatefulMenuView
+                    actions={menuActions}
+                    onPressAction={async ({ nativeEvent: { event } }) => {
+                      // replace current screen with same screen with event id as param
+                      (
+                        getParent()! as NativeStackNavigationProp<
+                          TeachingStackParamList,
+                          'Course'
+                        >
+                      ).replace('Course', {
+                        id: +event,
+                        animated: false,
+                      });
+                    }}
+                  >
+                    <Row justify="flex-start" align="center">
+                      <Metric
+                        title={t('common.period')}
+                        value={`${courseQuery.data?.teachingPeriod ?? '--'} - ${
+                          courseQuery.data?.year ?? '--'
+                        }`}
+                        accessibilityLabel={`${t('degreeCourseScreen.period')}: ${
+                          courseQuery.data?.teachingPeriod ?? '--'
+                        } - ${courseQuery.data?.year ?? '--'}`}
+                        style={styles.periodMetric}
+                      />
+                      <Col align="center">
+                        {!lockEdition && unreadsPrevEditions > 0 && (
+                          <Icon
+                            icon={faCircle}
+                            size={8}
+                            color={styles.dotIcon.color}
+                            style={styles.dotIcon}
+                          />
+                        )}
+                        {!lockEdition && (editions?.length ?? 0) > 0 && (
+                          <Icon
+                            icon={faAngleDown}
+                            size={14}
+                            style={{
+                              marginTop: unreadsPrevEditions
+                                ? undefined
+                                : spacing[4],
+                            }}
+                            color={styles.periodDropdownIcon.color}
+                          />
+                        )}
+                      </Col>
+                    </Row>
+                  </StatefulMenuView>
+                </View>
+              </Grid>
+            </Card>
+            <Section>
+              <SectionHeader title={t('courseInfoTab.nextLectureLabel')} />
+              <OverviewList
+                indented
+                loading={isLoadingNextLecture}
+                skeleton={{ count: 1, leading: 'tile', subtitleLines: 2 }}
+                emptyStateText={t('courseInfoTab.nextLectureEmptyState')}
+              >
+                {nextLecture && (
+                  <Row style={styles.nextLectureBox}>
+                    <Col style={styles.dayColumn} align="stretch">
+                      <View style={[styles.dayBox, styles.nextLecBox]}>
+                        <Text
+                          variant="heading"
+                          style={[styles.nextLec, styles.secondaryDay]}
+                        >
+                          {weekDay}
+                        </Text>
+                        <Text variant="heading" style={styles.nextLec}>
+                          {dayOfMonth}
+                        </Text>
+                        {monthOfYear && (
+                          <Text variant="heading" style={styles.nextLec}>
+                            {monthOfYear}
+                          </Text>
+                        )}
+                      </View>
+                    </Col>
+                    <Col flex={1}>
+                      {nextLecture && (
+                        <LectureCard
+                          item={nextLecture}
+                          nextLecture
+                          nextDate={`${weekDay}/${dayOfMonth}/${monthOfYear}`}
+                        />
+                      )}
+                    </Col>
+                  </Row>
+                )}
+              </OverviewList>
+            </Section>
+
+            <Section>
+              <SectionHeader title={t('courseInfoTab.staffSectionTitle')} />
+              <OverviewList
+                indented
+                loading={
+                  (courseQuery.data?.staff?.length ?? 0) > 0 && isStaffLoading
+                }
+                skeleton={{
+                  count: courseQuery.data?.staff?.length ?? 1,
+                  leading: 'avatar',
                 }}
               >
-                <Row justify="flex-start" align="center">
-                  <Metric
-                    title={t('common.period')}
-                    value={`${courseQuery.data?.teachingPeriod ?? '--'} - ${
-                      courseQuery.data?.year ?? '--'
-                    }`}
-                    accessibilityLabel={`${t('degreeCourseScreen.period')}: ${
-                      courseQuery.data?.teachingPeriod ?? '--'
-                    } - ${courseQuery.data?.year ?? '--'}`}
-                    style={styles.periodMetric}
+                {staff.map(member => (
+                  <PersonListItem
+                    key={`${member.id}`}
+                    person={member}
+                    subtitle={t(`common.${member.courseRole}`)}
                   />
-                  <Col align="center">
-                    {!lockEdition && unreadsPrevEditions > 0 && (
-                      <Icon
-                        icon={faCircle}
-                        size={8}
-                        color={styles.dotIcon.color}
-                        style={styles.dotIcon}
-                      />
-                    )}
-                    {!lockEdition && (editions?.length ?? 0) > 0 && (
-                      <Icon
-                        icon={faAngleDown}
-                        size={14}
-                        style={{
-                          marginTop: unreadsPrevEditions
-                            ? undefined
-                            : spacing[4],
-                        }}
-                        color={styles.periodDropdownIcon.color}
-                      />
-                    )}
-                  </Col>
-                </Row>
-              </StatefulMenuView>
-            </View>
-          </Grid>
-        </Card>
-        <Section>
-          <SectionHeader title={t('courseInfoTab.nextLectureLabel')} />
-          <OverviewList
-            indented
-            loading={isLoadingNextLecture}
-            emptyStateText={
-              isOffline && isLoadingNextLecture
-                ? t('common.cacheMiss')
-                : t('courseInfoTab.nextLectureEmptyState')
-            }
-          >
-            {nextLecture && (
-              <Row style={styles.nextLectureBox}>
-                <Col style={styles.dayColumn} align="stretch">
-                  <View style={[styles.dayBox, styles.nextLecBox]}>
-                    <Text
-                      variant="heading"
-                      style={[styles.nextLec, styles.secondaryDay]}
-                    >
-                      {weekDay}
-                    </Text>
-                    <Text variant="heading" style={styles.nextLec}>
-                      {dayOfMonth}
-                    </Text>
-                    {monthOfYear && (
-                      <Text variant="heading" style={styles.nextLec}>
-                        {monthOfYear}
-                      </Text>
-                    )}
-                  </View>
-                </Col>
-                <Col flex={1}>
-                  {nextLecture && (
-                    <LectureCard
-                      item={nextLecture}
-                      nextLecture
-                      nextDate={`${weekDay}/${dayOfMonth}/${monthOfYear}`}
-                    />
-                  )}
-                </Col>
-              </Row>
-            )}
-          </OverviewList>
-        </Section>
+                ))}
+              </OverviewList>
+            </Section>
+            <Section>
+              <SectionHeader title={t('examsScreen.title')} />
+              <OverviewList
+                queries={courseExamsQuery}
+                indented
+                skeleton={{ count: 1, leading: 'tile', trailing: 'chip' }}
+                emptyState={{
+                  title: t('states.exams.emptyTitle'),
+                  text: t('states.exams.emptyText'),
+                }}
+                errorState={{ title: t('states.exams.failedTitle') }}
+              >
+                {courseExamsQuery.data?.map(exam => (
+                  <ExamListItem
+                    key={`${exam.id}` + exam.moduleNumber}
+                    exam={exam}
+                  />
+                ))}
+              </OverviewList>
+            </Section>
 
-        <Section>
-          <SectionHeader title={t('courseInfoTab.staffSectionTitle')} />
-          <OverviewList
-            indented
-            loading={
-              !courseQuery?.data ||
-              ((courseQuery.data?.staff?.length ?? 0) > 0 && isStaffLoading)
-            }
-          >
-            {staff.map(member => (
-              <PersonListItem
-                key={`${member.id}`}
-                person={member}
-                subtitle={t(`common.${member.courseRole}`)}
-              />
-            ))}
-          </OverviewList>
-        </Section>
-        <Section>
-          <SectionHeader title={t('examsScreen.title')} />
-          <OverviewList
-            loading={courseExamsQuery.isLoading}
-            indented
-            emptyStateText={
-              isOffline && courseExamsQuery.isLoading
-                ? t('common.cacheMiss')
-                : t('examsScreen.emptyState')
-            }
-          >
-            {courseExamsQuery.data?.map(exam => (
-              <ExamListItem
-                key={`${exam.id}` + exam.moduleNumber}
-                exam={exam}
-              />
-            ))}
-          </OverviewList>
-        </Section>
+            <Section>
+              <SectionHeader title={t('courseInfoTab.linksSectionTitle')} />
+              <OverviewList
+                indented
+                emptyStateText={t('courseInfoTab.linksSectionEmptyState')}
+              >
+                {courseQuery.data?.links.map((link, index) => (
+                  <ListItem
+                    key={index}
+                    leadingItem={<Icon icon={faLink} size={fontSizes.xl} />}
+                    title={
+                      link.description ?? t('courseInfoTab.linkDefaultTitle')
+                    }
+                    subtitle={link.url}
+                    onPress={() => openInAppLink(link.url)}
+                  />
+                ))}
+              </OverviewList>
+            </Section>
 
-        <Section>
-          <SectionHeader title={t('courseInfoTab.linksSectionTitle')} />
-          <OverviewList
-            indented
-            loading={!courseQuery?.data}
-            emptyStateText={
-              isOffline && courseQuery.isLoading
-                ? t('common.cacheMiss')
-                : t('courseInfoTab.linksSectionEmptyState')
-            }
-          >
-            {courseQuery.data?.links.map((link, index) => (
-              <ListItem
-                key={index}
-                leadingItem={<Icon icon={faLink} size={fontSizes.xl} />}
-                title={link.description ?? t('courseInfoTab.linkDefaultTitle')}
-                subtitle={link.url}
-                onPress={() => openInAppLink(link.url)}
+            <Section>
+              <SectionHeader title={t('courseInfoTab.moreSectionTitle')} />
+              <OverviewList>
+                <ListItem
+                  title={t('courseGuideScreen.title')}
+                  linkTo={{ screen: 'CourseGuide', params: { courseId } }}
+                />
+                <ListItem
+                  title={t('courseStatisticsScreen.title')}
+                  subtitle={t('courseStatisticsScreen.subtitle')}
+                  linkTo={{
+                    screen: 'CourseStatistics',
+                    params: {
+                      courseShortcode: courseQuery.data?.shortcode,
+                      year: courseQuery.data?.year,
+                      teacherId: courseQuery.data?.teacherId,
+                      filter: CourseStatisticsFilterType.YEAR,
+                      nameCourse: courseQuery.data?.name,
+                    },
+                  }}
+                  disabled={isStatisticsDisabled}
+                />
+              </OverviewList>
+            </Section>
+          </>
+        ) : (
+          <QueryStateView
+            states={states}
+            skeleton={
+              <SkeletonDetail
+                cards={[88, 104, 120]}
+                label={t('states.courseInfo.loading')}
               />
-            ))}
-          </OverviewList>
-        </Section>
-
-        <Section>
-          <SectionHeader title={t('courseInfoTab.moreSectionTitle')} />
-          <OverviewList>
-            <ListItem
-              title={t('courseGuideScreen.title')}
-              linkTo={{ screen: 'CourseGuide', params: { courseId } }}
-              disabled={isGuideDisabled}
-            />
-            <ListItem
-              title={t('courseStatisticsScreen.title')}
-              subtitle={t('courseStatisticsScreen.subtitle')}
-              linkTo={{
-                screen: 'CourseStatistics',
-                params: {
-                  courseShortcode: courseQuery.data?.shortcode,
-                  year: courseQuery.data?.year,
-                  teacherId: courseQuery.data?.teacherId,
-                  filter: CourseStatisticsFilterType.YEAR,
-                  nameCourse: courseQuery.data?.name,
-                },
-              }}
-              disabled={isStatisticsDisabled}
-            />
-          </OverviewList>
-        </Section>
+            }
+            errorState={{ title: t('states.courseInfo.failedTitle') }}
+          >
+            {null}
+          </QueryStateView>
+        )}
         <BottomBarSpacer />
       </SafeAreaView>
     </ScrollView>

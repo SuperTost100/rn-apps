@@ -1247,7 +1247,9 @@
       "failedText": "La pagina del corso non ha risposto. I file già scaricati restano sul telefono. Riprova tra poco.",
       "noMatchTitle": "Nessun file corrisponde a \"{{search}}\"",
       "noMatchText": "La ricerca guarda i nomi dei file di questo corso.",
-      "clearSearch": "Cancella la ricerca"
+      "clearSearch": "Cancella la ricerca",
+      "emptyFolderTitle": "Questa cartella è vuota",
+      "emptyFolderText": "I file che il docente aggiunge qui compaiono in questo elenco."
     },
     "agenda": {
       "loading": "Caricamento dell'agenda",
@@ -1259,7 +1261,10 @@
       "emptyText": "Un ticket è una domanda alla segreteria. I tuoi ticket e le risposte compaiono qui.",
       "failedTitle": "Impossibile caricare i ticket",
       "failedText": "Il server della segreteria non ha risposto. I tuoi ticket sono al sicuro. Controlla la connessione e riprova.",
-      "newNeedsConnection": "Per un nuovo ticket serve una connessione"
+      "newNeedsConnection": "Per un nuovo ticket serve una connessione",
+      "failedFaqsTitle": "Impossibile cercare nelle FAQ",
+      "failedOneTitle": "Impossibile caricare il ticket",
+      "loadingOne": "Caricamento del ticket"
     },
     "messages": {
       "emptyTitle": "Nessun messaggio",
@@ -1274,6 +1279,89 @@
       "goneAction": "Mostra gli appelli",
       "failedTitle": "Impossibile caricare l'appello",
       "failedText": "La tua prenotazione, se ne hai una, è al sicuro. Controlla la connessione e riprova."
+    },
+    "assignments": {
+      "emptyTitle": "Nessun elaborato consegnato",
+      "emptyText": "I file che consegni per questo corso compaiono qui, con la data di invio.",
+      "failedTitle": "Impossibile caricare gli elaborati"
+    },
+    "bookings": {
+      "emptyTitle": "Nessuna prenotazione",
+      "emptyText": "Prenota un posto in aula studio o un appuntamento a uno sportello. Le prenotazioni compaiono qui e in agenda.",
+      "failedTitle": "Impossibile caricare le prenotazioni",
+      "noTopicsTitle": "Al momento non c'è niente da prenotare",
+      "noTopicsText": "Aule studio e sportelli compaiono qui quando si aprono le prenotazioni.",
+      "failedTopicsTitle": "Impossibile caricare cosa puoi prenotare",
+      "failedSlotsTitle": "Impossibile caricare gli orari liberi"
+    },
+    "career": {
+      "failedTitle": "Impossibile caricare la carriera",
+      "loading": "Caricamento della carriera"
+    },
+    "courseInfo": {
+      "failedTitle": "Impossibile caricare il corso",
+      "loading": "Caricamento del corso"
+    },
+    "grades": {
+      "emptyTitle": "Ancora nessun voto",
+      "emptyText": "Gli esami superati compaiono qui con voto e crediti.",
+      "failedTitle": "Impossibile caricare i voti",
+      "failedProvisionalTitle": "Impossibile caricare i voti provvisori"
+    },
+    "guides": {
+      "emptyTitle": "Nessuna guida",
+      "emptyText": "Qui compaiono le guide ai servizi dell'ateneo.",
+      "failedTitle": "Impossibile caricare le guide",
+      "failedOneTitle": "Impossibile caricare la guida",
+      "goneTitle": "Questa guida non è più disponibile",
+      "goneText": "Torna all'elenco delle guide per trovare quella che ti serve.",
+      "loadingOne": "Caricamento della guida"
+    },
+    "jobOffers": {
+      "emptyTitle": "Nessuna offerta di lavoro",
+      "emptyText": "Qui compaiono le offerte che le aziende pubblicano per studenti e laureati.",
+      "failedTitle": "Impossibile caricare le offerte di lavoro",
+      "failedOneTitle": "Impossibile caricare l'offerta",
+      "loadingOne": "Caricamento dell'offerta"
+    },
+    "lectures": {
+      "emptyTitle": "Ancora nessuna lezione",
+      "emptyText": "Le registrazioni e le lezioni in diretta pubblicate dal docente compaiono qui.",
+      "failedTitle": "Impossibile caricare le lezioni",
+      "loading": "Caricamento delle lezioni"
+    },
+    "news": {
+      "emptyTitle": "Nessuna notizia",
+      "emptyText": "Notizie ed eventi dell'ateneo compaiono qui, dal più recente.",
+      "failedTitle": "Impossibile caricare le notizie",
+      "failedOneTitle": "Impossibile caricare la notizia",
+      "loadingOne": "Caricamento della notizia"
+    },
+    "notices": {
+      "emptyTitle": "Ancora nessun avviso",
+      "emptyText": "Quando il docente pubblica un avviso, compare qui e ricevi una notifica.",
+      "failedTitle": "Impossibile caricare gli avvisi",
+      "failedText": "La pagina del corso non ha risposto. Riprova tra poco.",
+      "failedOneTitle": "Impossibile caricare l'avviso",
+      "goneTitle": "Questo avviso non è più disponibile",
+      "loading": "Caricamento degli avvisi"
+    },
+    "notifications": {
+      "failedTitle": "Impossibile caricare le impostazioni delle notifiche"
+    },
+    "offering": {
+      "failedTitle": "Impossibile caricare l'offerta formativa",
+      "failedDegreeTitle": "Impossibile caricare il corso di studi",
+      "failedCourseTitle": "Impossibile caricare l'insegnamento"
+    },
+    "surveys": {
+      "failedTitle": "Impossibile caricare i questionari"
+    },
+    "people": {
+      "emptyText": "La ricerca guarda nome e cognome del personale docente e amministrativo.",
+      "failedTitle": "Impossibile cercare nei contatti",
+      "failedOneTitle": "Impossibile caricare il contatto",
+      "loadingOne": "Caricamento del contatto"
     }
   }
 }

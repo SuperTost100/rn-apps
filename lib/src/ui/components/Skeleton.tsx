@@ -325,3 +325,50 @@ export const SkeletonCard = ({
     </SkeletonRegion>
   );
 };
+
+interface SkeletonDetailProps {
+  /** Two heading lines for a title that comes with the data. Default: true */
+  title?: boolean;
+  /** The heights of the cards below the title, top to bottom */
+  cards?: number[];
+  label?: string;
+}
+
+/** A detail page while loading: the title, then cards of the given heights */
+export const SkeletonDetail = ({
+  title = true,
+  cards = [160],
+  label,
+}: SkeletonDetailProps) => {
+  const { layout, spacing } = useTheme();
+  return (
+    <SkeletonRegion label={label}>
+      {title && (
+        <View
+          style={{
+            paddingHorizontal: layout.gutter,
+            paddingVertical: spacing[4],
+            gap: spacing[1],
+          }}
+        >
+          <SkeletonLine variant="heading" width="85%" />
+          <SkeletonLine variant="heading" width="55%" />
+        </View>
+      )}
+      {cards.map((height, i) => (
+        <Card
+          key={i}
+          style={{
+            minHeight: height,
+            padding: layout.cardPadding,
+            gap: spacing[1],
+          }}
+        >
+          <SkeletonLine variant="prose" width="90%" />
+          <SkeletonLine variant="prose" width="75%" />
+          <SkeletonLine variant="prose" width="60%" />
+        </Card>
+      ))}
+    </SkeletonRegion>
+  );
+};

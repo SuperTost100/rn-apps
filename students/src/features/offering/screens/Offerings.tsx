@@ -1,14 +1,14 @@
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet } from 'react-native';
 
-import { useOfflineDisabled } from '@polito/lib/core';
 import {
   BottomBarSpacer,
   ListItem,
-  LoadingContainer,
   OverviewList,
+  QueryStateView,
   RefreshControl,
   Section,
+  SkeletonDetail,
   Text,
   Theme,
   useStylesheet,
@@ -18,10 +18,9 @@ import { useGetOffering } from '../../../core/queries/offeringHooks';
 
 export const Offerings = ({ type }: { type: 'master' | 'bachelor' }) => {
   const offeringQuery = useGetOffering();
-  const { data, isLoading } = offeringQuery;
+  const { data } = offeringQuery;
   const styles = useStylesheet(createStyles);
   const { t } = useTranslation();
-  const isOffline = useOfflineDisabled();
 
   const offerings = data ? data[type] : [];
 
@@ -31,7 +30,12 @@ export const Offerings = ({ type }: { type: 'master' | 'bachelor' }) => {
       refreshControl={<RefreshControl queries={[offeringQuery]} manual />}
       contentContainerStyle={styles.container}
     >
-      <LoadingContainer loading={isLoading}>
+      <QueryStateView
+        queries={offeringQuery}
+        isEmpty={() => false}
+        skeleton={<SkeletonDetail title={false} cards={[200, 200]} />}
+        errorState={{ title: t('states.offering.failedTitle') }}
+      >
         {!!offerings && offerings?.length > 0 ? (
           offerings?.map(item => (
             <Section key={item.code} style={styles.section}>
@@ -55,7 +59,6 @@ export const Offerings = ({ type }: { type: 'master' | 'bachelor' }) => {
                         id: degree.id,
                       },
                     }}
-                    disabled={isOffline}
                   />
                 ))}
               </OverviewList>
@@ -64,7 +67,7 @@ export const Offerings = ({ type }: { type: 'master' | 'bachelor' }) => {
         ) : (
           <OverviewList emptyStateText={t('offeringScreen.emptyState')} />
         )}
-      </LoadingContainer>
+      </QueryStateView>
       <BottomBarSpacer />
     </ScrollView>
   );

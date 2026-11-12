@@ -1136,6 +1136,12 @@
     "refreshFailedNoTime": "Aggiornamento non riuscito. Mostro i dati salvati in precedenza.",
     "loadFailed": "Impossibile caricare queste informazioni. Riprova tra poco.",
     "close": "Chiudi",
-    "needsConnection": "Serve una connessione"
+    "needsConnection": "Serve una connessione",
+    "people": {
+      "emptyText": "La ricerca guarda nome e cognome del personale docente e amministrativo.",
+      "failedTitle": "Impossibile cercare nei contatti",
+      "failedOneTitle": "Impossibile caricare il contatto",
+      "loadingOne": "Caricamento del contatto"
+    }
   }
 }

@@ -1,8 +1,15 @@
 import { useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { SafeAreaView, ScrollView } from 'react-native';
 
-import { linkUrls, sanitizeHtml } from '@polito/lib/core';
-import { BottomBarSpacer, RefreshControl, useTheme } from '@polito/lib/ui';
+import { linkUrls, sanitizeHtml, useQueryStates } from '@polito/lib/core';
+import {
+  BottomBarSpacer,
+  QueryStateView,
+  RefreshControl,
+  SkeletonDetail,
+  useTheme,
+} from '@polito/lib/ui';
 import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
@@ -18,6 +25,11 @@ export const NoticeScreen = ({ route }: Props) => {
   const { spacing } = useTheme();
   const { clearNotificationScope } = useNotifications();
   const noticesQuery = useGetCourseNotices(courseId);
+  const { t } = useTranslation();
+  const states = useQueryStates(noticesQuery, {
+    isEmpty: (notices: { id: number }[]) =>
+      !notices.some(n => n.id === noticeId),
+  });
 
   const message = useMemo(
     () =>
@@ -49,13 +61,23 @@ export const NoticeScreen = ({ route }: Props) => {
       refreshControl={<RefreshControl queries={[noticesQuery]} manual />}
     >
       <SafeAreaView>
-        <HtmlMessage
-          message={message}
-          baseStyle={{
-            paddingTop: 0,
-            paddingHorizontal: spacing[5],
+        <QueryStateView
+          states={states}
+          skeleton={<SkeletonDetail title={false} cards={[200]} />}
+          emptyState={{ title: t('states.notices.goneTitle') }}
+          errorState={{
+            title: t('states.notices.failedOneTitle'),
+            text: t('states.notices.failedText'),
           }}
-        />
+        >
+          <HtmlMessage
+            message={message}
+            baseStyle={{
+              paddingTop: 0,
+              paddingHorizontal: spacing[5],
+            }}
+          />
+        </QueryStateView>
         <BottomBarSpacer />
       </SafeAreaView>
     </ScrollView>

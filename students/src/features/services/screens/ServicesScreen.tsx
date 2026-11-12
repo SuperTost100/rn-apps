@@ -31,13 +31,11 @@ import { useQueryClient } from '@tanstack/react-query';
 import { AppPreferences } from '~/core/types/preferences.ts';
 
 import { useNotifications } from '../../../core/hooks/useNotifications';
-import { BOOKINGS_QUERY_KEY } from '../../../core/queries/bookingHooks';
 import {
   WEBMAIL_LINK_QUERY_KEY,
   useGetWebmailLink,
 } from '../../../core/queries/studentAuthHooks';
 import { useGetUnreadEmails } from '../../../core/queries/studentHooks.ts';
-import { TICKETS_QUERY_KEY } from '../../../core/queries/ticketHooks';
 import { ServiceCard } from '../components/ServiceCard';
 
 export const ServicesScreen = () => {
@@ -46,7 +44,6 @@ export const ServicesScreen = () => {
     favoriteServices: favoriteServiceIds,
     emailGuideRead,
     updatePreference,
-    peopleSearched,
     accessibility,
   } = usePreferencesContext<AppPreferences>();
   const { getUnreadsCount } = useNotifications();
@@ -80,9 +77,6 @@ export const ServicesScreen = () => {
         id: 'tickets',
         name: t('ticketsScreen.title'),
         icon: faComments,
-        disabled:
-          isOffline &&
-          queryClient.getQueryData(TICKETS_QUERY_KEY) === undefined,
         linkTo: { screen: 'Tickets' },
         unReadCount: unreadTickets,
         accessibilityLabel: `${t('ticketsScreen.title')} ${
@@ -93,7 +87,6 @@ export const ServicesScreen = () => {
         id: 'news',
         name: t('newsScreen.title'),
         icon: faNewspaper,
-        disabled: isOffline,
         linkTo: {
           screen: 'News',
         },
@@ -108,7 +101,6 @@ export const ServicesScreen = () => {
         id: 'jobOffers',
         name: t('jobOffersScreen.title'),
         icon: faBriefcase,
-        disabled: isOffline,
         linkTo: { screen: 'JobOffers' },
         accessibilityLabel: t('jobOffersScreen.title'),
       },
@@ -116,7 +108,6 @@ export const ServicesScreen = () => {
         id: 'offering',
         name: t('offeringScreen.title'),
         icon: faBookBookmark,
-        disabled: isOffline,
         linkTo: { screen: 'Offering' },
         accessibilityLabel: t('offeringScreen.title'),
       },
@@ -124,7 +115,6 @@ export const ServicesScreen = () => {
         id: 'contacts',
         name: t('contactsScreen.title'),
         icon: faIdCard,
-        disabled: isOffline && peopleSearched?.length === 0, // TODO why?
         linkTo: { screen: 'Contacts' },
         accessibilityLabel: t('contactsScreen.title'),
       },
@@ -142,9 +132,6 @@ export const ServicesScreen = () => {
         id: 'bookings',
         name: t('bookingsScreen.title'),
         icon: faPersonCirclePlus,
-        disabled:
-          isOffline &&
-          queryClient.getQueryData(BOOKINGS_QUERY_KEY) === undefined,
         linkTo: { screen: 'Bookings' },
         accessibilityLabel: t('bookingsScreen.title'),
       },
@@ -152,7 +139,6 @@ export const ServicesScreen = () => {
         id: 'surveys',
         name: t('surveysScreen.title'),
         icon: faClipboardQuestion,
-        disabled: isOffline,
         linkTo: { screen: 'Surveys' },
         accessibilityLabel: t('surveysScreen.title'),
       },
@@ -160,6 +146,7 @@ export const ServicesScreen = () => {
         id: 'mail',
         name: 'Web\nMail',
         icon: faEnvelope,
+        // Opens the webmail in the browser: it needs the network
         disabled: isOffline,
         unReadCount: unreadEmailsQuery.data
           ? unreadEmailsQuery.data.unreadEmails
@@ -173,10 +160,8 @@ export const ServicesScreen = () => {
   }, [
     t,
     isOffline,
-    queryClient,
     unreadTickets,
     getUnreadsCount,
-    peopleSearched?.length,
     emailGuideRead,
     unreadEmailsQuery.data,
     openWebmailLink,

@@ -364,7 +364,11 @@ export const useGetAgendaWeek = (startDate: DateTime = thisMonday) => {
     { startDate, sources, hasData: agendaWeekQuery.data !== undefined },
   ]);
 
-  return agendaWeekQuery;
+  return {
+    weekQuery: agendaWeekQuery,
+    /** The API queries the week is built from, for loading and failed states */
+    sourceQueries: [examsQuery, bookingsQuery, lecturesQuery, deadlinesQuery],
+  };
 };
 
 export const useGetAgendaWeeks = (mondays: DateTime[]) => {

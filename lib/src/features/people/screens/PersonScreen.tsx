@@ -23,8 +23,8 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { usePreferencesContext } from '../../../core/contexts/PreferencesContext';
 import { useAccessibility } from '../../../core/hooks/useAccessibility';
-import { useOfflineDisabled } from '../../../core/hooks/useOfflineDisabled';
 import { useOpenInAppLink } from '../../../core/hooks/useOpenInAppLink';
+import { useQueryStates } from '../../../core/hooks/useQueryStates';
 import { notNullish } from '../../../core/utils/predicates';
 import { BottomBarSpacer } from '../../../ui/components/BottomBarSpacer';
 import { Col } from '../../../ui/components/Col';
@@ -33,10 +33,12 @@ import { IconButton } from '../../../ui/components/IconButton';
 import { ListItem } from '../../../ui/components/ListItem';
 import { Metric } from '../../../ui/components/Metric';
 import { OverviewList } from '../../../ui/components/OverviewList';
+import { QueryStateView } from '../../../ui/components/QueryStateView';
 import { RefreshControl } from '../../../ui/components/RefreshControl';
 import { Row } from '../../../ui/components/Row';
 import { Section } from '../../../ui/components/Section';
 import { SectionHeader } from '../../../ui/components/SectionHeader';
+import { SkeletonDetail } from '../../../ui/components/Skeleton';
 import { Text } from '../../../ui/components/Text';
 import { useStylesheet } from '../../../ui/hooks/useStylesheet';
 import { useTheme } from '../../../ui/hooks/useTheme';
@@ -87,7 +89,7 @@ export const PersonScreen = ({
   const courses = person?.courses ?? [];
   const phoneNumbers = person?.phoneNumbers;
 
-  const isOffline = useOfflineDisabled();
+  const states = useQueryStates(personQuery);
 
   const header = (
     <Col ph={5} gap={6} mb={6}>
@@ -189,10 +191,9 @@ export const PersonScreen = ({
   interface RenderedCourseProps {
     course: PersonCourse;
     index: number;
-    disabled: boolean;
   }
 
-  const RenderedCourse = ({ course, index, disabled }: RenderedCourseProps) => {
+  const RenderedCourse = ({ course, index }: RenderedCourseProps) => {
     const role = course.role === 'Titolare' ? 'roleHolder' : 'roleCollaborator';
 
     return (
@@ -211,7 +212,6 @@ export const PersonScreen = ({
             year: course.year,
           },
         }}
-        disabled={disabled}
       />
     );
   };
@@ -222,55 +222,71 @@ export const PersonScreen = ({
       contentInsetAdjustmentBehavior="automatic"
     >
       <SafeAreaView>
-        <Col pv={5}>
-          {header}
-          <Section>
-            <SectionHeader
-              title={t('personScreen.contacts')}
-              accessibilityLabel={[
-                t('personScreen.contacts'),
-                phoneNumbers?.length ? t('common.phoneContacts') : '',
-                t('personScreen.sentEmail'),
-              ]
-                .filter(Boolean)
-                .join('. ')}
-            />
-            <OverviewList indented loading={personQuery.isLoading}>
-              {phoneNumbers?.map(renderPhoneNumber)}
-              <ListItem
-                isAction
-                leadingItem={<Icon icon={faEnvelope} size={fontSizes.xl} />}
-                title={t('common.email')}
-                subtitle={person?.email}
-                onPress={() => {
-                  if (person?.email) Linking.openURL(`mailto:${person.email}`);
-                }}
+        {states.status !== 'ready' && (
+          <QueryStateView
+            states={states}
+            skeleton={
+              <SkeletonDetail
+                cards={[120]}
+                label={t('states.people.loadingOne')}
               />
-            </OverviewList>
-          </Section>
-          {courses.length > 0 && (
+            }
+            errorState={{ title: t('states.people.failedOneTitle') }}
+          >
+            {null}
+          </QueryStateView>
+        )}
+        {states.status === 'ready' && (
+          <Col pv={5}>
+            {header}
             <Section>
               <SectionHeader
-                title={t('common.course_plural')}
-                accessible={true}
-                accessibilityLabel={`${t('personScreen.coursesLabel')}. ${t(
-                  'personScreen.totalCourses',
-                  { total: courses.length },
-                )}`}
+                title={t('personScreen.contacts')}
+                accessibilityLabel={[
+                  t('personScreen.contacts'),
+                  phoneNumbers?.length ? t('common.phoneContacts') : '',
+                  t('personScreen.sentEmail'),
+                ]
+                  .filter(Boolean)
+                  .join('. ')}
               />
-              <OverviewList>
-                {courses.map((course, index) => (
-                  <RenderedCourse
-                    key={course.id}
-                    course={course}
-                    index={index}
-                    disabled={isOffline}
-                  />
-                ))}
+              <OverviewList indented>
+                {phoneNumbers?.map(renderPhoneNumber)}
+                <ListItem
+                  isAction
+                  leadingItem={<Icon icon={faEnvelope} size={fontSizes.xl} />}
+                  title={t('common.email')}
+                  subtitle={person?.email}
+                  onPress={() => {
+                    if (person?.email)
+                      Linking.openURL(`mailto:${person.email}`);
+                  }}
+                />
               </OverviewList>
             </Section>
-          )}
-        </Col>
+            {courses.length > 0 && (
+              <Section>
+                <SectionHeader
+                  title={t('common.course_plural')}
+                  accessible={true}
+                  accessibilityLabel={`${t('personScreen.coursesLabel')}. ${t(
+                    'personScreen.totalCourses',
+                    { total: courses.length },
+                  )}`}
+                />
+                <OverviewList>
+                  {courses.map((course, index) => (
+                    <RenderedCourse
+                      key={course.id}
+                      course={course}
+                      index={index}
+                    />
+                  ))}
+                </OverviewList>
+              </Section>
+            )}
+          </Col>
+        )}
         <BottomBarSpacer />
       </SafeAreaView>
     </ScrollView>

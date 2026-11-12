@@ -1,14 +1,17 @@
 import { useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { SafeAreaView, ScrollView, StyleSheet } from 'react-native';
 
-import { usePreferencesContext } from '@polito/lib/core';
+import { usePreferencesContext, useQueryStates } from '@polito/lib/core';
 import {
   BottomBarSpacer,
   Card,
   OverviewList,
+  QueryStateView,
   RefreshControl,
   ScreenTitle,
   Section,
+  SkeletonDetail,
   Text,
   Theme,
   useStylesheet,
@@ -27,7 +30,11 @@ type Props = NativeStackScreenProps<ServiceStackParamList, 'Guide'>;
 export const GuideScreen = ({ navigation, route }: Props) => {
   const { id } = route.params;
   const styles = useStylesheet(createStyles);
+  const { t } = useTranslation();
   const query = useGetGuides();
+  const states = useQueryStates(query, {
+    isEmpty: (d: { id: string }[]) => !d.some(g => g.id === id),
+  });
 
   const { emailGuideRead, updatePreference } =
     usePreferencesContext<AppPreferences>();
@@ -55,26 +62,50 @@ export const GuideScreen = ({ navigation, route }: Props) => {
       refreshControl={<RefreshControl queries={[query]} manual />}
     >
       <SafeAreaView>
-        <Section style={styles.paddingTop}>
-          <ScreenTitle title={guide?.title ?? ''} padded />
-        </Section>
-        <Section>
-          <Card padded style={styles.card}>
-            <Text>{guide?.intro}</Text>
-          </Card>
-          <OverviewList indented loading={query.isLoading}>
-            {guide?.fields.map(field => {
-              return <GuideFieldListItem field={field} key={field.label} />;
-            })}
-          </OverviewList>
-          <Card padded style={styles.card}>
-            {guide?.sections.map(section => {
-              return (
-                <GuideSectionListItem section={section} key={section.title} />
-              );
-            })}
-          </Card>
-        </Section>
+        {states.status === 'ready' ? (
+          <>
+            <Section style={styles.paddingTop}>
+              <ScreenTitle title={guide?.title ?? ''} padded />
+            </Section>
+            <Section>
+              <Card padded style={styles.card}>
+                <Text>{guide?.intro}</Text>
+              </Card>
+              <OverviewList indented>
+                {guide?.fields.map(field => {
+                  return <GuideFieldListItem field={field} key={field.label} />;
+                })}
+              </OverviewList>
+              <Card padded style={styles.card}>
+                {guide?.sections.map(section => {
+                  return (
+                    <GuideSectionListItem
+                      section={section}
+                      key={section.title}
+                    />
+                  );
+                })}
+              </Card>
+            </Section>
+          </>
+        ) : (
+          <QueryStateView
+            states={states}
+            skeleton={
+              <SkeletonDetail
+                cards={[80, 200]}
+                label={t('states.guides.loadingOne')}
+              />
+            }
+            errorState={{ title: t('states.guides.failedOneTitle') }}
+            emptyState={{
+              title: t('states.guides.goneTitle'),
+              text: t('states.guides.goneText'),
+            }}
+          >
+            {null}
+          </QueryStateView>
+        )}
         <BottomBarSpacer />
       </SafeAreaView>
     </ScrollView>

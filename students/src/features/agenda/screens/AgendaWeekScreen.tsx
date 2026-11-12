@@ -11,6 +11,7 @@ import {
   APP_TIMEZONE,
   useOfflineDisabled,
   usePreferencesContext,
+  useQueryStates,
 } from '@polito/lib/core';
 import {
   ActivityIndicator,
@@ -19,6 +20,7 @@ import {
   HOURS,
   HeaderAccessory,
   IconButton,
+  RegionStateBlock,
   Tabs,
   Theme,
   WeekNum,
@@ -83,8 +85,13 @@ export const AgendaWeekScreen = ({ navigation, route }: Props) => {
   const [dataPickerIsOpened, setDataPickerIsOpened] = useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const { data: weekData, isFetching /* , fetchPreviousPage, fetchNextPage*/ } =
-    useGetAgendaWeek(currentWeek);
+  const { weekQuery, sourceQueries } = useGetAgendaWeek(currentWeek);
+  const { data: weekData, isFetching } = weekQuery;
+  // The week waits for its sources: until it exists, their state is its state.
+  // The grid stays on screen; a failure shows above it
+  const states = useQueryStates(weekData ? weekQuery : sourceQueries, {
+    isEmpty: () => false,
+  });
 
   const calendarData = useMemo(() => {
     return weekData?.data?.flatMap(week => week.items) ?? [];
@@ -296,6 +303,15 @@ export const AgendaWeekScreen = ({ navigation, route }: Props) => {
           setCalendarHeight(height);
         }}
       >
+        {states.status === 'error' && (
+          <RegionStateBlock
+            states={states}
+            errorState={{
+              title: t('states.agenda.failedTitle'),
+              text: t('states.agenda.failedText'),
+            }}
+          />
+        )}
         {!calendarHeight ||
           ((isFetching || isRefreshing) && (
             <ActivityIndicator size="large" style={styles.loader} />

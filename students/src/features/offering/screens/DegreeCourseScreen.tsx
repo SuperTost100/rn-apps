@@ -24,14 +24,15 @@ import {
   Grid,
   Icon,
   ListItem,
-  LoadingContainer,
   Metric,
   OverviewList,
+  QueryStateView,
   RefreshControl,
   Row,
   ScreenTitle,
   Section,
   SectionHeader,
+  SkeletonDetail,
   StatefulMenuView,
   Text,
   Theme,
@@ -101,7 +102,12 @@ export const DegreeCourseScreen = ({ route }: Props) => {
       refreshControl={<RefreshControl queries={[courseQuery]} manual />}
     >
       <SafeAreaView>
-        <LoadingContainer loading={courseQuery.isLoading}>
+        <QueryStateView
+          queries={courseQuery}
+          isEmpty={() => false}
+          skeleton={<SkeletonDetail cards={[96, 160, 120]} />}
+          errorState={{ title: t('states.offering.failedCourseTitle') }}
+        >
           <Section>
             <ScreenTitle style={styles.heading} title={offeringCourse?.name} />
             <Text style={styles.shortCode} variant="caption">
@@ -280,7 +286,7 @@ export const DegreeCourseScreen = ({ route }: Props) => {
             </OverviewList>
           </Section>
           <BottomBarSpacer />
-        </LoadingContainer>
+        </QueryStateView>
       </SafeAreaView>
     </ScrollView>
   );

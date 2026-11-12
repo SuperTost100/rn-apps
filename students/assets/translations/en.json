@@ -1221,7 +1221,9 @@
       "failedText": "The course page didn't answer. Files you already downloaded are still on this phone. Try again in a moment.",
       "noMatchTitle": "No files match \"{{search}}\"",
       "noMatchText": "Search looks at the names of the files of this course.",
-      "clearSearch": "Clear search"
+      "clearSearch": "Clear search",
+      "emptyFolderTitle": "This folder is empty",
+      "emptyFolderText": "Files the teacher adds here will appear in this list."
     },
     "agenda": {
       "loading": "Loading the agenda",
@@ -1233,7 +1235,10 @@
       "emptyText": "A ticket is a question to the student office. Your tickets and the replies appear here.",
       "failedTitle": "Couldn't load your tickets",
       "failedText": "The student office server didn't answer. Your tickets are safe. Check your connection and try again.",
-      "newNeedsConnection": "New ticket needs a connection"
+      "newNeedsConnection": "New ticket needs a connection",
+      "failedFaqsTitle": "Couldn't search the FAQs",
+      "failedOneTitle": "Couldn't load this ticket",
+      "loadingOne": "Loading the ticket"
     },
     "messages": {
       "emptyTitle": "No messages",
@@ -1248,6 +1253,89 @@
       "goneAction": "Show exam calls",
       "failedTitle": "Couldn't load this exam call",
       "failedText": "Your booking, if you have one, is safe. Check your connection and try again."
+    },
+    "assignments": {
+      "emptyTitle": "No assignments sent",
+      "emptyText": "Files you hand in for this course appear here, with the date you sent them.",
+      "failedTitle": "Couldn't load your assignments"
+    },
+    "bookings": {
+      "emptyTitle": "No bookings",
+      "emptyText": "Book a desk in a study room or a slot at an office. Your bookings appear here and in the agenda.",
+      "failedTitle": "Couldn't load your bookings",
+      "noTopicsTitle": "Nothing to book right now",
+      "noTopicsText": "Study rooms and office slots appear here when they open for booking.",
+      "failedTopicsTitle": "Couldn't load what you can book",
+      "failedSlotsTitle": "Couldn't load the free slots"
+    },
+    "career": {
+      "failedTitle": "Couldn't load your career",
+      "loading": "Loading your career"
+    },
+    "courseInfo": {
+      "failedTitle": "Couldn't load this course",
+      "loading": "Loading the course"
+    },
+    "grades": {
+      "emptyTitle": "No grades yet",
+      "emptyText": "Exams you pass appear here with their grade and credits.",
+      "failedTitle": "Couldn't load your grades",
+      "failedProvisionalTitle": "Couldn't load the provisional grades"
+    },
+    "guides": {
+      "emptyTitle": "No guides",
+      "emptyText": "Guides to the university's services appear here.",
+      "failedTitle": "Couldn't load the guides",
+      "failedOneTitle": "Couldn't load this guide",
+      "goneTitle": "This guide is no longer available",
+      "goneText": "Go back to the list of guides to find the one you need.",
+      "loadingOne": "Loading the guide"
+    },
+    "jobOffers": {
+      "emptyTitle": "No job offers",
+      "emptyText": "Offers that companies publish for students and graduates appear here.",
+      "failedTitle": "Couldn't load the job offers",
+      "failedOneTitle": "Couldn't load this job offer",
+      "loadingOne": "Loading the job offer"
+    },
+    "lectures": {
+      "emptyTitle": "No lectures yet",
+      "emptyText": "Recordings and live classes the teacher publishes appear here.",
+      "failedTitle": "Couldn't load the lectures",
+      "loading": "Loading the lectures"
+    },
+    "news": {
+      "emptyTitle": "No news",
+      "emptyText": "News and events from the university appear here, newest first.",
+      "failedTitle": "Couldn't load the news",
+      "failedOneTitle": "Couldn't load this news item",
+      "loadingOne": "Loading the news item"
+    },
+    "notices": {
+      "emptyTitle": "No announcements yet",
+      "emptyText": "When the teacher posts an announcement, it appears here and you get a notification.",
+      "failedTitle": "Couldn't load the announcements",
+      "failedText": "The course page didn't answer. Try again in a moment.",
+      "failedOneTitle": "Couldn't load this announcement",
+      "goneTitle": "This announcement is no longer available",
+      "loading": "Loading the announcements"
+    },
+    "notifications": {
+      "failedTitle": "Couldn't load your notification settings"
+    },
+    "offering": {
+      "failedTitle": "Couldn't load the course catalogue",
+      "failedDegreeTitle": "Couldn't load this degree programme",
+      "failedCourseTitle": "Couldn't load this course"
+    },
+    "surveys": {
+      "failedTitle": "Couldn't load the surveys"
+    },
+    "people": {
+      "emptyText": "Search looks at the first and last names of teaching and administrative staff.",
+      "failedTitle": "Couldn't search the contacts",
+      "failedOneTitle": "Couldn't load this contact",
+      "loadingOne": "Loading the contact"
     }
   }
 }

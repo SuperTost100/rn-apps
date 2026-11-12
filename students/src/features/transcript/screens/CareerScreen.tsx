@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { SafeAreaView, ScrollView, StyleSheet, View } from 'react-native';
 
 import { faQuestionCircle } from '@fortawesome/free-regular-svg-icons';
+import { useQueryStates } from '@polito/lib/core';
 import {
   BottomBarSpacer,
   BottomModal,
@@ -10,10 +11,12 @@ import {
   Col,
   GlobalStyles,
   Metric,
+  QueryStateView,
   RefreshControl,
   Row,
   Section,
   SectionHeader,
+  SkeletonDetail,
   Text,
   type Theme,
   useBottomModal,
@@ -41,6 +44,7 @@ export const CareerScreen = () => {
   const styles = useStylesheet(createStyles);
   const studentQuery = useGetStudent();
   const gradesQuery = useGetGrades();
+  const states = useQueryStates(studentQuery);
   const {
     enrollmentCredits,
     enrollmentAttendedCredits,
@@ -180,176 +184,200 @@ export const CareerScreen = () => {
         }
       >
         <SafeAreaView>
-          <Section>
-            <SectionHeader title={t('transcriptMetricsScreen.yourCareer')} />
-            <Card style={styles.chartCard} accessible={true}>
-              <View style={GlobalStyles.grow}>
-                <Metric
-                  title={t('transcriptMetricsScreen.acquiredCreditsLabel')}
-                  value={`${totalAcquiredCredits ?? '--'}/${
-                    totalCredits ?? '--'
-                  } CFU`}
-                  style={styles.spaceBottom}
-                  accessibilityLabel={`${t(
-                    'transcriptMetricsScreen.acquiredCreditsLabel',
-                  )}: ${totalAcquiredCredits} ${t(
-                    'common.of',
-                  )} ${totalCredits}`}
+          {states.status === 'ready' ? (
+            <>
+              <Section>
+                <SectionHeader
+                  title={t('transcriptMetricsScreen.yourCareer')}
                 />
-                <Metric
-                  title={t('transcriptMetricsScreen.attendedCreditsLabel')}
-                  value={`${totalAttendedCredits ?? '--'}/${
-                    totalCredits ?? '--'
-                  } CFU`}
-                  color={palettes.primary[400]}
-                  accessibilityLabel={`${t(
-                    'transcriptMetricsScreen.attendedCreditsLabel',
-                  )}: ${totalAttendedCredits} ${t(
-                    'common.of',
-                  )} ${totalCredits}`}
-                />
-              </View>
-              <ProgressChart
-                data={
-                  totalCredits
-                    ? [
-                        (totalAttendedCredits ?? 0) / totalCredits,
-                        (totalAcquiredCredits ?? 0) / totalCredits,
-                      ]
-                    : []
-                }
-                colors={[palettes.primary[400], palettes.secondary[500]]}
-              />
-            </Card>
-          </Section>
-
-          <Section>
-            <SectionHeader title={t('transcriptMetricsScreen.thisYear')} />
-            <Card style={styles.chartCard} accessible={true}>
-              <View style={GlobalStyles.grow}>
-                <Metric
-                  title={t('transcriptMetricsScreen.acquiredCreditsLabel')}
-                  value={`${enrollmentAcquiredCredits ?? '--'}/${
-                    enrollmentCredits ?? '--'
-                  } CFU`}
-                  accessibilityLabel={`${t(
-                    'transcriptMetricsScreen.acquiredCreditsLabel',
-                  )}: ${enrollmentAcquiredCredits} ${t(
-                    'common.of',
-                  )} ${enrollmentCredits}`}
-                  style={styles.spaceBottom}
-                />
-                <Metric
-                  title={t('transcriptMetricsScreen.attendedCreditsLabel')}
-                  value={`${enrollmentAttendedCredits ?? '--'}/${
-                    enrollmentCredits ?? '--'
-                  } CFU`}
-                  accessibilityLabel={`${t(
-                    'transcriptMetricsScreen.attendedCreditsLabel',
-                  )}: ${enrollmentCredits} ${t(
-                    'common.of',
-                  )} ${enrollmentCredits}`}
-                  color={palettes.primary[400]}
-                />
-              </View>
-              <ProgressChart
-                data={
-                  enrollmentCredits
-                    ? [
-                        (enrollmentAttendedCredits ?? 0) / enrollmentCredits,
-                        (enrollmentAcquiredCredits ?? 0) / enrollmentCredits,
-                      ]
-                    : []
-                }
-                colors={[palettes.primary[400], palettes.secondary[500]]}
-              />
-            </Card>
-          </Section>
-
-          <Section>
-            <SectionHeader
-              title={t('transcriptMetricsScreen.averages')}
-              trailingIcon={{
-                onPress: onPressAverageEvent,
-                icon: faQuestionCircle,
-                color: colors.link,
-              }}
-            />
-            <Card style={styles.metricsCard} accessible={true}>
-              <Col>
-                <>
-                  <Row>
-                    <Text style={styles.title}>
-                      {t('transcriptMetricsScreen.weightedAverage')}
-                    </Text>
-                  </Row>
-                  <Row style={styles.spaceBottom}>
+                <Card style={styles.chartCard} accessible={true}>
+                  <View style={GlobalStyles.grow}>
                     <Metric
-                      value={formatThirtiethsGrade(
-                        studentQuery.data?.averageGrade,
-                      )}
-                      style={GlobalStyles.grow}
+                      title={t('transcriptMetricsScreen.acquiredCreditsLabel')}
+                      value={`${totalAcquiredCredits ?? '--'}/${
+                        totalCredits ?? '--'
+                      } CFU`}
+                      style={styles.spaceBottom}
+                      accessibilityLabel={`${t(
+                        'transcriptMetricsScreen.acquiredCreditsLabel',
+                      )}: ${totalAcquiredCredits} ${t(
+                        'common.of',
+                      )} ${totalCredits}`}
                     />
-                  </Row>
-                </>
-
-                <Row>
-                  <Text style={styles.title}>
-                    {t('transcriptMetricsScreen.averageLabel')}
-                  </Text>
-                </Row>
-                <Row>
-                  <Metric
-                    value={formatFinalGrade(
-                      studentQuery.data?.estimatedFinalGrade,
-                    )}
-                    color={palettes.primary[400]}
-                    style={GlobalStyles.grow}
+                    <Metric
+                      title={t('transcriptMetricsScreen.attendedCreditsLabel')}
+                      value={`${totalAttendedCredits ?? '--'}/${
+                        totalCredits ?? '--'
+                      } CFU`}
+                      color={palettes.primary[400]}
+                      accessibilityLabel={`${t(
+                        'transcriptMetricsScreen.attendedCreditsLabel',
+                      )}: ${totalAttendedCredits} ${t(
+                        'common.of',
+                      )} ${totalCredits}`}
+                    />
+                  </View>
+                  <ProgressChart
+                    data={
+                      totalCredits
+                        ? [
+                            (totalAttendedCredits ?? 0) / totalCredits,
+                            (totalAcquiredCredits ?? 0) / totalCredits,
+                          ]
+                        : []
+                    }
+                    colors={[palettes.primary[400], palettes.secondary[500]]}
                   />
-                </Row>
+                </Card>
+              </Section>
 
-                {studentQuery.data?.mastersAdmissionAverageGrade && (
-                  <>
-                    <Row style={styles.additionalMetric}>
+              <Section>
+                <SectionHeader title={t('transcriptMetricsScreen.thisYear')} />
+                <Card style={styles.chartCard} accessible={true}>
+                  <View style={GlobalStyles.grow}>
+                    <Metric
+                      title={t('transcriptMetricsScreen.acquiredCreditsLabel')}
+                      value={`${enrollmentAcquiredCredits ?? '--'}/${
+                        enrollmentCredits ?? '--'
+                      } CFU`}
+                      accessibilityLabel={`${t(
+                        'transcriptMetricsScreen.acquiredCreditsLabel',
+                      )}: ${enrollmentAcquiredCredits} ${t(
+                        'common.of',
+                      )} ${enrollmentCredits}`}
+                      style={styles.spaceBottom}
+                    />
+                    <Metric
+                      title={t('transcriptMetricsScreen.attendedCreditsLabel')}
+                      value={`${enrollmentAttendedCredits ?? '--'}/${
+                        enrollmentCredits ?? '--'
+                      } CFU`}
+                      accessibilityLabel={`${t(
+                        'transcriptMetricsScreen.attendedCreditsLabel',
+                      )}: ${enrollmentCredits} ${t(
+                        'common.of',
+                      )} ${enrollmentCredits}`}
+                      color={palettes.primary[400]}
+                    />
+                  </View>
+                  <ProgressChart
+                    data={
+                      enrollmentCredits
+                        ? [
+                            (enrollmentAttendedCredits ?? 0) /
+                              enrollmentCredits,
+                            (enrollmentAcquiredCredits ?? 0) /
+                              enrollmentCredits,
+                          ]
+                        : []
+                    }
+                    colors={[palettes.primary[400], palettes.secondary[500]]}
+                  />
+                </Card>
+              </Section>
+
+              <Section>
+                <SectionHeader
+                  title={t('transcriptMetricsScreen.averages')}
+                  trailingIcon={{
+                    onPress: onPressAverageEvent,
+                    icon: faQuestionCircle,
+                    color: colors.link,
+                  }}
+                />
+                <Card style={styles.metricsCard} accessible={true}>
+                  <Col>
+                    <>
+                      <Row>
+                        <Text style={styles.title}>
+                          {t('transcriptMetricsScreen.weightedAverage')}
+                        </Text>
+                      </Row>
+                      <Row style={styles.spaceBottom}>
+                        <Metric
+                          value={formatThirtiethsGrade(
+                            studentQuery.data?.averageGrade,
+                          )}
+                          style={GlobalStyles.grow}
+                        />
+                      </Row>
+                    </>
+
+                    <Row>
                       <Text style={styles.title}>
-                        {t('transcriptMetricsScreen.masterAdmissionAverage')}
+                        {t('transcriptMetricsScreen.averageLabel')}
                       </Text>
                     </Row>
                     <Row>
                       <Metric
-                        value={formatThirtiethsGrade(
-                          studentQuery.data?.mastersAdmissionAverageGrade,
+                        value={formatFinalGrade(
+                          studentQuery.data?.estimatedFinalGrade,
                         )}
+                        color={palettes.primary[400]}
                         style={GlobalStyles.grow}
                       />
                     </Row>
-                  </>
-                )}
-              </Col>
-            </Card>
-          </Section>
-          {!isNil(totalOnTimeExamPoints) && !isNil(maxOnTimeExamPoints) && (
-            <Section>
-              <SectionHeader
-                title={t('transcriptMetricsScreen.pointTitle')}
-                trailingIcon={{
-                  onPress: onPressPointEvent,
-                  icon: faQuestionCircle,
-                  color: colors.link,
-                }}
-              />
-              <Card style={styles.metricsCard} accessible={true}>
-                <Metric
-                  title={t('transcriptMetricsScreen.onTimeScores')}
-                  value={formatExamOnTime(
-                    totalOnTimeExamPoints,
-                    maxOnTimeExamPoints,
-                  )}
-                  style={GlobalStyles.grow}
-                  color={palettes.success[dark ? 400 : 700]}
+
+                    {studentQuery.data?.mastersAdmissionAverageGrade && (
+                      <>
+                        <Row style={styles.additionalMetric}>
+                          <Text style={styles.title}>
+                            {t(
+                              'transcriptMetricsScreen.masterAdmissionAverage',
+                            )}
+                          </Text>
+                        </Row>
+                        <Row>
+                          <Metric
+                            value={formatThirtiethsGrade(
+                              studentQuery.data?.mastersAdmissionAverageGrade,
+                            )}
+                            style={GlobalStyles.grow}
+                          />
+                        </Row>
+                      </>
+                    )}
+                  </Col>
+                </Card>
+              </Section>
+              {!isNil(totalOnTimeExamPoints) && !isNil(maxOnTimeExamPoints) && (
+                <Section>
+                  <SectionHeader
+                    title={t('transcriptMetricsScreen.pointTitle')}
+                    trailingIcon={{
+                      onPress: onPressPointEvent,
+                      icon: faQuestionCircle,
+                      color: colors.link,
+                    }}
+                  />
+                  <Card style={styles.metricsCard} accessible={true}>
+                    <Metric
+                      title={t('transcriptMetricsScreen.onTimeScores')}
+                      value={formatExamOnTime(
+                        totalOnTimeExamPoints,
+                        maxOnTimeExamPoints,
+                      )}
+                      style={GlobalStyles.grow}
+                      color={palettes.success[dark ? 400 : 700]}
+                    />
+                  </Card>
+                </Section>
+              )}
+            </>
+          ) : (
+            <QueryStateView
+              states={states}
+              skeleton={
+                <SkeletonDetail
+                  title={false}
+                  cards={[200, 160, 120]}
+                  label={t('states.career.loading')}
                 />
-              </Card>
-            </Section>
+              }
+              errorState={{ title: t('states.career.failedTitle') }}
+            >
+              {null}
+            </QueryStateView>
           )}
           <BottomBarSpacer />
         </SafeAreaView>

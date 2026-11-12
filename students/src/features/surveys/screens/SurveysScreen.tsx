@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SafeAreaView, ScrollView, StyleSheet } from 'react-native';
 
+import { useQueryStates } from '@polito/lib/core';
 import {
   BottomBarSpacer,
   OverviewList,
@@ -25,6 +26,7 @@ export const SurveysScreen = (_: Props) => {
   const { t } = useTranslation();
   const styles = useStylesheet(createStyles);
   const surveysQuery = useGetSurveys();
+  const states = useQueryStates(surveysQuery, { isEmpty: () => false });
 
   const IncompleteSurveys = () => {
     const incompleteSurveys = (surveysQuery.data || [])
@@ -38,18 +40,17 @@ export const SurveysScreen = (_: Props) => {
     return (
       <Section>
         <SectionHeader title={t('surveysScreen.toBeCompiledTitle')} />
-        {!surveysQuery.isLoading &&
-          (incompleteSurveys.length > 0 ? (
-            <OverviewList indented>
-              {incompleteSurveys?.map(survey => (
-                <SurveyListItem survey={survey} key={survey.id} />
-              ))}
-            </OverviewList>
-          ) : (
-            <OverviewList
-              emptyStateText={t('surveysScreen.toBeCompiledEmptyState')}
-            />
+        <OverviewList
+          indented
+          states={states}
+          skeleton={{ count: 2 }}
+          emptyState={{ title: t('surveysScreen.toBeCompiledEmptyState') }}
+          errorState={{ title: t('states.surveys.failedTitle') }}
+        >
+          {incompleteSurveys?.map(survey => (
+            <SurveyListItem survey={survey} key={survey.id} />
           ))}
+        </OverviewList>
       </Section>
     );
   };
@@ -80,18 +81,18 @@ export const SurveysScreen = (_: Props) => {
             compiledSurveys.length - renderedCompiledSurveys.length
           }
         />
-        {!surveysQuery.isLoading &&
-          (renderedCompiledSurveys.length > 0 ? (
-            <OverviewList indented>
-              {renderedCompiledSurveys.map(survey => (
-                <SurveyListItem survey={survey} key={survey.id} />
-              ))}
-            </OverviewList>
-          ) : (
-            <OverviewList
-              emptyStateText={t('surveysScreen.compiledEmptyState')}
-            />
-          ))}
+        {states.status !== 'error' && (
+          <OverviewList
+            indented
+            states={states}
+            skeleton={{ count: 4 }}
+            emptyState={{ title: t('surveysScreen.compiledEmptyState') }}
+          >
+            {renderedCompiledSurveys.map(survey => (
+              <SurveyListItem survey={survey} key={survey.id} />
+            ))}
+          </OverviewList>
+        )}
       </Section>
     );
   };

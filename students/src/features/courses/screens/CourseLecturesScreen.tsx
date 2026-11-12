@@ -17,14 +17,18 @@ import {
   faChevronUp,
   faVideo,
 } from '@fortawesome/free-solid-svg-icons';
-import { formatDate, useOfflineDisabled } from '@polito/lib/core';
+import {
+  formatDate,
+  useOfflineDisabled,
+  useQueryStates,
+} from '@polito/lib/core';
 import { useGetPerson } from '@polito/lib/features/people';
 import {
   BottomBarSpacer,
   Icon,
   IndentedDivider,
   ListItem,
-  OverviewList,
+  QueryStateView,
   RefreshControl,
   SectionHeader,
   TranslucentView,
@@ -53,9 +57,9 @@ export const CourseLecturesScreen = () => {
   const [lectures, setLectures] = useState<CourseLectureSection[]>([]);
   const sectionListRef =
     useRef<SectionList<CourseLecture, CourseLectureSection>>(null);
-  const isCacheMissing = useOfflineDisabled(
-    () => courseLecturesQuery.data === undefined,
-  );
+  const states = useQueryStates(courseLecturesQuery.queries, {
+    isEmpty: () => (courseLecturesQuery.data?.length ?? 0) === 0,
+  });
 
   useFocusEffect(
     useCallback(() => {
@@ -118,16 +122,23 @@ export const CourseLecturesScreen = () => {
       sections={lectures}
       refreshControl={<RefreshControl queries={courseLecturesQuery.queries} />}
       stickySectionHeadersEnabled={true}
-      ListEmptyComponent={() => {
-        if (!courseLecturesQuery.isLoading) {
-          return (
-            <OverviewList emptyStateText={t('courseLecturesTab.emptyState')} />
-          );
-        } else if (isCacheMissing) {
-          return <OverviewList emptyStateText={t('common.cacheMiss')} />;
-        }
-        return null;
-      }}
+      ListEmptyComponent={
+        <QueryStateView
+          states={states}
+          skeleton={{
+            count: 4,
+            leading: 'icon',
+            label: t('states.lectures.loading'),
+          }}
+          emptyState={{
+            title: t('states.lectures.emptyTitle'),
+            text: t('states.lectures.emptyText'),
+          }}
+          errorState={{ title: t('states.lectures.failedTitle') }}
+        >
+          {null}
+        </QueryStateView>
+      }
       onScroll={Animated.event(
         [{ nativeEvent: { contentOffset: { y: scrollPosition.current } } }],
         { useNativeDriver: false },
@@ -244,7 +255,9 @@ const CourseLectureListItem = ({
         },
       }}
       containerStyle={marginHorizontal}
+      // Recordings and live classes stream: they need the network
       disabled={isDisabled}
+      accessibilityHint={isDisabled ? t('states.needsConnection') : undefined}
     />
   );
 };

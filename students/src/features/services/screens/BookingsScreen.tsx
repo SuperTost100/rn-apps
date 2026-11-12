@@ -48,8 +48,13 @@ export const BookingsScreen = ({ navigation }: Props) => {
           <Section style={{ marginTop: spacing[2] }}>
             <SectionHeader title={t('bookingsScreen.sectionTitle')} />
             <OverviewList
-              loading={bookingsQuery.isLoading}
-              emptyStateText={t('bookingsScreen.emptyState')}
+              queries={bookingsQuery}
+              skeleton={{ count: 2, subtitleLines: 2 }}
+              emptyState={{
+                title: t('states.bookings.emptyTitle'),
+                text: t('states.bookings.emptyText'),
+              }}
+              errorState={{ title: t('states.bookings.failedTitle') }}
             >
               {bookingsQuery?.data?.map((booking, index) => (
                 <BookingListItem

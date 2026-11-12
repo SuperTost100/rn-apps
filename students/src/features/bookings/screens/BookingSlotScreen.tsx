@@ -27,6 +27,7 @@ import {
   HeaderAccessory,
   Icon,
   IconButton,
+  RegionStateBlock,
   Row,
   Tabs,
   Text,
@@ -48,7 +49,10 @@ import { EmptyWeek } from '~/features/agenda/components/EmptyWeek';
 import { DateTime } from 'luxon';
 
 import { usePreferencesContext } from '../../../../../lib/src/core/contexts';
-import { useOfflineDisabled } from '../../../../../lib/src/core/hooks';
+import {
+  useOfflineDisabled,
+  useQueryStates,
+} from '../../../../../lib/src/core/hooks';
 import {
   APP_TIMEZONE,
   formatDate,
@@ -115,13 +119,17 @@ export const BookingSlotScreen = ({ route, navigation }: Props) => {
   } = useBottomModal();
   const { data: myBookings } = useGetBookings();
   const { data: topics } = useGetBookingTopics();
+  const bookingSlotsQuery = useGetBookingSlots(topicId, currentWeekStart);
   const {
     data: bookingSlots,
     isLoading,
     isFetching,
     refetch,
     isRefetching,
-  } = useGetBookingSlots(topicId, currentWeekStart);
+  } = bookingSlotsQuery;
+  const slotsStates = useQueryStates(bookingSlotsQuery, {
+    isEmpty: () => false,
+  });
   const currentTopic = useMemo(
     () => getCalendarPropsFromTopic(topics, topicId),
     [topics, topicId],
@@ -368,6 +376,12 @@ export const BookingSlotScreen = ({ route, navigation }: Props) => {
       </HeaderAccessory>
 
       <View style={styles.container} onLayout={() => {}}>
+        {slotsStates.status === 'error' && (
+          <RegionStateBlock
+            states={slotsStates}
+            errorState={{ title: t('states.bookings.failedSlotsTitle') }}
+          />
+        )}
         {showAgendaLayout ? (
           <SectionList<BookingCalendarEvent>
             sections={weekSections}

@@ -13,7 +13,7 @@ import { Document } from 'react-native-render-html';
 
 import { faQuestionCircle } from '@fortawesome/free-regular-svg-icons';
 import { faPencil, faSearch } from '@fortawesome/free-solid-svg-icons';
-import { useAccessibility } from '@polito/lib/core';
+import { useAccessibility, useQueryStates } from '@polito/lib/core';
 import {
   BottomBarSpacer,
   CtaButton,
@@ -48,6 +48,7 @@ export const TicketFaqsScreen = ({ navigation }: Props) => {
   const [search, setSearch] = useState('');
   const [hasSearchedOnce, setHasSearchedOnce] = useState(false);
   const ticketFaqsQuery = useSearchTicketFaqs(search);
+  const faqStates = useQueryStates(ticketFaqsQuery);
   const ticketFaqs = useMemo(() => {
     return (
       ticketFaqsQuery.data?.sort((a, b) =>
@@ -127,7 +128,7 @@ export const TicketFaqsScreen = ({ navigation }: Props) => {
           </OverviewList>
           {hasSearchedOnce &&
             (ticketFaqs.length > 0 ? (
-              <OverviewList indented>
+              <OverviewList indented states={faqStates}>
                 {ticketFaqs.map((faq, index) => {
                   const dom = parseDocument(
                     faq.question.replace(/\\r+/g, ' ').replace(/\\"/g, '"'),
@@ -155,12 +156,13 @@ export const TicketFaqsScreen = ({ navigation }: Props) => {
                 })}
               </OverviewList>
             ) : (
-              !ticketFaqsQuery.isFetching && (
-                <OverviewList
-                  indented
-                  emptyStateText={t('ticketFaqsScreen.emptyState')}
-                />
-              )
+              <OverviewList
+                indented
+                states={faqStates}
+                skeleton={{ count: 3, leading: 'icon', subtitle: false }}
+                emptyState={{ title: t('ticketFaqsScreen.emptyState') }}
+                errorState={{ title: t('states.tickets.failedFaqsTitle') }}
+              />
             ))}
         </Section>
 

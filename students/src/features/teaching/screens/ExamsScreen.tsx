@@ -29,13 +29,17 @@ export const ExamsScreen = () => {
       <SafeAreaView>
         <Section>
           <OverviewList
-            emptyStateText={
-              examsQuery.data && examsQuery.data.length === 0
-                ? t('examsScreen.emptyState')
-                : undefined
-            }
+            queries={examsQuery}
             indented
-            loading={examsQuery.isLoading}
+            skeleton={{ count: 5, leading: 'tile', trailing: 'chip' }}
+            emptyState={{
+              title: t('states.exams.emptyTitle'),
+              text: t('states.exams.emptyText'),
+            }}
+            errorState={{
+              title: t('states.exams.failedTitle'),
+              text: t('states.exams.failedText'),
+            }}
           >
             {examsQuery.data?.map((exam, index) => (
               <ExamListItem

@@ -87,6 +87,9 @@ export const ContactsScreen = ({
             style={[GlobalStyles.grow, styles.textField]}
             label={t('contactsScreen.search')}
             editable={!isInputDisabled}
+            accessibilityHint={
+              isInputDisabled ? t('states.needsConnection') : undefined
+            }
             isClearable={!!search}
             onClear={() => setSearch('')}
             onClearLabel={t('contactsScreen.clearSearch')}
@@ -108,9 +111,14 @@ export const ContactsScreen = ({
           <SafeAreaView>
             <Section>
               <OverviewList
-                loading={peopleQuery.isLoading}
+                queries={peopleQuery}
                 style={{ marginTop: spacing[4] }}
-                emptyStateText={t('contactsScreen.emptyState')}
+                skeleton={{ count: 4, leading: 'avatar' }}
+                emptyState={{
+                  title: t('contactsScreen.emptyState'),
+                  text: t('states.people.emptyText'),
+                }}
+                errorState={{ title: t('states.people.failedTitle') }}
                 indented
               >
                 {peopleQuery.data?.map((item, index) => (
