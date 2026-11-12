@@ -25,3 +25,6 @@ pc-api-secret.json
 
 # Fastlane
 fastlane/report.xml
+
+# local build output
+build.log
