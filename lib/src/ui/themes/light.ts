@@ -437,8 +437,7 @@ export const lightTheme: Theme = {
     sm: 4,
     md: 8,
     lg: 12,
-    // shortcut: the mockup's xl is 16; it stays 20 until badges move to pill in phase 3
-    xl: 20,
+    xl: 16,
     pill: 999,
   },
   elevation: {

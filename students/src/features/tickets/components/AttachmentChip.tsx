@@ -83,7 +83,7 @@ const createStyles = ({ colors, shapes, spacing, fontWeights }: Theme) => {
   return StyleSheet.create({
     attachmentContainer: {
       backgroundColor: colors.translucentSurface,
-      borderRadius: shapes.xl,
+      borderRadius: shapes.pill,
     },
     name: {
       flexGrow: 1,
@@ -93,7 +93,7 @@ const createStyles = ({ colors, shapes, spacing, fontWeights }: Theme) => {
     cancelButton: {
       padding: spacing[1],
       backgroundColor: colors.translucentSurface,
-      borderRadius: shapes.xl,
+      borderRadius: shapes.pill,
       marginRight: -spacing[1.5],
     },
     space: {

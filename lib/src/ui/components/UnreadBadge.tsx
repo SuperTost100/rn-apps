@@ -1,13 +1,10 @@
-import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, TextProps } from 'react-native';
+import { TextProps, View } from 'react-native';
 
 import { isNumber } from 'lodash';
 
-import { useStylesheet } from '../hooks/useStylesheet';
 import { useTheme } from '../hooks/useTheme';
-import { Theme } from '../types/Theme';
-import { Row } from './Row';
+import { useCountBadgeMetrics } from './Badge';
 import { Text } from './Text';
 import { VisuallyHidden } from './VisuallyHidden';
 
@@ -18,6 +15,13 @@ interface Props {
   isNumeric?: boolean;
 }
 
+/** The unread dot, when there is no count: always next to bold text */
+const DOT_SIZE = 10;
+
+/**
+ * An unread count in a round badge, or a dot without one. The number is
+ * centred and grows with the text size; the pill keeps its shape.
+ */
 export const UnreadBadge = ({
   text,
   style,
@@ -25,61 +29,73 @@ export const UnreadBadge = ({
   isNumeric = false,
 }: Props) => {
   const { t } = useTranslation();
-  const { colors } = useTheme();
-  const styles = useStylesheet(createStyles);
-  const isOutlined = useMemo(() => variant === 'outlined', [variant]);
+  const { colors, shapes } = useTheme();
+  const metrics = useCountBadgeMetrics();
+  const isOutlined = variant === 'outlined';
   const isDigit = isNumber(text);
-  return (
-    <Row
-      ph={1}
-      align="center"
-      justify="center"
-      flexShrink={0}
-      style={[
-        styles.badge,
-        !text && styles.dotBadge,
-        isOutlined && {
-          backgroundColor: colors.surface,
-          borderColor: isDigit || isNumeric ? colors.badge : colors.accentText,
+  // 0 and an empty text show the dot, as before
+  const hasText = !!text;
 
-          borderWidth: 2,
+  if (!hasText) {
+    return (
+      <View
+        style={[
+          {
+            width: DOT_SIZE,
+            height: DOT_SIZE,
+            borderRadius: shapes.pill,
+            backgroundColor: colors.badge,
+            flexShrink: 0,
+          },
+          style,
+        ]}
+      />
+    );
+  }
+
+  const border = isOutlined
+    ? isDigit || isNumeric
+      ? colors.badge
+      : colors.accentText
+    : undefined;
+
+  return (
+    <View
+      style={[
+        {
+          minWidth: metrics.size,
+          height: metrics.size,
+          paddingHorizontal: metrics.paddingHorizontal,
+          borderRadius: shapes.pill,
+          backgroundColor: isOutlined ? colors.surface : colors.badge,
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
         },
+        border !== undefined && { borderColor: border, borderWidth: 2 },
         style,
       ]}
     >
-      {text && (
-        <Text
-          style={[styles.badgeText, isOutlined && { color: colors.accentText }]}
-        >
-          {text}
-          {isDigit && (
-            <VisuallyHidden>
-              {t('common.newItems', { count: Number(text) })}
-            </VisuallyHidden>
-          )}
-        </Text>
-      )}
-    </Row>
+      <Text
+        weight="bold"
+        maxFontSizeMultiplier={metrics.maxFontSizeMultiplier}
+        style={[
+          metrics.textStyle,
+          {
+            color: isOutlined ? colors.accentText : colors.onBadge,
+            textAlign: 'center',
+            textTransform: 'uppercase',
+            fontVariant: ['tabular-nums'],
+          },
+        ]}
+      >
+        {text}
+        {isDigit && (
+          <VisuallyHidden>
+            {t('common.newItems', { count: Number(text) })}
+          </VisuallyHidden>
+        )}
+      </Text>
+    </View>
   );
-};
-
-const createStyles = ({ colors, fontSizes, fontWeights, shapes }: Theme) => {
-  return StyleSheet.create({
-    badge: {
-      borderRadius: shapes.xl,
-      minWidth: 19,
-      minHeight: 19,
-      backgroundColor: colors.badge,
-    },
-    dotBadge: {
-      minWidth: 12,
-      minHeight: 12,
-    },
-    badgeText: {
-      color: colors.onBadge,
-      fontWeight: fontWeights.semibold,
-      fontSize: fontSizes.sm,
-      textTransform: 'uppercase',
-    },
-  });
 };

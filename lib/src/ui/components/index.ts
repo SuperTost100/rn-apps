@@ -57,6 +57,7 @@ export * from './Separator';
 export * from './Snackbar';
 export * from './SSOScreen';
 export * from './Stack';
+export * from './StatusChip';
 export * from './StatefulMenuView';
 export * from './Swipeable';
 export * from './Swiper';
