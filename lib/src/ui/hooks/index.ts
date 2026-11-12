@@ -3,6 +3,7 @@ export * from './calendar/useNow';
 export * from './calendar/usePanResponder';
 export * from './useBottomBarAwareStyles';
 export * from './useBottomModal';
+export * from './useHeaderOptions';
 export * from './useHideTabs';
 export * from './useSafeAreaSpacing';
 export * from './useStylesheet';

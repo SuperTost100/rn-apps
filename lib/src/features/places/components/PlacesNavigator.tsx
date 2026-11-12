@@ -25,7 +25,7 @@ import { EventPlacesScreen } from '../screens/EventPlacesScreen';
 import { FreeRoomsScreen } from '../screens/FreeRoomsScreen';
 import { PlaceScreen } from '../screens/PlaceScreen';
 import { PlacesScreen } from '../screens/PlacesScreen';
-import { createMapNavigator } from './MapNavigator';
+import { MapNavigationOptions, createMapNavigator } from './MapNavigator';
 
 export type PlacesStackParamList = {
   Places: {
@@ -129,10 +129,20 @@ type UnreadMessageModalProps = NativeStackNavigationProp<
 >;
 interface PlacesNavigatorProps {
   unreadMessagesModal: ComponentType<any>;
+  /**
+   * Header options from the app: `root` for the map without a category
+   * filter when it is the first screen of a tab, `inner` for every screen.
+   * Without them the headers stay as they were.
+   */
+  headerOptions?: {
+    root?: MapNavigationOptions;
+    inner?: MapNavigationOptions;
+  };
 }
 
 export const PlacesNavigator = ({
   unreadMessagesModal,
+  headerOptions,
 }: PlacesNavigatorProps) => {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -185,12 +195,22 @@ export const PlacesNavigator = ({
           },
           mapDefaultContent: MapDefaultContent,
           ...useTitlesStyles(theme),
+          ...headerOptions?.inner,
         }}
       >
         <Map.Screen
           name="Places"
           component={PlacesScreen}
-          options={{ title: t('placesScreen.title') }}
+          options={({
+            route,
+          }: {
+            route: { params?: { categoryId?: string; subCategoryId?: string } };
+          }) => ({
+            title: t('placesScreen.title'),
+            ...(!route.params?.categoryId &&
+              !route.params?.subCategoryId &&
+              headerOptions?.root),
+          })}
           getId={({ params }: { params: any }) =>
             [params?.categoryId, params?.subCategoryId].join()
           }

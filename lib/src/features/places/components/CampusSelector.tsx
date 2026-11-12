@@ -1,9 +1,11 @@
+import { useContext } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { faChevronDown, faSchool } from '@fortawesome/free-solid-svg-icons';
 
 import { usePreferencesContext } from '../../../core/contexts/PreferencesContext';
 import { Icon, Row, StatefulMenuView, Text } from '../../../ui/components';
+import { HeaderForegroundContext } from '../../../ui/components/AppHeader';
 import { useTheme } from '../../../ui/hooks/useTheme';
 import { useGetSite, useGetSites } from '../queries/placesHooks';
 
@@ -13,6 +15,8 @@ export const CampusSelector = () => {
   const { data: sites } = useGetSites();
   const { campusId, updatePreference } = usePreferencesContext();
   const campus = useGetSite(campusId);
+  // On the navy header the link colour would not be readable
+  const color = useContext(HeaderForegroundContext) ?? colors.link;
 
   return (
     <StatefulMenuView
@@ -32,16 +36,21 @@ export const CampusSelector = () => {
       }
     >
       <Row align="center" mr={2} gap={0.5} style={{ maxWidth: '73%' }}>
-        <Icon icon={faSchool} color={colors.link} />
+        <Icon icon={faSchool} color={color} />
         <Text
           variant="link"
           numberOfLines={1}
           ellipsizeMode="tail"
-          style={{ flexGrow: 1, flexShrink: 1, marginLeft: spacing[1] }}
+          style={{
+            flexGrow: 1,
+            flexShrink: 1,
+            marginLeft: spacing[1],
+            color,
+          }}
         >
           {campus?.name ?? t('common.campus')}
         </Text>
-        <Icon icon={faChevronDown} color={colors.link} size={fontSizes.xs} />
+        <Icon icon={faChevronDown} color={color} size={fontSizes.xs} />
       </Row>
     </StatefulMenuView>
   );
