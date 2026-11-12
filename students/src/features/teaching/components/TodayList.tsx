@@ -231,7 +231,11 @@ export const TodayList = ({ quiet = false }: Props) => {
     <View style={[styles.head, isLarge && styles.headLarge]}>
       <Text
         variant="label"
-        style={[styles.muted, styles.headTitle]}
+        style={[
+          styles.muted,
+          styles.headTitle,
+          isLarge && styles.headTitleLarge,
+        ]}
         accessibilityRole="header"
       >
         {t('todayList.title', { date: formatDay(now, language) })}
@@ -705,8 +709,14 @@ const createStyles = ({ colors, layout, spacing }: Theme) =>
       alignItems: 'flex-start',
       paddingTop: spacing[2],
     },
+    // Wider than the text needs: given only its measured width, Android
+    // wraps the last word to a line nobody sees
     headTitle: {
+      flexGrow: 1,
       flexShrink: 1,
+    },
+    headTitleLarge: {
+      alignSelf: 'stretch',
     },
     list: {
       paddingTop: spacing[1],
