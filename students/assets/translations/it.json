@@ -284,7 +284,6 @@
     "transcript": "Libretto",
     "unnamedFile": "File senza nome",
     "untitled": "Senza titolo",
-    "dateAtTime": "{{date}} alle {{time}}",
     "updatedAt": "Aggiornato il",
     "upload": "Carica",
     "username": "Matricola",
@@ -861,7 +860,6 @@
     "whatsNewEmptyText": "Quando un aggiornamento cambia qualcosa che usi, lo trovi descritto qui."
   },
   "settingsScreen": {
-    "appVersion": "Versione {{version}}",
     "title": "Impostazioni",
     "authenticatorTitle": "PoliTO Authenticator",
     "storageTitle": "Archiviazione file",
@@ -1758,6 +1756,10 @@
       "storageFolder": "Una cartella a tua scelta",
       "spacingOn": "{{count}} attiva",
       "spacingOn_plural": "{{count}} attive"
+    },
+    "authenticatorRemoved": {
+      "title": "Authenticator rimosso da questo telefono",
+      "text": "È stato rimosso dalla Gestione MFA su idp.polito.it, quindi questo telefono non può più approvare gli accessi. Per usarlo di nuovo, attivalo qui in Impostazioni, alla voce PoliTO Authenticator."
     }
   },
   "messagesScreen": {

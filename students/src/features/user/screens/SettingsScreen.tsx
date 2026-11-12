@@ -8,6 +8,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
+import DeviceInfo from 'react-native-device-info';
 
 import {
   PreferencesContextBase,
@@ -42,7 +43,6 @@ import { AppPreferences } from '~/core/types/preferences';
 import i18next from 'i18next';
 import { Settings } from 'luxon';
 
-import { version } from '../../../../package.json';
 import { useConfirmationDialog } from '../../../core/hooks/useConfirmationDialog';
 import { useUpdateDevicePreferences } from '../../../core/queries/studentHooks';
 import { formatSize } from '../../courses/utils/fileTree';
@@ -136,8 +136,8 @@ const useAuthenticatorState = () => {
       await resetPrivateKeyMFA();
       setLocalMfaKey(false);
       Alert.alert(
-        t('mfaScreen.settings.removedTitle'),
-        t('mfaScreen.settings.removed'),
+        t('profile.authenticatorRemoved.title'),
+        t('profile.authenticatorRemoved.text'),
         [{ text: t('common.ok') }],
       );
     } catch (error) {
@@ -479,7 +479,11 @@ export const SettingsScreen = () => {
           </OverviewList>
         </View>
         <Text variant="secondaryText" style={styles.version}>
-          {t('settingsScreen.appVersion', { version })}
+          {t('appInfoScreen.version', {
+            // The installed build, as App info shows it
+            version: DeviceInfo.getVersion(),
+            build: DeviceInfo.getBuildNumber().slice(-2),
+          })}
         </Text>
         <BottomBarSpacer />
       </ScrollView>

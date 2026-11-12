@@ -19,6 +19,7 @@ import {
   Text,
   Theme,
   UnreadBadge,
+  setAppTabBarStyle,
   tabBarStyle,
   useInnerTitleOptions,
   useStylesheet,
@@ -222,6 +223,13 @@ export const RootNavigator = ({
     ),
   });
 
+  const appTabBarStyle = useMemo(
+    () => [styles.tabBarStyle, androidTabBarBottom],
+    [styles.tabBarStyle, androidTabBarBottom],
+  );
+  // Screens that hide the bar and show it again restore this style
+  useEffect(() => setAppTabBarStyle(appTabBarStyle), [appTabBarStyle]);
+
   return (
     <>
       <TabNavigator.Navigator
@@ -234,7 +242,7 @@ export const RootNavigator = ({
             show: instantAnimation,
             hide: instantAnimation,
           },
-          tabBarStyle: [styles.tabBarStyle, androidTabBarBottom],
+          tabBarStyle: appTabBarStyle,
           tabBarBackground: () => <View style={styles.tabBarBackground} />,
           tabBarItemStyle: styles.tabBarItemStyle,
           tabBarActiveTintColor: colors.tabBar,

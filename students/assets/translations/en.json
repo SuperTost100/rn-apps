@@ -284,7 +284,6 @@
     "transcript": "Transcript",
     "unnamedFile": "Unnamed file",
     "untitled": "Untitled",
-    "dateAtTime": "{{date}} at {{time}}",
     "updatedAt": "Updated at",
     "upload": "Upload",
     "username": "Student ID",
@@ -861,7 +860,6 @@
     "whatsNewEmptyText": "When an update changes something you use, it is described here."
   },
   "settingsScreen": {
-    "appVersion": "Version {{version}}",
     "title": "Settings",
     "authenticatorTitle": "PoliTO Authenticator",
     "storageTitle": "File storage",
@@ -1758,6 +1756,10 @@
       "storageFolder": "A folder you choose",
       "spacingOn": "{{count}} on",
       "spacingOn_plural": "{{count}} on"
+    },
+    "authenticatorRemoved": {
+      "title": "Authenticator removed from this phone",
+      "text": "It was removed in MFA management at idp.polito.it, so this phone can no longer approve logins. To use it again, set it up here in Settings, under PoliTO Authenticator."
     }
   },
   "messagesScreen": {

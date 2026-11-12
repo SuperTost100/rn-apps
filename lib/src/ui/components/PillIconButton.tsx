@@ -6,6 +6,9 @@ import { PillButton, PillButtonProps } from './PillButton';
 import { Row } from './Row';
 import { Text } from './Text';
 
+/** 14 px at 150% */
+export const CHIP_MAX_FONT = 21;
+
 export interface PillIconButtonProps extends PillButtonProps {
   icon?: IconDefinition;
 }
@@ -25,7 +28,9 @@ export const PillIconButton = ({
     <PillButton {...props}>
       <Row align="center" gap={2}>
         {icon && <Icon icon={icon} color={color} size={16} />}
-        <Text variant="label" style={{ color }}>
+        {/* Over the map the chips stop growing at 150%, so the row keeps a
+            few in view; a long label still fits and the row scrolls */}
+        <Text variant="label" style={{ color }} maxFontSize={CHIP_MAX_FONT}>
           {children}
         </Text>
       </Row>

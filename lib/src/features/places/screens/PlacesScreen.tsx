@@ -14,6 +14,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { PERMISSIONS, RESULTS, request } from 'react-native-permissions';
 import Animated, {
   Extrapolation,
   interpolate,
@@ -42,6 +43,7 @@ import { debounce } from 'lodash';
 import { usePreferencesContext } from '../../../core/contexts/PreferencesContext';
 import { useScreenTitle } from '../../../core/hooks/useScreenTitle';
 import {
+  CHIP_MAX_FONT,
   Divider,
   EmptyState,
   Icon,
@@ -123,6 +125,17 @@ export const PlacesScreen = ({ navigation, route }: Props) => {
   useScreenTitle(categoryFilterName);
 
   const centerToUserLocation = useCallback(async () => {
+    // Asked on this tap, so the request comes with a reason the student
+    // just gave; the map itself no longer asks when it opens
+    const permission = Platform.select({
+      ios: PERMISSIONS.IOS.LOCATION_WHEN_IN_USE,
+      android: PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION,
+    });
+    if (permission) {
+      const status = await request(permission).catch(() => RESULTS.DENIED);
+      if (status !== RESULTS.GRANTED && status !== RESULTS.LIMITED) return;
+    }
+    Mapbox.locationManager.start();
     const location = await Mapbox.locationManager.getLastKnownLocation();
     if (location) {
       const { latitude, longitude } = location.coords;
@@ -407,7 +420,9 @@ export const PlacesScreen = ({ navigation, route }: Props) => {
             <ThemeContext.Provider value={darkTheme}>
               <Row align="center" gap={2}>
                 {!isLarge && <Icon icon={faEllipsis} />}
-                <Text weight="medium">{t('common.more')}</Text>
+                <Text weight="medium" maxFontSize={CHIP_MAX_FONT}>
+                  {t('common.more')}
+                </Text>
               </Row>
             </ThemeContext.Provider>
           </PillButton>

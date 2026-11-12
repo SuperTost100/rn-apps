@@ -29,7 +29,7 @@ import { PolitoLogo } from '~/core/components/Logo.tsx';
 export const LoginScreen = () => {
   const { t } = useTranslation();
   const styles = useStylesheet(createStyles);
-  const { top, bottom } = useSafeAreaInsets();
+  const { bottom } = useSafeAreaInsets();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -57,7 +57,8 @@ export const LoginScreen = () => {
       keyboardShouldPersistTaps="handled"
       contentContainerStyle={[
         styles.content,
-        { paddingTop: top, paddingBottom: bottom },
+        // The header above takes the top inset
+        { paddingBottom: bottom },
       ]}
     >
       <View style={styles.logo}>

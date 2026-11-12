@@ -54,10 +54,11 @@ export const InboxBell = ({ color }: Props) => {
 };
 
 const styles = StyleSheet.create({
-  // Over the bell's top right corner, clear of the glyph's centre
+  // Its bottom left corner sits just past the bell's centre, so a badge that
+  // grows with the text size grows up and to the right, away from the bell
   badge: {
     position: 'absolute',
-    top: 0,
-    right: -6,
+    left: '56%',
+    bottom: '56%',
   },
 });

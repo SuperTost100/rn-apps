@@ -1,7 +1,6 @@
-import { ComponentType, useContext, useEffect, useMemo, useState } from 'react';
+import { ComponentType, useContext, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ImageURISource, Platform, StyleSheet, View } from 'react-native';
-import { PERMISSIONS, request } from 'react-native-permissions';
+import { ImageURISource, StyleSheet, View } from 'react-native';
 
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
@@ -153,13 +152,8 @@ export const PlacesNavigator = ({
       setFloorId(id);
     }
   };
-  useEffect(() => {
-    const perm = Platform.select({
-      ios: PERMISSIONS.IOS.LOCATION_WHEN_IN_USE,
-      android: PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION,
-    });
-    if (perm) request(perm).catch(console.error);
-  }, []);
+  // Location is asked for when the student taps "Go to my position", not
+  // when the map opens: see PlacesScreen
 
   return (
     <PlacesContext.Provider value={{ floorId, setFloorId: checkAndSetFloorId }}>

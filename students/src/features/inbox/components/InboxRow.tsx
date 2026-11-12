@@ -150,13 +150,17 @@ export const InboxRow = ({ item, onPress }: Props) => {
       style={pinned ? { backgroundColor: colors.dangerBg } : undefined}
       leadingItem={
         <View
-          style={[styles.kind, item.urgent && styles.kindUrgent]}
+          style={[
+            styles.kind,
+            isLarge && styles.kindLarge,
+            item.urgent && styles.kindUrgent,
+          ]}
           accessibilityElementsHidden
           importantForAccessibility="no-hide-descendants"
         >
           <Icon
             icon={item.urgent ? faTriangleExclamation : KIND_ICONS[item.kind]}
-            size={20}
+            size={isLarge ? 16 : 20}
             color={item.urgent ? colors.surface : colors.title}
           />
         </View>
@@ -215,6 +219,13 @@ const createStyles = ({ colors, controls, spacing }: Theme) =>
       backgroundColor: colors.surfaceSunken,
       alignItems: 'center',
       justifyContent: 'center',
+    },
+    // At large text the circle shrinks, as in the mockup, to leave the
+    // width to the text
+    kindLarge: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
     },
     kindUrgent: {
       backgroundColor: colors.dangerText,

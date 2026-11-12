@@ -374,7 +374,9 @@ const Rail = ({
               ? { top: -paddingTop, height: paddingTop + dotCenter }
               : {
                   top: first ? dotCenter : -paddingTop,
-                  bottom: -paddingBottom,
+                  // One pixel into the next row: rows end on fractional
+                  // pixels at 150%, which left a seam in the thread
+                  bottom: -paddingBottom - 1,
                 },
           ]}
         />

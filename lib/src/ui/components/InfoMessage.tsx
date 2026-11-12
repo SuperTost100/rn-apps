@@ -59,6 +59,9 @@ export const InfoMessage = ({
             variant="secondaryText"
             style={{ color: textColor }}
             weight="medium"
+            // Android's default "highQuality" breaking left the first lines
+            // half empty at 200%; simple fills each line in turn
+            textBreakStrategy="simple"
           >
             {children}
           </Text>
