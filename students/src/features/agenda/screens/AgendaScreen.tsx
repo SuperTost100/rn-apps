@@ -7,403 +7,418 @@ import {
   useState,
 } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList, StyleSheet, View, ViewToken } from 'react-native';
+import {
+  AccessibilityInfo,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native';
 import DatePicker from 'react-native-date-picker';
 
-import {
-  faCalendarDay,
-  faEllipsisVertical,
-} from '@fortawesome/free-solid-svg-icons';
+import { faArrowsRotate } from '@fortawesome/free-solid-svg-icons';
 import {
   APP_TIMEZONE,
+  useFeedbackContext,
   usePreferencesContext,
   useQueryStates,
+  useQuietQueryErrors,
 } from '@polito/lib/core';
 import {
-  ActivityIndicator,
   BottomBarSpacer,
-  HeaderAccessory,
-  IconButton,
-  RegionStateBlock,
-  SkeletonRows,
+  StateBlock,
   Theme,
-  useSafeAreaSpacing,
+  useSavedAtText,
   useStylesheet,
+  useTextScale,
   useTheme,
 } from '@polito/lib/ui';
-import { MenuView, NativeActionEvent } from '@react-native-menu/menu';
 import { useScrollToTop } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { AppPreferences } from '~/core/types/preferences';
 
 import { DateTime } from 'luxon';
 
-import { AgendaFilters } from '../components/AgendaFilters';
-import { AgendaStackParamList } from '../components/AgendaNavigator';
-import { WeeklyAgenda } from '../components/WeeklyAgenda';
 import {
-  refreshAgendaQueries,
-  useGetAgendaWeeks,
-} from '../queries/agendaHooks';
-import { AgendaOption } from '../types/AgendaOption';
-import { AgendaState } from '../types/AgendaState';
+  AgendaHeaderControls,
+  AgendaView,
+} from '../components/AgendaHeaderControls';
+import { AgendaDateRow, DayStrip } from '../components/AgendaHero';
+import {
+  AgendaDayCard,
+  AgendaDaySkeleton,
+  AgendaEmptyDay,
+  AgendaWeekList,
+} from '../components/AgendaLists';
+import { AgendaStackParamList } from '../components/AgendaNavigator';
+import {
+  AgendaFilterChips,
+  AgendaStatusRow,
+} from '../components/AgendaToolbar';
+import { AgendaWeekGrid } from '../components/AgendaWeekGrid';
+import { useMinuteClock } from '../hooks/useMinuteClock';
+import { processLectures } from '../hooks/useProcessedLectures';
+import { refreshAgendaQueries, useGetAgendaWeek } from '../queries/agendaHooks';
+import { AgendaItemType } from '../types/AgendaItem';
 import { AgendaWeek } from '../types/AgendaWeek';
+import {
+  AgendaEntry,
+  shownTypes,
+  toEntry,
+  toggleType,
+} from '../utils/agendaItems';
+import {
+  DayKey,
+  addDays,
+  countsByDay,
+  dayKeyOf,
+  daysOfWeek,
+  groupByDay,
+  weekOf,
+} from '../utils/agendaLogic';
 
 type Props = NativeStackScreenProps<AgendaStackParamList, 'Agenda'>;
 
-export const AgendaScreen = ({ navigation, route }: Props) => {
-  const { fontSizes } = useTheme();
-  const { t } = useTranslation();
-  const styles = useStylesheet(createStyles);
-  const { updatePreference, agendaScreen, language } =
-    usePreferencesContext<AppPreferences>();
-  const client = useQueryClient();
-  const { marginHorizontal } = useSafeAreaSpacing();
-  const { params } = route;
-  const today = useMemo(
-    () => DateTime.now().setZone(APP_TIMEZONE).toJSDate(),
-    [],
-  );
-
-  const selectedDate = params?.date
-    ? DateTime.fromISO(params.date)
-    : DateTime.now().setZone(APP_TIMEZONE);
-
-  const [nextDate, setNextDate] = useState<DateTime>(selectedDate);
-
-  const [weeks, setWeeks] = useState<DateTime[]>([
-    selectedDate.startOf('week'),
-  ]);
-
-  const { isLoading, data, weekQueries, sourceQueries } =
-    useGetAgendaWeeks(weeks);
-  // A week is built from the API queries: until one exists, their state is
-  // the agenda's (the week query itself waits for them)
-  const states = useQueryStates(
-    data.length ? weekQueries.filter(q => q.data) : sourceQueries,
-    { isEmpty: () => false },
-  );
-  const isWaiting =
-    states.status === 'loading' || (states.status === 'ready' && !data.length);
-
-  const [dataPickerIsOpened, setDataPickerIsOpened] = useState<boolean>(false);
-
-  const [isScrolling, setIsScrolling] = useState<boolean>(false);
-
-  const viewabilityConfig = useRef({
-    minimumViewTime: 10,
-    viewAreaCoveragePercentThreshold: 95,
-  }).current;
-
-  const flatListRef = useRef<FlatList<AgendaWeek>>(null);
-
-  const [agendaState, setAgendaState] = useState<AgendaState>({
-    contentHeight: 0, // the total height of scrollview content
-    currentOffset: 0, // current scrollview offset
-    isRefreshing: false, // is refreshing all agenda data
-    shouldLoadNext: false, // should retrieve the previous page of data
-    shouldLoadPrevious: true, // should retrieve the next page of data
-    dayOffsetInWeek: 0, // the offset of day inside its week
-    dayOffsetOverall: 0, // the offset of day, based on contentHeight
-  });
-
-  const refreshQueries = useCallback(() => {
-    setAgendaState(prev => ({ ...prev, isRefreshing: true }));
-    refreshAgendaQueries(client).then(_ =>
-      setAgendaState(prev => ({ ...prev, isRefreshing: false })),
+/** The entries of a week the student shows: hidden lectures and filters applied */
+const useEntries = (week: AgendaWeek | undefined) => {
+  const { courses, agendaScreen } = usePreferencesContext<AppPreferences>();
+  return useMemo(() => {
+    if (!week) return undefined;
+    const items = week.data.flatMap(day => day.items);
+    // processLectures reads each lecture's course preferences: lectures of
+    // a course without saved preferences pass unchanged
+    const known = items.filter(
+      i =>
+        i.type !== 'lecture' ||
+        !i.uniqueShortcode ||
+        courses[i.uniqueShortcode],
     );
-  }, [client, setAgendaState]);
+    const unknown = items.filter(i => !known.includes(i));
+    const all = [...processLectures(known, courses), ...unknown].map(toEntry);
+    const shown = shownTypes(agendaScreen.filters);
+    return { all, shown: all.filter(e => shown[e.item.type]) };
+  }, [week, courses, agendaScreen.filters]);
+};
 
-  const setCurrentDayOffset = (offsetY: number) => {
-    setAgendaState(prev => ({
-      ...prev,
-      dayOffsetInWeek: offsetY,
-      dayOffsetOverall: prev.contentHeight + offsetY,
-    }));
-    setIsScrolling(true);
-  };
+export const AgendaScreen = ({ navigation, route }: Props) => {
+  const { t, i18n } = useTranslation();
+  const styles = useStylesheet(createStyles);
+  const { colors } = useTheme();
+  const { isLarge } = useTextScale();
+  const client = useQueryClient();
+  const { setFeedback } = useFeedbackContext();
+  const { agendaScreen, updatePreference, language } =
+    usePreferencesContext<AppPreferences>();
 
-  const onViewableItemsChanged = useCallback(
-    ({ viewableItems }: { viewableItems: Array<ViewToken> }) => {
-      if (!viewableItems.length) return;
-      const startDate = (viewableItems[0].item as AgendaWeek).dateRange.start;
-      if (startDate === null) return;
-      setNextDate(prevDate => {
-        if (startDate.startOf('week').equals(prevDate.startOf('week'))) {
-          return prevDate;
-        }
-        return startDate;
-      });
-    },
-    [],
+  // Today in Rome, computed on every render from a clock that ticks each
+  // minute, so the today mark moves at midnight
+  const now = useMinuteClock();
+  const today = dayKeyOf(now, APP_TIMEZONE);
+
+  const [date, setDate] = useState<DayKey>(route.params?.date ?? today);
+  const [view, setView] = useState<AgendaView>(
+    agendaScreen.layout === 'weekly' ? 'week' : 'day',
   );
 
-  const getSelectedWeek = useCallback(
-    (newJSDate: Date) => {
-      setDataPickerIsOpened(false);
-      const newDate = DateTime.fromJSDate(newJSDate, {
-        zone: APP_TIMEZONE,
-      });
-      (
-        navigation as NativeStackNavigationProp<AgendaStackParamList, 'Agenda'>
-      ).replace('Agenda', {
-        date: newDate.toISODate() ?? '',
-        animated: false,
-      });
-    },
-    [navigation],
-  );
-
-  // Tapping the active tab again goes back to the day the agenda opened on
-  const selectedDayOffset = useRef(0);
-  selectedDayOffset.current = agendaState.dayOffsetOverall;
-  const scrollToTopTarget = useRef({
-    scrollToTop: () =>
-      flatListRef.current?.scrollToOffset({
-        offset: selectedDayOffset.current,
-        animated: true,
-      }),
-  });
-  useScrollToTop(scrollToTopTarget);
-
-  const scrollToSelectedDay = useCallback(() => {
-    setAgendaState(prevState => {
-      if (prevState.dayOffsetOverall > 0) {
-        flatListRef.current?.scrollToOffset({
-          offset: prevState.dayOffsetOverall,
-          animated: true,
-        });
-      }
-      return prevState;
-    });
-    setIsScrolling(false);
-  }, []);
-
-  // TODO try to scroll backwards
-  // https://github.com/polito/students-app/blob/v1.6.9/src/features/agenda/screens/AgendaScreen.tsx#L155
-
-  const screenOptions = useMemo<AgendaOption[]>(
-    () => [
-      {
-        id: 'refresh',
-        title: t('agendaScreen.refresh'),
-      },
-      {
-        id: 'weekly',
-        title: t('agendaScreen.weeklyLayout'),
-      },
-      {
-        id: 'hide-event',
-        title: t('agendaScreen.hideEvent'),
-      },
-    ],
-    [t],
-  );
-
-  const navigateToHideEventScreen = useCallback(() => {
-    navigation.navigate('AgendaPreferences');
-  }, [navigation]);
-
+  // "Open agenda" elsewhere sets the day; each request applies again, even
+  // for the day already in the params
+  const { date: paramDate, requestedAt } = route.params ?? {};
   useEffect(() => {
-    if (isScrolling) {
-      scrollToSelectedDay();
-    }
-  }, [isScrolling, scrollToSelectedDay]);
+    if (paramDate) setDate(paramDate);
+  }, [paramDate, requestedAt]);
 
-  useLayoutEffect(() => {
-    const switchToWeekly = () => {
+  const changeView = useCallback(
+    (next: AgendaView) => {
+      setView(next);
       updatePreference('agendaScreen', {
         ...agendaScreen,
-        layout: 'weekly',
+        layout: next === 'week' ? 'weekly' : 'daily',
       });
-      navigation.replace('AgendaWeek', {
-        date: nextDate.toISODate() ?? '',
+    },
+    [agendaScreen, updatePreference],
+  );
+
+  const toggleFilter = (type: AgendaItemType) => {
+    const filters = toggleType(agendaScreen.filters, type);
+    if (!filters) {
+      setFeedback({ text: t('agendaScreen.lastFilter') });
+      return;
+    }
+    updatePreference('agendaScreen', { ...agendaScreen, filters });
+  };
+  const showAllTypes = () =>
+    updatePreference('agendaScreen', {
+      ...agendaScreen,
+      filters: { lecture: false, exam: false, booking: false, deadline: false },
+    });
+
+  const { monday } = useMemo(() => weekOf(date, APP_TIMEZONE), [date]);
+  const nextMonday = useMemo(() => monday.plus({ weeks: 1 }), [monday]);
+  const days = useMemo(() => daysOfWeek(monday), [monday]);
+
+  const { week, sourceQueries } = useGetAgendaWeek(monday);
+  // The next week is loaded too: it is saved for offline use, and an empty
+  // day can point to the next one with events
+  const { week: nextWeek, sourceQueries: nextSources } =
+    useGetAgendaWeek(nextMonday);
+  useQuietQueryErrors(nextSources);
+  const states = useQueryStates(sourceQueries, { isEmpty: () => false });
+
+  const entries = useEntries(week);
+  const nextEntries = useEntries(nextWeek);
+  const byDay = useMemo(
+    () => groupByDay<AgendaEntry>(entries?.shown ?? [], APP_TIMEZONE),
+    [entries],
+  );
+  const counts = useMemo(
+    () => countsByDay(days, entries?.shown ?? [], APP_TIMEZONE),
+    [days, entries],
+  );
+
+  // Refresh: the button and pull to refresh fetch the sources again
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const { time: savedTime } = useSavedAtText(states.updatedAt);
+  const refresh = useCallback(() => {
+    if (isRefreshing) return;
+    if (states.isOffline) {
+      setFeedback({
+        text: savedTime
+          ? t('agendaScreen.refreshNeedsConnection', { time: savedTime })
+          : t('agendaScreen.refreshNeedsConnectionNoTime'),
       });
-    };
+      return;
+    }
+    setIsRefreshing(true);
+    refreshAgendaQueries(client).finally(() => setIsRefreshing(false));
+  }, [client, isRefreshing, savedTime, setFeedback, states.isOffline, t]);
+  const wasRefreshing = useRef(false);
+  useEffect(() => {
+    if (wasRefreshing.current && !isRefreshing && savedTime)
+      AccessibilityInfo.announceForAccessibility(
+        t('agendaScreen.updatedAnnouncement', { time: savedTime }),
+      );
+    wasRefreshing.current = isRefreshing;
+  }, [isRefreshing, savedTime, t]);
 
-    const onPressOption = ({ nativeEvent: { event } }: NativeActionEvent) => {
-      switch (event) {
-        case 'weekly':
-          switchToWeekly();
-          break;
-        case 'refresh':
-          refreshQueries();
-          break;
-        case 'hide-event':
-          navigateToHideEventScreen();
-          break;
-      }
-    };
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
 
+  useLayoutEffect(() => {
     navigation.setOptions({
-      // On the navy header: the header's foreground colour
-      headerRight: ({ tintColor }) => (
-        <>
-          <IconButton
-            icon={faCalendarDay}
-            color={tintColor}
-            size={fontSizes.lg}
-            adjustSpacing="left"
-            accessibilityLabel={t('agendaScreen.selectDate')}
-            onPress={() => setDataPickerIsOpened(true)}
-          />
-          <MenuView actions={screenOptions} onPressAction={onPressOption}>
-            <IconButton
-              icon={faEllipsisVertical}
-              color={tintColor}
-              size={fontSizes.lg}
-              adjustSpacing="right"
-              accessibilityLabel={t('common.options')}
-            />
-          </MenuView>
-        </>
+      headerRight: () => (
+        <AgendaHeaderControls
+          view={view}
+          onChangeView={changeView}
+          onPickDate={() => setIsPickerOpen(true)}
+          onOpenPreferences={() => navigation.navigate('AgendaPreferences')}
+        />
       ),
     });
-  }, [
-    fontSizes.lg,
-    navigation,
-    t,
-    agendaScreen,
-    updatePreference,
-    refreshQueries,
-    nextDate,
-    screenOptions,
-    navigateToHideEventScreen,
-  ]);
+  }, [navigation, view, changeView]);
+
+  // Tapping the active tab again scrolls back to the top
+  const scrollRef = useRef<ScrollView>(null);
+  useScrollToTop(scrollRef);
+
+  const isOnToday =
+    view === 'day'
+      ? date === today
+      : weekOf(today, APP_TIMEZONE).monday.equals(monday);
+  const step = (direction: -1 | 1) =>
+    setDate(d =>
+      addDays(d, direction * (view === 'day' ? 1 : 7), APP_TIMEZONE),
+    );
+  const goToday = () => setDate(today);
+
+  const dayDate = DateTime.fromISO(date, { zone: APP_TIMEZONE }).setLocale(
+    language,
+  );
+  const statusTitle =
+    view === 'day'
+      ? date === today
+        ? t('agendaScreen.todayDate', { date: dayDate.toFormat('ccc d LLL') })
+        : dayDate.toFormat('ccc d LLL')
+      : t('agendaScreen.weekOf', {
+          date: monday.setLocale(i18n.language).toFormat('d LLL'),
+        });
+
+  const isLoading = states.status === 'loading';
+  let body;
+  if (states.status === 'error') {
+    body = (
+      <StateBlock
+        card
+        style={styles.block}
+        variant={states.isOffline ? 'empty' : 'error'}
+        title={
+          states.isOffline
+            ? t('agendaScreen.offlineTitle')
+            : t('states.agenda.failedTitle')
+        }
+        text={
+          states.isOffline
+            ? t('agendaScreen.offlineText')
+            : t('states.agenda.failedText')
+        }
+        action={
+          states.isOffline
+            ? undefined
+            : {
+                label: t('states.tryAgain'),
+                icon: faArrowsRotate,
+                primary: true,
+                onPress: states.retry,
+              }
+        }
+      />
+    );
+  } else if (view === 'week' && !isLarge) {
+    body = (
+      <AgendaWeekGrid
+        days={days}
+        today={today}
+        now={now}
+        entriesByDay={byDay}
+        loading={isLoading}
+        onOpenDay={day => {
+          setDate(day);
+          changeView('day');
+        }}
+      />
+    );
+  } else if (isLoading) {
+    body = <AgendaDaySkeleton label={t('states.agenda.loading')} />;
+  } else if (view === 'week') {
+    body = (
+      <AgendaWeekList
+        days={days}
+        today={today}
+        entriesByDay={byDay}
+        now={now}
+      />
+    );
+  } else {
+    const shown = byDay.get(date) ?? [];
+    if (shown.length) {
+      body = <AgendaDayCard entries={shown} now={now} />;
+    } else {
+      const allOfDay = (entries?.all ?? []).filter(
+        e => dayKeyOf(e.start, APP_TIMEZONE) === date,
+      );
+      const later = [...(entries?.shown ?? []), ...(nextEntries?.shown ?? [])]
+        .filter(e => dayKeyOf(e.start, APP_TIMEZONE) > date)
+        .sort((a, b) => a.start - b.start);
+      body = (
+        <AgendaEmptyDay
+          day={date}
+          hidden={allOfDay.length}
+          next={later[0]}
+          onShowAll={showAllTypes}
+          onGoTo={setDate}
+        />
+      );
+    }
+  }
 
   return (
-    <View style={styles.container}>
-      <HeaderAccessory>
-        <AgendaFilters />
-      </HeaderAccessory>
+    <>
+      <ScrollView
+        ref={scrollRef}
+        contentInsetAdjustmentBehavior="automatic"
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={refresh}
+            tintColor={colors.onHeader}
+            colors={[colors.primary]}
+          />
+        }
+      >
+        {/* The navy goes on above the date row when the page is pulled down */}
+        <View style={styles.overscroll} />
+        <View style={styles.hero}>
+          <AgendaDateRow
+            view={view}
+            date={date}
+            monday={monday}
+            isOnToday={isOnToday}
+            onStep={step}
+            onToday={goToday}
+          />
+          {view === 'day' ? (
+            <DayStrip
+              days={days}
+              selected={date}
+              today={today}
+              counts={counts}
+              loading={!entries}
+              onSelect={setDate}
+              onSwipe={direction =>
+                setDate(d => addDays(d, direction * 7, APP_TIMEZONE))
+              }
+            />
+          ) : (
+            <View style={styles.heroEnd} />
+          )}
+        </View>
+        <AgendaFilterChips
+          shown={shownTypes(agendaScreen.filters)}
+          onToggle={toggleFilter}
+        />
+        <AgendaStatusRow
+          title={statusTitle}
+          time={savedTime}
+          isRefreshing={isRefreshing}
+          isOffline={states.isOffline}
+          onRefresh={refresh}
+        />
+        {body}
+        <View style={styles.end} />
+        <BottomBarSpacer />
+      </ScrollView>
       <DatePicker
         modal
         locale={language}
-        date={today}
+        date={DateTime.fromISO(date, { zone: APP_TIMEZONE })
+          .set({ hour: 12 })
+          .toJSDate()}
         mode="date"
-        open={dataPickerIsOpened}
-        onConfirm={getSelectedWeek}
-        onCancel={() => setDataPickerIsOpened(false)}
+        open={isPickerOpen}
+        onConfirm={picked => {
+          setIsPickerOpen(false);
+          setDate(dayKeyOf(picked.valueOf(), APP_TIMEZONE));
+        }}
+        onCancel={() => setIsPickerOpen(false)}
         title={t('agendaScreen.selectDate')}
         confirmText={t('common.confirm')}
         cancelText={t('common.cancel')}
       />
-      {isWaiting && (
-        <SkeletonRows
-          count={5}
-          leading="tile"
-          trailing="none"
-          label={t('states.agenda.loading')}
-          style={styles.skeleton}
-        />
-      )}
-      {states.status === 'error' && (
-        <RegionStateBlock
-          states={states}
-          errorState={{
-            title: t('states.agenda.failedTitle'),
-            text: t('states.agenda.failedText'),
-          }}
-          style={styles.block}
-        />
-      )}
-      {agendaState.isRefreshing && (
-        <ActivityIndicator style={styles.activityIndicator} size="large" />
-      )}
-      {!!data.length && !agendaState.isRefreshing && (
-        <FlatList
-          ref={flatListRef}
-          data={data}
-          initialNumToRender={1}
-          keyExtractor={item => item.key}
-          // extraData={[isFetchingPreviousPage, isFetchingNextPage]}
-          contentContainerStyle={[styles.listContainer, marginHorizontal]}
-          renderItem={({ item }) => (
-            <WeeklyAgenda
-              agendaWeek={item}
-              setCurrentDayOffset={setCurrentDayOffset}
-              currentDay={selectedDate}
-            />
-          )}
-          /* ListHeaderComponent={
-            isLoading ? <ActivityIndicator size="small" /> : undefined
-          }*/
-          ListFooterComponent={
-            <>
-              {isLoading ? <ActivityIndicator size="small" /> : undefined}
-              <BottomBarSpacer />
-            </>
-          }
-          ItemSeparatorComponent={() => <View style={styles.separator} />}
-          scrollEventThrottle={100}
-          scrollEnabled={!isScrolling}
-          // onContentSizeChange={(contentWidth, contentHeight) => onContentHeightChange(contentHeight)}
-          /* onScroll={(event: NativeSyntheticEvent<NativeScrollEvent>) => {
-            const offsetY = event.nativeEvent.contentOffset.y;
-
-            if (!isLoading && offsetY < prevPageThreshold) {
-              setWeeks(prev => {
-                const firstWeek = prev[0];
-
-                return [firstWeek.minus({ week: 1 }), ...prev];
-              });
-            }
-          }}*/
-          onEndReachedThreshold={0.3}
-          onEndReached={() => {
-            if (isLoading) return;
-            setWeeks(prev => {
-              const lastWeek = prev[prev.length - 1];
-
-              return [...prev, lastWeek.plus({ week: 1 })];
-            });
-          }}
-          viewabilityConfig={viewabilityConfig}
-          onViewableItemsChanged={onViewableItemsChanged}
-        />
-      )}
-    </View>
+    </>
   );
 };
 
-const createStyles = ({ spacing }: Theme) =>
+const createStyles = ({ colors, layout, spacing }: Theme) =>
   StyleSheet.create({
-    activityIndicator: {
+    overscroll: {
       position: 'absolute',
+      top: -1000,
       left: 0,
       right: 0,
-      top: 0,
-      bottom: 0,
+      height: 1000,
+      backgroundColor: colors.header,
     },
-    separator: {
-      height: spacing[8],
+    hero: {
+      backgroundColor: colors.header,
     },
-    skeleton: {
-      paddingVertical: spacing[3],
+    heroEnd: {
+      height: spacing[2],
     },
     block: {
-      marginTop: spacing[4],
+      marginHorizontal: layout.gutter,
+      marginTop: spacing[3],
     },
-    container: { flex: 1 },
-    listContainer: {
-      paddingLeft: spacing[1],
-      paddingRight: spacing[3],
-      paddingVertical: spacing[5],
-    },
-    weekHeader: {
-      marginLeft: '15%',
-      paddingTop: spacing[4],
-      paddingBottom: spacing[2],
-    },
-    dayColumn: {
-      width: '15%',
-      maxWidth: 200,
-    },
-    itemsColumn: {
-      flexGrow: 1,
-      justifyContent: 'center',
+    end: {
+      height: spacing[6],
     },
   });

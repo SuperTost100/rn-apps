@@ -1,12 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  AppState,
-  PixelRatio,
-  Pressable,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { PixelRatio, Pressable, StyleSheet, View } from 'react-native';
 
 import { faCalendar } from '@fortawesome/free-regular-svg-icons';
 import {
@@ -33,6 +27,7 @@ import { AppPreferences, CoursesPreferences } from '~/core/types/preferences';
 import { DateTime } from 'luxon';
 
 import { useGetCourses } from '../../../core/queries/courseHooks';
+import { useMinuteClock } from '../../agenda/hooks/useMinuteClock';
 import { processLectures } from '../../agenda/hooks/useProcessedLectures';
 import { useGetAgendaWeek } from '../../agenda/queries/agendaHooks';
 import {
@@ -41,7 +36,6 @@ import {
   ExamItem,
   LectureItem,
 } from '../../agenda/types/AgendaItem';
-import { AgendaTypesFilterState } from '../../agenda/types/AgendaTypesFilterState';
 import { AgendaWeek } from '../../agenda/types/AgendaWeek';
 import {
   NamedItem,
@@ -55,17 +49,8 @@ import {
   foldText,
   hhmm,
   itemsOfDay,
-  msToNextMinute,
   rowLabel,
 } from '../utils/todayList';
-
-/** Every type, whatever the agenda's own filters hide */
-export const TODAY_TYPES: AgendaTypesFilterState = {
-  booking: true,
-  deadline: true,
-  exam: true,
-  lecture: true,
-};
 
 /** A lecture, booked exam or room booking with a time, as a row of the list */
 interface TodayEntry extends NamedItem {
@@ -136,32 +121,6 @@ const useEntries = (week: AgendaWeek | undefined) => {
   }, [week, courses, courseList]);
 };
 
-/**
- * The time, updated when a new minute starts and when the app comes back
- * to the foreground. Only the component that calls it re-renders.
- */
-const useMinuteClock = () => {
-  const [now, setNow] = useState(Date.now);
-  useEffect(() => {
-    let timer: ReturnType<typeof setTimeout>;
-    const tick = () => {
-      setNow(Date.now());
-      timer = setTimeout(tick, msToNextMinute(Date.now()) + 50);
-    };
-    timer = setTimeout(tick, msToNextMinute(Date.now()) + 50);
-    const subscription = AppState.addEventListener('change', state => {
-      if (state !== 'active') return;
-      clearTimeout(timer);
-      tick();
-    });
-    return () => {
-      clearTimeout(timer);
-      subscription.remove();
-    };
-  }, []);
-  return now;
-};
-
 /** Line heights of the list at the current text size, for the thread */
 const useLines = () => {
   const { scale } = useTextScale();
@@ -169,22 +128,18 @@ const useLines = () => {
   return { title: 24 * k, cardTitle: 28 * k, secondary: 20 * k };
 };
 
-/** Opens the agenda tab on a day, in the layout the student chose */
+/**
+ * Opens the agenda tab on a day, in the layout the student chose. The
+ * agenda goes back to its first screen and shows the day, keeping the rest
+ * of its state
+ */
 const useOpenAgenda = () => {
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
-  const { agendaScreen } = usePreferencesContext<AppPreferences>();
   return (date: string) =>
-    // The agenda builds its weeks once, from the date it opens on: a new
-    // route makes it start again from this day
     navigation.navigate('AgendaTab', {
-      state: {
-        routes: [
-          {
-            name: agendaScreen.layout === 'weekly' ? 'AgendaWeek' : 'Agenda',
-            params: { date, animated: false },
-          },
-        ],
-      },
+      screen: 'Agenda',
+      params: { date, requestedAt: Date.now() },
+      pop: true,
     });
 };
 
@@ -217,11 +172,11 @@ export const TodayList = ({ quiet = false }: Props) => {
     () => DateTime.fromISO(today, { zone: APP_TIMEZONE }).startOf('week'),
     [today],
   );
-  const { weekQuery, sourceQueries } = useGetAgendaWeek(monday, TODAY_TYPES);
-  const states = useQueryStates(weekQuery.data ? weekQuery : sourceQueries, {
+  const { week, sourceQueries } = useGetAgendaWeek(monday);
+  const states = useQueryStates(sourceQueries, {
     isEmpty: () => false,
   });
-  const entries = useEntries(weekQuery.data);
+  const entries = useEntries(week);
   const model = useMemo(
     () => buildToday(itemsOfDay(entries, now, APP_TIMEZONE), now, percent),
     [entries, now, percent],
@@ -378,9 +333,9 @@ const NextDay = ({ entry }: { entry: TodayEntry | null }) => {
 
 /** Looks for the next teaching day in next week, when this one has none */
 const NextWeekFirst = ({ monday }: { monday: DateTime }) => {
-  const { weekQuery } = useGetAgendaWeek(monday, TODAY_TYPES);
-  const entries = useEntries(weekQuery.data);
-  if (!weekQuery.data) return null;
+  const { week } = useGetAgendaWeek(monday);
+  const entries = useEntries(week);
+  if (!week) return null;
   return (
     <NextDay
       entry={firstOfNextDay(

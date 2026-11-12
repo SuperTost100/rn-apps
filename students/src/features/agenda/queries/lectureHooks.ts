@@ -22,6 +22,11 @@ import {
   useCoursesClient,
   useGetCourses,
 } from '../../../core/queries/courseHooks';
+import {
+  WEEK_STALE_TIME,
+  romeMonday,
+  weekQueryKey,
+} from '../../../core/queries/weekQueries';
 import { CourseOverview } from '../../../core/types/api';
 import { Lecture } from '../types/Lecture';
 import { formatNextLecture } from '../utils/formatters';
@@ -104,9 +109,8 @@ const getVisibleCourseIds = (
   return visibleCourseIds;
 };
 
-const getLectureWeekQueryKey = (monday: DateTime) => {
-  return [LECTURES_QUERY_PREFIX, monday];
-};
+const getLectureWeekQueryKey = (monday: DateTime) =>
+  weekQueryKey(LECTURES_QUERY_PREFIX, monday);
 
 const getLectureWeekQueryFn = async (
   lectureClient: LecturesApi,
@@ -114,11 +118,12 @@ const getLectureWeekQueryFn = async (
   courses: CourseOverview[],
   visibleCourseIds: number[],
 ) => {
-  const until = monday.endOf('week');
+  const from = romeMonday(monday);
+  const until = from.endOf('week');
 
   return lectureClient
     .getLectures({
-      fromDate: toOASTruncable(monday),
+      fromDate: toOASTruncable(from),
       toDate: toOASTruncable(until),
       courseIds: visibleCourseIds,
     })
@@ -128,7 +133,7 @@ const getLectureWeekQueryFn = async (
 
 export const useGetLectureWeek = (
   coursesPreferences: CoursesPreferences,
-  since: DateTime = DateTime.now().startOf('week'),
+  since: DateTime = romeMonday(),
 ) => {
   const lectureClient = useLectureClient();
   const { data: courses } = useGetCourses();
@@ -142,13 +147,13 @@ export const useGetLectureWeek = (
     queryFn: async () =>
       getLectureWeekQueryFn(lectureClient, since, courses!, visibleCourseIds),
     enabled: !!courses && Array.isArray(visibleCourseIds),
-    staleTime: Infinity,
+    staleTime: WEEK_STALE_TIME,
   });
 };
 
 export const useGetLectureWeeks = (
   coursesPreferences: CoursesPreferences,
-  mondays: DateTime[] = [DateTime.now().startOf('week')],
+  mondays: DateTime[] = [romeMonday()],
 ) => {
   const lectureClient = useLectureClient();
   const { data: courses } = useGetCourses();
@@ -167,6 +172,8 @@ export const useGetLectureWeeks = (
           courses!,
           visibleCourseIds,
         ),
+      enabled: !!courses && Array.isArray(visibleCourseIds),
+      staleTime: WEEK_STALE_TIME,
     })),
   });
 

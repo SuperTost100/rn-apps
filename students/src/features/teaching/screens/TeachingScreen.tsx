@@ -72,7 +72,7 @@ import { CreditsRing } from '../components/CreditsRing';
 import { ExamListItem } from '../components/ExamListItem';
 import { GraduationSessionSection } from '../components/GraduationSessionSection';
 import { TeachingStackParamList } from '../components/TeachingNavigator';
-import { TODAY_TYPES, TodayList } from '../components/TodayList';
+import { TodayList } from '../components/TodayList';
 
 type Props = NativeStackScreenProps<TeachingStackParamList, 'Home'>;
 
@@ -107,10 +107,7 @@ export const TeachingScreen = ({ navigation }: Props) => {
   const mondays = useMemo(deadlineMondays, []);
   const deadlinesQueries = useGetDeadlineWeeks(mondays);
   // Pulling to refresh reloads today's lectures too
-  const { sourceQueries: todayQueries } = useGetAgendaWeek(
-    mondays[0],
-    TODAY_TYPES,
-  );
+  const { sourceQueries: todayQueries } = useGetAgendaWeek(mondays[0]);
   // These parts appear only when they have something to show
   useQuietQueryErrors([eventAdmissionsQuery, ...deadlinesQueries.queries]);
 

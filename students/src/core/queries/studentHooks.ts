@@ -34,6 +34,7 @@ import { getProfilePictureFile } from '../../utils/profilePicture';
 import { useMfaChallengeHandler } from '../hooks/useMfaChallengeHandler';
 import { UpdateNotificationPreferencesRequestKey } from '../types/notificationTypes';
 import { COURSE_QUERY_PREFIX } from './courseHooks';
+import { WEEK_STALE_TIME, romeMonday, weekQueryKey } from './weekQueries';
 
 export const STUDENT_QUERY_KEY = ['student'];
 export const PROFILE_QUERY_KEY = ['profile'];
@@ -233,46 +234,42 @@ export const useRejectProvisionalGrade = () => {
   });
 };
 
-const getDeadlineWeekQueryKey = (since: DateTime) => [
-  DEADLINES_QUERY_PREFIX,
-  since,
-];
+const getDeadlineWeekQueryKey = (since: DateTime) =>
+  weekQueryKey(DEADLINES_QUERY_PREFIX, since);
 
 const getDeadlineWeekQueryFn = async (
   studentClient: StudentApi,
   since: DateTime,
 ) => {
-  const until = since.endOf('week');
+  const from = romeMonday(since);
+  const until = from.endOf('week');
 
   return studentClient
     .getDeadlines({
-      fromDate: toOASTruncable(since),
+      fromDate: toOASTruncable(from),
       toDate: toOASTruncable(until),
     })
     .then(pluckData);
 };
 
-export const useGetDeadlineWeek = (
-  since: DateTime = DateTime.now().startOf('week'),
-) => {
+export const useGetDeadlineWeek = (since: DateTime = romeMonday()) => {
   const studentClient = useStudentClient();
 
   return useQuery({
     queryKey: getDeadlineWeekQueryKey(since),
     queryFn: async () => getDeadlineWeekQueryFn(studentClient, since),
-    staleTime: Infinity,
+    staleTime: WEEK_STALE_TIME,
   });
 };
 
-export const useGetDeadlineWeeks = (
-  mondays: DateTime[] = [DateTime.now().startOf('week')],
-) => {
+export const useGetDeadlineWeeks = (mondays: DateTime[] = [romeMonday()]) => {
   const studentClient = useStudentClient();
 
   const queries = useQueries({
     queries: (mondays ?? []).map(monday => ({
       queryKey: getDeadlineWeekQueryKey(monday),
       queryFn: async () => getDeadlineWeekQueryFn(studentClient, monday),
+      staleTime: WEEK_STALE_TIME,
     })),
   });
 

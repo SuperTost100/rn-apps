@@ -26,11 +26,15 @@ export interface BookingItem extends BaseAgendaItem {
   type: 'booking';
   fromTime: string;
   toTime: string;
+  /** Where the booking is: a room or a virtual place */
+  place?: string;
 }
 
 export interface DeadlineItem extends BaseAgendaItem {
   id: number;
   type: 'deadline';
+  /** The kind of deadline, as the university names it */
+  deadlineType?: string;
   url: string | null;
 }
 

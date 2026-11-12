@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 
-import { AgendaNavigatorID, usePreferencesContext } from '@polito/lib/core';
+import { AgendaNavigatorID } from '@polito/lib/core';
 import {
   PlacesNavigator,
   type PlacesStackParamList,
@@ -14,7 +14,6 @@ import {
 import { NavigatorScreenParams } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-import { AppPreferences } from '~/core/types/preferences';
 import { AgendaPreferencesScreen } from '~/features/agenda/screens/AgendaPreferencesScreen.tsx';
 import { HiddenEventsScreen } from '~/features/agenda/screens/HiddenEventsScreen.tsx';
 import { UnreadMessagesModal } from '~/features/user/screens/UnreadMessagesModal';
@@ -30,7 +29,6 @@ import {
 } from '../../courses/navigation/CourseSharedScreens';
 import { ExamScreen } from '../../teaching/screens/ExamScreen';
 import { AgendaScreen } from '../screens/AgendaScreen';
-import { AgendaWeekScreen } from '../screens/AgendaWeekScreen';
 import { BookingScreen } from '../screens/BookingScreen';
 import { DeadlineScreen } from '../screens/DeadlineScreen';
 import { LectureScreen } from '../screens/LectureScreen';
@@ -38,8 +36,11 @@ import { DeadlineItem, LectureItem } from '../types/AgendaItem';
 
 export type AgendaStackParamList = CourseSharedScreensParamList &
   SharedScreensParamList & {
-    Agenda: { date?: string; animated?: boolean };
-    AgendaWeek: { date?: string };
+    /**
+     * `date` (yyyy-MM-dd) shows that day; `requestedAt` makes the same day
+     * apply again when it is asked for a second time
+     */
+    Agenda: { date?: string; requestedAt?: number } | undefined;
     Lecture: { item: LectureItem };
     Exam: { id: number };
     Deadline: { item: DeadlineItem };
@@ -64,29 +65,17 @@ export const AgendaNavigator = () => {
   const { t } = useTranslation();
   const rootOptions = useTabRootHeaderOptions();
   const placesHeaderOptions = { inner: useInnerTitleOptions() };
-  const {
-    agendaScreen: { layout },
-  } = usePreferencesContext<AppPreferences>();
 
   return (
     <Stack.Navigator
       screenLayout={offlineScreenLayout}
       id={AgendaNavigatorID}
       screenOptions={useInnerHeaderOptions()}
-      initialRouteName={layout === 'daily' ? 'Agenda' : 'AgendaWeek'}
+      initialRouteName="Agenda"
     >
       <Stack.Screen
         name="Agenda"
         component={AgendaScreen}
-        options={({ route: { params } }) => ({
-          ...rootOptions,
-          headerTitle: t('agendaScreen.title'),
-          animation: (params?.animated ?? true) ? 'default' : 'none',
-        })}
-      />
-      <Stack.Screen
-        name="AgendaWeek"
-        component={AgendaWeekScreen}
         options={{
           ...rootOptions,
           headerTitle: t('agendaScreen.title'),
