@@ -9,6 +9,7 @@ import {
 import { usePreferencesContext } from '../../core/contexts/PreferencesContext';
 import { useTheme } from '../hooks/useTheme';
 import { Colors, TextVariant, Theme } from '../types/Theme';
+import { resolveFontFace } from '../utils/font-face';
 import { computeTextSize, textScaleFromPercent } from '../utils/text-scale';
 
 export interface TextProps extends RNTextProps {
@@ -130,18 +131,39 @@ export const Text = ({
     accessibility?.paragraphSpacing,
   ]);
 
+  // The family file that has the final weight, after the screen's overrides:
+  // a weight from style or the weight prop wins, a family alone keeps its own
+  const styleFamily = flatStyle?.fontFamily;
+  const styleWeight = flatStyle?.fontWeight;
+  const isItalic = italic || flatStyle?.fontStyle === 'italic';
+  const fontFace = useMemo(
+    () =>
+      resolveFontFace(
+        styleFamily ?? baseStyle.fontFamily,
+        styleWeight ??
+          (weight || !styleFamily ? baseStyle.fontWeight : undefined),
+        isItalic,
+      ),
+    [
+      styleFamily,
+      styleWeight,
+      weight,
+      baseStyle.fontFamily,
+      baseStyle.fontWeight,
+      isItalic,
+    ],
+  );
+
   return (
     <RNText
       style={[
         baseStyle,
-        italic && {
-          fontStyle: 'italic',
-        },
         capitalize && { textTransform: 'capitalize' },
         uppercase && { textTransform: 'uppercase' },
         sizeStyle.paragraphSpacing,
         flatStyle,
         sizeStyle.style,
+        fontFace,
       ]}
       // A caller may only lower the cap on the phone's font scale
       maxFontSizeMultiplier={
