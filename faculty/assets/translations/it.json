@@ -1143,5 +1143,18 @@
       "failedOneTitle": "Impossibile caricare il contatto",
       "loadingOne": "Caricamento del contatto"
     }
+  },
+  "serviceInfo": {
+    "contacts": {
+      "matches": "{{count}} persona corrisponde a \"{{search}}\"",
+      "matches_plural": "{{count}} persone corrispondono a \"{{search}}\"",
+      "noMatchTitle": "Nessuno corrisponde a \"{{search}}\""
+    },
+    "person": {
+      "call": "Chiama {{number}}",
+      "write": "Scrivi a {{email}}",
+      "profilePage": "Pagina del profilo"
+    },
+    "opensInBrowser": "{{label}}, si apre nel browser"
   }
 }

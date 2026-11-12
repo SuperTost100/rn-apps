@@ -1,6 +1,9 @@
 import { Text } from '../../../ui/components/Text';
-import { useTheme } from '../../../ui/hooks/useTheme';
 
+/**
+ * A name with the searched part in bold, so the match shows without relying
+ * on colour
+ */
 export const HighlightedText = ({
   text,
   highlight,
@@ -8,16 +11,21 @@ export const HighlightedText = ({
   text: string;
   highlight: string;
 }) => {
-  const highlightIndex = text.toLowerCase().indexOf(highlight.toLowerCase());
-  const { palettes } = useTheme();
+  const highlightIndex = highlight
+    ? text.toLowerCase().indexOf(highlight.toLowerCase())
+    : -1;
   if (highlightIndex === -1) {
-    return <Text variant="heading">{text}</Text>;
+    return (
+      <Text variant="title" numberOfLines={2}>
+        {text}
+      </Text>
+    );
   }
 
   return (
-    <Text variant="heading">
+    <Text variant="title" numberOfLines={2}>
       {text.substring(0, highlightIndex)}
-      <Text variant="heading" style={{ color: palettes.secondary['600'] }}>
+      <Text variant="title" weight="bold">
         {text.substring(highlightIndex, highlightIndex + highlight.length)}
       </Text>
       {text.substring(highlightIndex + highlight.length)}

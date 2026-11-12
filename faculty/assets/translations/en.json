@@ -1116,5 +1116,18 @@
       "failedOneTitle": "Couldn't load this contact",
       "loadingOne": "Loading the contact"
     }
+  },
+  "serviceInfo": {
+    "contacts": {
+      "matches": "{{count}} person matches \"{{search}}\"",
+      "matches_plural": "{{count}} people match \"{{search}}\"",
+      "noMatchTitle": "Nobody matches \"{{search}}\""
+    },
+    "person": {
+      "call": "Call {{number}}",
+      "write": "Write to {{email}}",
+      "profilePage": "Profile page"
+    },
+    "opensInBrowser": "{{label}}, opens in the browser"
   }
 }

@@ -1,15 +1,15 @@
 import { Fragment } from 'react';
-import { Linking, Platform, ScrollView, StyleSheet, View } from 'react-native';
-
-import { faChevronRight } from '@fortawesome/free-solid-svg-icons';
+import { useTranslation } from 'react-i18next';
+import { Linking, ScrollView, StyleSheet } from 'react-native';
 
 import { BottomBarSpacer } from '../../../ui/components/BottomBarSpacer';
 import { Card } from '../../../ui/components/Card';
-import { Icon } from '../../../ui/components/Icon';
-import { IndentedDivider } from '../../../ui/components/IndentedDivider';
 import { InfoMessage } from '../../../ui/components/InfoMessage';
 import { ListItem } from '../../../ui/components/ListItem';
-import { Text } from '../../../ui/components/Text';
+import { OutlineIcon } from '../../../ui/components/OutlineIcon';
+import { OverviewList } from '../../../ui/components/OverviewList';
+import { Section } from '../../../ui/components/Section';
+import { SectionHeader } from '../../../ui/components/SectionHeader';
 import { useStylesheet } from '../../../ui/hooks/useStylesheet';
 import { useTheme } from '../../../ui/hooks/useTheme';
 import { Theme } from '../../../ui/types/Theme';
@@ -19,9 +19,16 @@ interface Props {
   detail: UsefulContactDetail;
 }
 
+const ICONS = { email: 'mail', tel: 'phone', link: 'ext' } as const;
+
+/**
+ * A useful contact: what the service does in a card, how to reach it as a
+ * section, then its contacts as rows. The header already shows its name.
+ */
 export const StaticContactScreenContent = ({ detail }: Props) => {
+  const { t } = useTranslation();
   const styles = useStylesheet(createStyles);
-  const { colors, fontSizes } = useTheme();
+  const { colors } = useTheme();
 
   const openContact = (contact: UsefulContactItem) => {
     const { kind, target } = contact.action;
@@ -35,109 +42,77 @@ export const StaticContactScreenContent = ({ detail }: Props) => {
     Linking.openURL(url);
   };
 
+  const contactLabel = (contact: UsefulContactItem) => {
+    switch (contact.action.kind) {
+      case 'email':
+        return t('serviceInfo.person.write', { email: contact.value });
+      case 'tel':
+        return t('serviceInfo.person.call', { number: contact.value });
+      default:
+        return `${contact.title}, ${contact.value}`;
+    }
+  };
+
   return (
-    <ScrollView
-      contentInsetAdjustmentBehavior="automatic"
-      contentContainerStyle={styles.scroll}
-    >
-      <View style={styles.content}>
-        <Text variant="heading" style={styles.title}>
-          {detail.title}
-        </Text>
-
-        <Card style={styles.descriptionCard} padded={false}>
-          <View style={styles.descriptionInner}>
-            {detail.description.paragraphs.map((paragraph, index) => (
-              <Fragment key={index}>{paragraph}</Fragment>
-            ))}
-            {detail.description.warning && (
-              <InfoMessage variant="warning">
-                {detail.description.warning}
-              </InfoMessage>
-            )}
-          </View>
-        </Card>
-
-        {detail.info && (
-          <Card style={styles.infoCard} padded={false}>
-            <View style={styles.infoInner}>
-              <Text
-                variant="heading"
-                style={[styles.infoTitle, { fontSize: fontSizes.sm }]}
-              >
-                {detail.info.title}
-              </Text>
-              {detail.info.body}
-            </View>
-          </Card>
+    <ScrollView contentInsetAdjustmentBehavior="automatic">
+      <Card padded style={styles.firstCard}>
+        {detail.description.paragraphs.map((paragraph, index) => (
+          <Fragment key={index}>{paragraph}</Fragment>
+        ))}
+        {detail.description.warning && (
+          <InfoMessage variant="warning">
+            {detail.description.warning}
+          </InfoMessage>
         )}
+      </Card>
 
-        {detail.contacts.length > 0 && (
-          <Card style={styles.contactsCard} padded={false}>
+      {detail.info && (
+        <Section style={styles.section}>
+          <SectionHeader title={detail.info.title} />
+          <Card padded>{detail.info.body}</Card>
+        </Section>
+      )}
+
+      {detail.contacts.length > 0 && (
+        <Section style={!detail.info && styles.section}>
+          <SectionHeader title={t('personScreen.contacts')} />
+          <OverviewList>
             {detail.contacts.map((contact, index) => (
-              <View key={index}>
-                {index > 0 && <IndentedDivider indent={20} />}
-                <ListItem
-                  title={contact.title}
-                  subtitle={contact.value}
-                  onPress={() => openContact(contact)}
-                  accessibilityRole="button"
-                  leadingItem={<Icon icon={contact.icon} size={fontSizes.lg} />}
-                  trailingItem={
-                    <Icon
-                      icon={faChevronRight}
-                      color={colors.secondaryText}
-                      size={fontSizes.sm}
-                    />
-                  }
-                />
-              </View>
+              <ListItem
+                key={index}
+                title={contact.value}
+                titleProps={{ numberOfLines: 3 }}
+                subtitle={contact.title}
+                onPress={() => openContact(contact)}
+                isAction
+                accessibilityRole={
+                  contact.action.kind === 'link' ? 'link' : 'button'
+                }
+                accessibilityLabel={contactLabel(contact)}
+                leadingItem={
+                  <OutlineIcon
+                    name={ICONS[contact.action.kind]}
+                    color={colors.secondaryText}
+                  />
+                }
+              />
             ))}
-          </Card>
-        )}
-      </View>
+          </OverviewList>
+        </Section>
+      )}
       <BottomBarSpacer />
     </ScrollView>
   );
 };
 
-const createStyles = ({ spacing, shapes }: Theme) =>
+const createStyles = ({ spacing, layout }: Theme) =>
   StyleSheet.create({
-    scroll: {
-      flexGrow: 1,
-    },
-    content: {
-      alignSelf: 'center',
-      width: '100%',
-      maxWidth: 390,
-      padding: spacing[5],
+    // 16 px under the header, as every first card
+    firstCard: {
+      marginTop: spacing[4],
       gap: spacing[3],
     },
-    title: {
-      marginTop: spacing[1],
-      marginBottom: spacing[2],
+    section: {
+      marginTop: layout.sectionGap - spacing[2],
     },
-    descriptionCard: {
-      marginHorizontal: 0,
-      borderRadius: shapes.md,
-    },
-    descriptionInner: {
-      padding: spacing[3],
-      gap: spacing[3],
-    },
-    infoCard: {
-      marginHorizontal: 0,
-      borderRadius: shapes.md,
-    },
-    infoInner: {
-      padding: spacing[3],
-      gap: spacing[1],
-    },
-    infoTitle: {
-      marginBottom: spacing[1],
-    },
-    contactsCard: Platform.select({
-      ios: { marginHorizontal: 0, borderRadius: shapes.md },
-      android: { marginHorizontal: 0 },
-    })!,
   });

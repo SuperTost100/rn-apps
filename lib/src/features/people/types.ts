@@ -45,7 +45,7 @@ export type UsefulContactDetail = {
 };
 
 export type PeopleStackParamList = {
-  Contacts: undefined;
+  Contacts: { focusSearch?: boolean } | undefined;
   Person: { id: number };
   UsefulContact: { id: string };
 };

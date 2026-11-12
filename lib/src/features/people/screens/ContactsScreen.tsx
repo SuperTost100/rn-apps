@@ -1,21 +1,19 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { SafeAreaView, ScrollView, StyleSheet } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
+import { useRoute } from '@react-navigation/native';
 
 import { usePreferencesContext } from '../../../core/contexts/PreferencesContext';
 import { useDebounceValue } from '../../../core/hooks/useDebounceValue';
 import { useOfflineDisabled } from '../../../core/hooks/useOfflineDisabled';
+import { useQueryStates } from '../../../core/hooks/useQueryStates';
 import { BottomBarSpacer } from '../../../ui/components/BottomBarSpacer';
-import { HeaderAccessory } from '../../../ui/components/HeaderAccessory';
 import { OverviewList } from '../../../ui/components/OverviewList';
-import { Row } from '../../../ui/components/Row';
-import { Section } from '../../../ui/components/Section';
+import { Text } from '../../../ui/components/Text';
 import { TranslucentTextField } from '../../../ui/components/TranslucentTextField';
 import { useStylesheet } from '../../../ui/hooks/useStylesheet';
-import { useTheme } from '../../../ui/hooks/useTheme';
-import { GlobalStyles } from '../../../ui/styles/GlobalStyles';
 import { Theme } from '../../../ui/types/Theme';
 import { PersonOverviewListItem } from '../components/PersonOverviewListItem';
 import { PreferredContactsSection } from '../components/PreferredContactsSection';
@@ -33,24 +31,38 @@ interface Props {
   usefulContactsVisibility?: UsefulContactsVisibility;
   /** Whether to show the preferred/favorite contacts section. */
   showPreferredContacts?: boolean;
+  /**
+   * Opens the keyboard on the search field. Default: only when the useful
+   * contacts appear on focus, or when the route asks for it with
+   * `focusSearch`
+   */
+  autoFocusSearch?: boolean;
 }
 
 export const ContactsScreen = ({
   usefulContacts,
   usefulContactsVisibility = 'always',
   showPreferredContacts = true,
+  autoFocusSearch,
 }: Props) => {
   const { t } = useTranslation();
   const styles = useStylesheet(createStyles);
-  const { spacing } = useTheme();
+  const route = useRoute();
   const { peoplePreferred = [] } = usePreferencesContext<PeoplePreferences>();
   const [search, setSearch] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const debounceSearch = useDebounceValue(search, 500);
   const enabled = debounceSearch.length >= 2;
   const peopleQuery = useGetPeople(debounceSearch, enabled);
+  const peopleStates = useQueryStates(peopleQuery);
   const hasUsefulContacts = (usefulContacts?.length ?? 0) > 0;
   const isInputDisabled = useOfflineDisabled();
+  const focusFromRoute = (route.params as { focusSearch?: boolean } | undefined)
+    ?.focusSearch;
+  const autoFocus =
+    focusFromRoute ??
+    autoFocusSearch ??
+    usefulContactsVisibility === 'onSearchFocus';
 
   const showUsefulAlways =
     !enabled && hasUsefulContacts && usefulContactsVisibility === 'always';
@@ -72,30 +84,30 @@ export const ContactsScreen = ({
     </>
   );
 
+  const people = peopleQuery.data ?? [];
+
   return (
     <>
-      <HeaderAccessory style={styles.searchBar}>
-        <Row align="center" style={GlobalStyles.grow}>
-          <TranslucentTextField
-            autoFocus
-            autoCorrect={false}
-            leadingIcon={faSearch}
-            value={search}
-            onChangeText={setSearch}
-            onFocus={() => setIsSearchFocused(true)}
-            onBlur={() => setIsSearchFocused(false)}
-            style={[GlobalStyles.grow, styles.textField]}
-            label={t('contactsScreen.search')}
-            editable={!isInputDisabled}
-            accessibilityHint={
-              isInputDisabled ? t('states.needsConnection') : undefined
-            }
-            isClearable={!!search}
-            onClear={() => setSearch('')}
-            onClearLabel={t('contactsScreen.clearSearch')}
-          />
-        </Row>
-      </HeaderAccessory>
+      <View style={styles.searchBar}>
+        <TranslucentTextField
+          autoFocus={autoFocus}
+          autoCorrect={false}
+          leadingIcon={faSearch}
+          value={search}
+          onChangeText={setSearch}
+          onFocus={() => setIsSearchFocused(true)}
+          onBlur={() => setIsSearchFocused(false)}
+          containerStyle={styles.textField}
+          label={t('contactsScreen.search')}
+          editable={!isInputDisabled}
+          accessibilityHint={
+            isInputDisabled ? t('states.needsConnection') : undefined
+          }
+          isClearable={!!search}
+          onClear={() => setSearch('')}
+          onClearLabel={t('contactsScreen.clearSearch')}
+        />
+      </View>
       {!enabled && (
         <RecentSearch
           showRecents={isSearchFocused}
@@ -105,50 +117,67 @@ export const ContactsScreen = ({
       {enabled && (
         <ScrollView
           contentInsetAdjustmentBehavior="automatic"
-          contentContainerStyle={{ paddingBottom: spacing[4] }}
+          contentContainerStyle={styles.results}
           keyboardShouldPersistTaps="handled"
         >
-          <SafeAreaView>
-            <Section>
-              <OverviewList
-                queries={peopleQuery}
-                style={{ marginTop: spacing[4] }}
-                skeleton={{ count: 4, leading: 'avatar' }}
-                emptyState={{
-                  title: t('contactsScreen.emptyState'),
-                  text: t('states.people.emptyText'),
-                }}
-                errorState={{ title: t('states.people.failedTitle') }}
-                indented
+          <View accessibilityLiveRegion="polite">
+            {peopleStates.status === 'ready' && people.length > 0 && (
+              <Text
+                variant="secondaryText"
+                style={styles.status}
+                accessibilityRole="text"
               >
-                {peopleQuery.data?.map((item, index) => (
-                  <PersonOverviewListItem
-                    key={item.id}
-                    person={item}
-                    index={index}
-                    totalData={peopleQuery.data?.length ?? 0}
-                    searchString={debounceSearch}
-                  />
-                ))}
-              </OverviewList>
-            </Section>
-            <BottomBarSpacer />
-          </SafeAreaView>
+                {t('serviceInfo.contacts.matches', {
+                  count: people.length,
+                  search: debounceSearch,
+                })}
+              </Text>
+            )}
+          </View>
+          <OverviewList
+            states={peopleStates}
+            skeleton={{ count: 4, leading: 'avatar' }}
+            emptyState={{
+              title: t('serviceInfo.contacts.noMatchTitle', {
+                search: debounceSearch,
+              }),
+              text: t('states.people.emptyText'),
+            }}
+            errorState={{ title: t('states.people.failedTitle') }}
+          >
+            {people.map((item, index) => (
+              <PersonOverviewListItem
+                key={item.id}
+                person={item}
+                index={index}
+                totalData={people.length}
+                searchString={debounceSearch}
+              />
+            ))}
+          </OverviewList>
+          <BottomBarSpacer />
         </ScrollView>
       )}
     </>
   );
 };
 
-const createStyles = ({ spacing, shapes }: Theme) =>
+const createStyles = ({ layout, spacing }: Theme) =>
   StyleSheet.create({
-    textField: {
-      paddingLeft: spacing[4],
-      borderRadius: shapes.lg,
-      marginLeft: spacing[3],
-    },
     searchBar: {
+      paddingTop: spacing[4],
       paddingBottom: spacing[2],
+    },
+    // The field draws its own 12 px side margin: this makes it the gutter
+    textField: {
+      marginHorizontal: layout.gutter,
+    },
+    results: {
+      paddingTop: spacing[2],
+      paddingBottom: spacing[4],
+    },
+    status: {
+      paddingHorizontal: layout.gutter,
       paddingTop: spacing[2],
     },
   });
