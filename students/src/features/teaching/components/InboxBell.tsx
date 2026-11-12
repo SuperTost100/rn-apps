@@ -7,8 +7,7 @@ import { IconButton, UnreadBadge, useTheme } from '@polito/lib/ui';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import { useGetMessages } from '../../../core/queries/studentHooks';
-import { filterUnread } from '../../../utils/messages';
+import { useInbox } from '../../../core/hooks/useInbox';
 import { TeachingStackParamList } from './TeachingNavigator';
 
 interface Props {
@@ -17,18 +16,19 @@ interface Props {
 }
 
 /**
- * The bell on the Teaching header, with the number of unread messages.
- * It opens the messages until the inbox replaces them.
+ * The bell on the Teaching header, with the inbox's unread count: the same
+ * number as the Teaching tab's badge. It opens the inbox.
  */
-export const MessagesBell = ({ color }: Props) => {
+export const InboxBell = ({ color }: Props) => {
   const { t } = useTranslation();
   const { controls } = useTheme();
   const navigation =
     useNavigation<NativeStackNavigationProp<TeachingStackParamList>>();
-  const messagesQuery = useGetMessages();
+  const { counts, notificationsQuery, messagesQuery, ticketsQuery } =
+    useInbox();
   // A count that fails to load shows no badge, without an alert
-  useQuietQueryErrors(messagesQuery);
-  const unread = filterUnread(messagesQuery.data ?? []).length;
+  useQuietQueryErrors([notificationsQuery, messagesQuery, ticketsQuery]);
+  const unread = counts.all;
 
   return (
     <View>
@@ -39,10 +39,10 @@ export const MessagesBell = ({ color }: Props) => {
         adjustSpacing="right"
         accessibilityLabel={
           unread
-            ? t('teachingScreen.bellLabelUnread', { count: unread })
-            : t('teachingScreen.bellLabel')
+            ? t('inboxScreen.bellLabelUnread', { count: unread })
+            : t('inboxScreen.bellLabel')
         }
-        onPress={() => navigation.navigate('Messages')}
+        onPress={() => navigation.navigate('Inbox')}
       />
       {unread > 0 && (
         <View pointerEvents="none" style={styles.badge}>

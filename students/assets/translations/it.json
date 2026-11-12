@@ -794,22 +794,6 @@
     "fcmUnsupported": "Si è verificato un errore durante l'attivazione delle notifiche push. Questo problema può essere causato dall'assenza dei servizi Google su questo dispositivo. È possibile continuare ad utilizzare l'app ma non si riceveranno notifiche push.",
     "SSO": "oppure entra con SSO"
   },
-  "messageScreen": {
-    "backTitle": "Archivio",
-    "sender": "Mittente",
-    "title": "Messaggio",
-    "viewProvisionalGrade": "Vai a valutazioni",
-    "viewProvisionalGradeDescription": "Controlla la tua valutazione provvisoria e prendi una decisione"
-  },
-  "messagesScreen": {
-    "empty": "Non ci sono messaggi",
-    "end": "Fine",
-    "readNext": "Leggi il prossimo",
-    "sentAt": "Inviato il",
-    "title": "Archivio messaggi",
-    "unreadMessages": "Messaggio ({{read}} di {{total}})",
-    "youHaveUnreadMessages": "Hai {{total}} messaggi non letti"
-  },
   "messagingView": {
     "activeReplay": "Attivo, (tocca due volte per attivare)",
     "pickFile": "Scegli un file max 32MB",
@@ -1045,8 +1029,6 @@
     "cpdTitle": "Questionari CPD",
     "eventTitle": "Pass Eventi con QR Code",
     "title": "Didattica",
-    "bellLabel": "Messaggi",
-    "bellLabelUnread": "Messaggi, {{count}} da leggere",
     "surveysTitle": "Questionari sulla didattica: {{count}} da compilare",
     "surveysDue": "Scadenza {{date}}. Servono per prenotare gli esami.",
     "surveysNoDue": "Servono per prenotare gli esami.",
@@ -1327,12 +1309,6 @@
       "failedOneTitle": "Impossibile caricare il ticket",
       "loadingOne": "Caricamento del ticket"
     },
-    "messages": {
-      "emptyTitle": "Nessun messaggio",
-      "emptyText": "I messaggi dell'ateneo compaiono qui, dal più recente.",
-      "failedTitle": "Impossibile caricare i messaggi",
-      "failedText": "I tuoi messaggi sono al sicuro sui server dell'ateneo. Controlla la connessione e riprova."
-    },
     "exam": {
       "loading": "Caricamento dell'appello",
       "goneTitle": "Questo appello non è più in elenco",
@@ -1423,6 +1399,101 @@
       "failedTitle": "Impossibile cercare nei contatti",
       "failedOneTitle": "Impossibile caricare il contatto",
       "loadingOne": "Caricamento del contatto"
+    }
+  },
+  "inboxScreen": {
+    "title": "In arrivo",
+    "bellLabel": "In arrivo",
+    "bellLabelUnread": "In arrivo, {{count}} da leggere",
+    "filtersLabel": "Mostra",
+    "filters": {
+      "all": "Tutte",
+      "courses": "Corsi",
+      "university": "Ateneo",
+      "tickets": "Ticket"
+    },
+    "filterUnread": "{{label}}, {{count}} da leggere",
+    "unreadCount": "{{count}} da leggere",
+    "allRead": "Hai letto tutto",
+    "markAll": "Segna tutto come letto",
+    "markAllProgress": "Segno come lette: {{done}} di {{total}}",
+    "markAllConfirmTitle": "Segnare {{count}} elementi come letti?",
+    "markAllConfirmText": "I server dell'Ateneo non permettono di segnarli di nuovo come da leggere.",
+    "markAllConfirm": "Segna come letti",
+    "markAllDone": "{{count}} elemento segnato come letto.",
+    "markAllDone_plural": "{{count}} elementi segnati come letti.",
+    "markAllPartial": "Segnate come lette {{done}} di {{total}}. Le altre non sono passate: riprova.",
+    "groups": {
+      "pinned": "In cima finché non lo leggi",
+      "today": "Oggi",
+      "yesterday": "Ieri",
+      "thisWeek": "Prima, questa settimana",
+      "older": "Meno recenti"
+    },
+    "kinds": {
+      "announcement": "Avviso",
+      "files": "Nuovi file",
+      "lecture": "Lezione",
+      "message": "Messaggio",
+      "ticket": "Risposta al ticket",
+      "news": "Notizia",
+      "other": "Notifica",
+      "urgent": "Messaggio urgente"
+    },
+    "messageKinds": {
+      "teacher": "Messaggio del docente",
+      "secretariat": "Messaggio",
+      "exams": "Esami",
+      "event": "Evento",
+      "personal": "Messaggio personale",
+      "emergency": "Messaggio urgente"
+    },
+    "senders": {
+      "studentOffice": "Segreteria studenti",
+      "university": "Politecnico di Torino",
+      "news": "Notizie",
+      "course": "Corso",
+      "teacher": "Docente",
+      "emergency": "Politecnico di Torino",
+      "event": "Eventi",
+      "secretariat": "Segreteria studenti",
+      "exams": "Esami",
+      "personal": "Politecnico di Torino"
+    },
+    "rowLabel": "{{kind}} da {{sender}}: {{title}}, {{when}}",
+    "unreadPrefix": "Da leggere. ",
+    "urgentPrefix": "Urgente. ",
+    "when": {
+      "today": "oggi alle {{time}}",
+      "yesterday": "ieri alle {{time}}",
+      "other": "{{date}} alle {{time}}"
+    },
+    "emptyTitle": "Qui non c'è ancora niente",
+    "emptyFilterTitle": "Niente con questo filtro",
+    "emptyText": "Qui arrivano gli avvisi dei corsi, i nuovi file, i messaggi dell'Ateneo e le risposte ai ticket, dal più recente.",
+    "showAll": "Mostra tutto",
+    "failedTitle": "Non è stato possibile caricare In arrivo",
+    "failedText": "Avvisi e messaggi restano sui server dell'Ateneo. Controlla la connessione e riprova.",
+    "loading": "Caricamento di In arrivo",
+    "message": {
+      "title": "Messaggio",
+      "delete": "Elimina messaggio",
+      "deleteConfirmTitle": "Eliminare questo messaggio?",
+      "deleteConfirmText": "Viene eliminato dai server dell'Ateneo e non si può recuperare.",
+      "deleted": "Messaggio eliminato.",
+      "deleteFailed": "Non è stato possibile eliminare il messaggio. Controlla la connessione e riprova.",
+      "deletedTitle": "Questo messaggio è stato eliminato",
+      "deletedText": "Non è più nell'elenco In arrivo.",
+      "goToInbox": "Apri In arrivo",
+      "noText": "Questo messaggio non ha testo.",
+      "openTranscript": "Apri il libretto"
+    },
+    "urgent": {
+      "chip": "Messaggio urgente",
+      "gotIt": "Ho capito",
+      "openInInbox": "Apri In arrivo",
+      "from": "Politecnico di Torino · {{date}}",
+      "announce": "Messaggio urgente dal Politecnico di Torino"
     }
   }
 }

@@ -33,6 +33,11 @@ export interface CourseSharedScreensParamList extends ParamListBase {
     title?: string;
     uniqueShortcode?: string;
     lockEdition?: boolean;
+    /** The tab to open, e.g. from the inbox or a push notification */
+    screen?:
+      | 'CourseNoticesScreen'
+      | 'CourseFilesScreen'
+      | 'CourseLecturesScreen';
   };
   CourseNoAssignment: {
     uniqueShortcode: string;

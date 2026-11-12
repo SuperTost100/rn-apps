@@ -7,7 +7,6 @@ import {
   faBell,
   faCircleInfo,
   faCog,
-  faMessage,
   faPersonThroughWindow,
 } from '@fortawesome/free-solid-svg-icons';
 import { AuthProfile } from '@polito/auth-api-client';
@@ -28,23 +27,17 @@ import {
   SectionHeader,
   StatefulMenuView,
   Text,
-  UnreadBadge,
   useTheme,
 } from '@polito/lib/ui';
 import { MenuAction, NativeActionEvent } from '@react-native-menu/menu';
 import { useScrollToTop } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-import {
-  filterUnread,
-  hasUnreadMessages,
-} from '../../../../src/utils/messages';
 import { CardSwiper } from '../../../core/components/CardSwiper';
 import { useMfaChallengeHandler } from '../../../core/hooks/useMfaChallengeHandler';
 import { useEscGet } from '../../../core/queries/escHooks';
 import { useSwitchCareer } from '../../../core/queries/studentAuthHooks';
 import {
-  useGetMessages,
   useGetProfile,
   useGetProfilePicture,
   useGetSmartCard,
@@ -163,10 +156,8 @@ export const ProfileScreen = ({ navigation, route }: Props) => {
   const smartCardQuery = useGetSmartCard();
   const smartCardUrl = smartCardQuery.data?.url;
   const pictureQuery = useGetProfilePicture(profile?.username);
-  const messages = useGetMessages();
-  // The student card falls back to the plain details without these, and
-  // the unread badge on Messages stays as it was
-  useQuietQueryErrors([escQuery, smartCardQuery, pictureQuery, messages]);
+  // The student card falls back to the plain details without these
+  useQuietQueryErrors([escQuery, smartCardQuery, pictureQuery]);
   const mfaChallengeQuery = useMfaChallengeHandler();
 
   const enrollmentYear = useMemo(() => {
@@ -289,16 +280,6 @@ export const ProfileScreen = ({ navigation, route }: Props) => {
               leadingItem={<Icon icon={faCircleInfo} size={fontSizes.xl} />}
               linkTo="AppInfo"
               accessibilityRole="button"
-            />
-            <ListItem
-              title={t('messagesScreen.title')}
-              leadingItem={<Icon icon={faMessage} size={fontSizes.xl} />}
-              linkTo="Messages"
-              trailingItem={
-                messages.data && hasUnreadMessages(messages.data) ? (
-                  <UnreadBadge text={filterUnread(messages.data).length} />
-                ) : undefined
-              }
             />
             <ListItem
               title={t('common.logout')}

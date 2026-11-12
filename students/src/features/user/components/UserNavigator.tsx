@@ -21,8 +21,6 @@ import { NewsItemScreen } from '../../services/screens/NewsItemScreen';
 import { CreateTicketScreen } from '../../tickets/screens/CreateTicketScreen';
 import { AccessibilitySettingsScreen } from '../screens/AccessibilityFontSettingsScreen.tsx';
 import { AppInfoScreen } from '../screens/AppInfoScreen.tsx';
-import { MessageScreen } from '../screens/MessageScreen';
-import { MessagesScreen } from '../screens/MessagesScreen';
 import { NewOverlayScreen } from '../screens/NewOverlayScreen';
 import { NotificationsScreen } from '../screens/NotificationsScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
@@ -42,11 +40,7 @@ export type UserStackParamList = OfferingStackParamList & {
     subtopicId?: number;
   };
   MfaSettings: undefined;
-  Messages: undefined;
   RequestESC: undefined;
-  Message: {
-    id: number;
-  };
   MessagesModal: undefined;
   Notifications: undefined;
   Person: { id: number };
@@ -169,26 +163,10 @@ export const UserNavigator = () => {
         }}
       />
       <Stack.Screen
-        name="Messages"
-        component={MessagesScreen}
-        options={{
-          headerTitle: t('messagesScreen.title'),
-        }}
-      />
-      <Stack.Screen
         name="MfaSettings"
         component={MfaSettingsScreen}
         options={{
           headerTitle: t('settingsScreen.authenticatorTitle'),
-        }}
-      />
-      <Stack.Screen
-        name="Message"
-        component={MessageScreen}
-        getId={({ params }) => `${params.id}`}
-        options={{
-          headerTitle: t('messageScreen.title'),
-          headerBackTitle: t('messageScreen.backTitle'),
         }}
       />
       <Stack.Screen

@@ -117,7 +117,7 @@ export const SharedScreens = () => {
         name="MessagesModal"
         component={UnreadMessagesModal}
         options={({ navigation }) => ({
-          headerTitle: t('messagesScreen.title'),
+          headerTitle: t('inboxScreen.message.title'),
           presentation: 'modal',
           headerRight: createHeaderCloseButton(navigation),
         })}

@@ -318,28 +318,33 @@ export const useGetMessages = (enabled = true) => {
           const previousMessages =
             queryClient.getQueryData<Message[]>(MESSAGES_QUERY_KEY);
           let hasMfaMessages = false;
-          const unreadMessages = filterUnread(messages).filter(m => {
+          // Only unread urgent messages interrupt at launch; the rest wait
+          // in the inbox
+          const urgentUnread = filterUnread(messages).filter(m => {
             if (m.type === MessageType.Mfa) {
               hasMfaMessages = true;
               return false;
             }
-            return true;
+            return m.type === MessageType.Emergency;
           });
 
           if (hasMfaMessages) {
             refetchMfaChallenge();
           }
 
+          const previousUrgent = filterUnread(previousMessages ?? []).filter(
+            m => m.type === MessageType.Emergency,
+          );
           if (
             previousMessages &&
-            filterUnread(previousMessages).length >= unreadMessages.length
+            urgentUnread.every(m => previousUrgent.some(p => p.id === m.id))
           ) {
             return messages;
           }
 
           queryClient.setQueryData(
             [MESSAGES_QUERY_PREFIX, 'modal'],
-            unreadMessages,
+            urgentUnread,
           );
 
           return messages;
@@ -348,14 +353,6 @@ export const useGetMessages = (enabled = true) => {
     refetchInterval: 300000, // 5 minutes
     refetchOnWindowFocus: 'always',
   });
-};
-
-export const useInvalidateMessages = () => {
-  const queryClient = useQueryClient();
-
-  return {
-    run: () => queryClient.invalidateQueries({ queryKey: MESSAGES_QUERY_KEY }),
-  };
 };
 
 export const useGetModalMessages = () => {
@@ -416,22 +413,6 @@ export const useGetNotifications = () => {
     queryFn: () => studentClient.getNotifications(),
     staleTime: Infinity,
     refetchOnWindowFocus: true,
-  });
-};
-
-export const useMarkNotificationAsRead = (invalidate: boolean = true) => {
-  const studentClient = useStudentClient();
-  const client = useQueryClient();
-
-  return useMutation({
-    mutationFn: (notificationId: number) =>
-      studentClient.markNotificationAsRead({ notificationId }),
-    onSuccess() {
-      return (
-        invalidate &&
-        client.invalidateQueries({ queryKey: NOTIFICATIONS_QUERY_KEY })
-      );
-    },
   });
 };
 

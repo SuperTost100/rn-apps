@@ -1,138 +1,140 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
-  faCheckCircle,
-  faChevronRight,
-} from '@fortawesome/free-solid-svg-icons';
-import { useScreenReader } from '@polito/lib/core';
-import { CtaButton, useHideTabs, useTheme } from '@polito/lib/ui';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-
+  APP_TIMEZONE,
+  linkUrls,
+  usePreferencesContext,
+  useScreenReader,
+} from '@polito/lib/core';
 import {
-  useGetModalMessages,
-  useInvalidateMessages,
-  useMarkMessageAsRead,
-} from '../../../core/queries/studentHooks';
+  CtaButton,
+  HtmlView,
+  StatusChip,
+  Text,
+  type Theme,
+  useHideTabs,
+  useStylesheet,
+} from '@polito/lib/ui';
+import { Message } from '@polito/student-api-client';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useQueryClient } from '@tanstack/react-query';
+
+import { AppPreferences } from '~/core/types/preferences';
+
+import { DateTime } from 'luxon';
+
+import { useMarkAsRead } from '../../../core/hooks/useMarkAsRead';
+import { useGetModalMessages } from '../../../core/queries/studentHooks';
 import { TeachingStackParamList } from '../../teaching/components/TeachingNavigator';
-import { MessageScreenContent } from '../components/MessageScreenContent';
 
 type Props = NativeStackScreenProps<TeachingStackParamList, 'MessagesModal'>;
 
+const MODAL_QUERY_KEY = ['messages', 'modal'];
+
+/**
+ * The only message that interrupts at launch: an unread urgent one, once.
+ * Leaving it in any way (Got it, Open the inbox, the close button, back)
+ * marks it read on the server, so it does not come back at the next launch.
+ */
 export const UnreadMessagesModal = ({ navigation }: Props) => {
-  const { data: messages } = useGetModalMessages();
-  const invalidateMessages = useInvalidateMessages();
   const { t } = useTranslation();
-  const [messagesReadCount, setMessageReadCount] = useState(0);
-  const messagesToReadCount = messages?.length || 0;
-  const isLastMessageToRead = messagesReadCount + 1 === messagesToReadCount;
-  const { mutate } = useMarkMessageAsRead(false);
-  const { isScreenReaderEnabled, announce } = useScreenReader();
-  const { spacing } = useTheme();
+  const styles = useStylesheet(createStyles);
   const { bottom } = useSafeAreaInsets();
-
-  const currentMessage = messages?.[messagesReadCount];
-  const isExamMessage = currentMessage?.type === ('exams' as any);
-
-  useEffect(() => {
-    if (!messagesToReadCount) {
-      navigation.goBack();
-    }
-  }, [messagesToReadCount, navigation]);
-
-  useEffect(() => {
-    isScreenReaderEnabled().then(isEnabled => {
-      if (!isEnabled) return;
-      announce(
-        t('messagesScreen.youHaveUnreadMessages', {
-          total: messagesToReadCount,
-        }),
-      );
-    });
-  }, [announce, isScreenReaderEnabled, t, messagesToReadCount]);
+  const { language } = usePreferencesContext<AppPreferences>();
+  const { announce } = useScreenReader();
+  const queryClient = useQueryClient();
+  const markAsRead = useMarkAsRead();
+  const { data: messages } = useGetModalMessages();
+  const message = messages?.[0];
+  // Kept for the cleanup, which runs after the list may have changed
+  const shown = useRef<Message | undefined>(undefined);
+  shown.current = message ?? shown.current;
 
   useEffect(() => {
-    navigation.setOptions({
-      headerTitle: t('messagesScreen.unreadMessages', {
-        read: messagesReadCount + 1,
-        total: messagesToReadCount,
-      }),
-    });
-  }, [t, messagesReadCount, navigation, messagesToReadCount]);
+    if (!message) navigation.goBack();
+  }, [message, navigation]);
 
-  useHideTabs(undefined, () => invalidateMessages.run());
+  useEffect(() => {
+    if (message) announce(t('inboxScreen.urgent.announce'));
+  }, [announce, message, t]);
 
-  const onConfirm = async () => {
-    if (currentMessage) {
-      await new Promise(ok => mutate(currentMessage.id, { onSettled: ok }));
-    }
-    if (isLastMessageToRead) {
-      navigation.goBack();
-    } else {
-      setMessageReadCount(m => m + 1);
-    }
-  };
+  // Leaving marks the message read and takes it off the launch list
+  useHideTabs(undefined, () => {
+    const m = shown.current;
+    if (!m) return;
+    markAsRead.message(m.id);
+    queryClient.setQueryData<Message[]>(MODAL_QUERY_KEY, prev =>
+      prev?.filter(x => x.id !== m.id),
+    );
+  });
 
-  const onViewProvisionalGrade = async () => {
-    if (currentMessage) {
-      await new Promise(ok => mutate(currentMessage.id, { onSettled: ok }));
-    }
+  const html = useMemo(
+    () => (message?.message ? linkUrls(message.message) : ''),
+    [message?.message],
+  );
 
-    navigation.goBack();
-    navigation.navigate('Transcript');
-  };
+  if (!message) return null;
 
-  const showExamButton = isExamMessage;
-  const showNextButton = !isLastMessageToRead;
-  const showEndButton = !isExamMessage && isLastMessageToRead;
+  const date = DateTime.fromJSDate(message.sentAt, { zone: APP_TIMEZONE })
+    .setLocale(language)
+    .toFormat('cccc d LLLL, HH:mm');
 
   return (
     <>
-      <ScrollView contentInsetAdjustmentBehavior="automatic">
-        {currentMessage && (
-          <MessageScreenContent message={currentMessage} modal />
-        )}
-      </ScrollView>
-      <View
-        style={{
-          paddingVertical: bottom,
-          flexDirection: 'row',
-          justifyContent: 'flex-end',
-        }}
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={styles.content}
       >
-        {showExamButton && (
-          <CtaButton
-            absolute={false}
-            title={t('messageScreen.viewProvisionalGrade')}
-            action={onViewProvisionalGrade}
-            variant="filled"
-            containerStyle={{ flex: 1 }}
+        <View style={styles.chip}>
+          <StatusChip tone="danger" label={t('inboxScreen.urgent.chip')} />
+        </View>
+        <Text variant="heading" role="heading">
+          {message.title}
+        </Text>
+        {!!html && (
+          <HtmlView
+            props={{ source: { html }, baseStyle: { padding: 0 } }}
+            variant="longProse"
           />
         )}
-
-        {showNextButton && (
-          <CtaButton
-            absolute={false}
-            title=""
-            variant="outlined"
-            action={onConfirm}
-            icon={faChevronRight}
-            style={{ paddingLeft: spacing[4], paddingRight: spacing[2] }}
-          />
-        )}
-
-        {showEndButton && (
-          <CtaButton
-            absolute={false}
-            title={t('messagesScreen.end')}
-            action={onConfirm}
-            icon={faCheckCircle}
-            containerStyle={{ flex: 1 }}
-          />
-        )}
+        <Text variant="secondaryText">
+          {t('inboxScreen.urgent.from', { date })}
+        </Text>
+      </ScrollView>
+      <View style={[styles.actions, { paddingBottom: bottom }]}>
+        <CtaButton
+          absolute={false}
+          title={t('inboxScreen.urgent.gotIt')}
+          action={() => navigation.goBack()}
+        />
+        <CtaButton
+          absolute={false}
+          variant="outlined"
+          title={t('inboxScreen.urgent.openInInbox')}
+          action={() => {
+            navigation.goBack();
+            navigation.navigate('Inbox');
+          }}
+        />
       </View>
     </>
   );
 };
+
+const createStyles = ({ layout, spacing }: Theme) =>
+  StyleSheet.create({
+    content: {
+      paddingHorizontal: layout.gutter,
+      paddingVertical: spacing[4],
+      gap: spacing[3],
+    },
+    chip: {
+      flexDirection: 'row',
+    },
+    actions: {
+      paddingTop: spacing[2],
+    },
+  });

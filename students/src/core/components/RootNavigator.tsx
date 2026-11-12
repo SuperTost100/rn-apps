@@ -30,16 +30,16 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import { UnreadMessagesModal } from '~/features/user/screens/UnreadMessagesModal';
 
-import { filterUnread } from '../../../src/utils/messages';
 import { AgendaNavigator } from '../../features/agenda/components/AgendaNavigator';
 import { ServicesNavigator } from '../../features/services/components/ServicesNavigator';
 import { TeachingNavigator } from '../../features/teaching/components/TeachingNavigator';
 import { UserNavigator } from '../../features/user/components/UserNavigator';
 import { useDownloadsContext } from '../contexts/DownloadsContext';
 import { useInitFirebaseMessaging } from '../hooks/messaging';
+import { useInbox } from '../hooks/useInbox';
 import { useModalManager } from '../hooks/useModalManager';
 import { useNotifications } from '../hooks/useNotifications';
-import { useGetMessages, useGetStudent } from '../queries/studentHooks';
+import { useGetStudent } from '../queries/studentHooks';
 import { OnboardingModal } from '../screens/OnboardingModal';
 import { RootParamList } from '../types/navigation';
 import { AppPreferences } from '../types/preferences';
@@ -156,9 +156,14 @@ export const RootNavigator = ({
   const { data: sites } = sitesQuery;
   const { isOnboardingVisible, closeOnboarding } =
     useModalManager(versionModalIsOpen);
-  const profileMessages = useGetMessages();
-  // The tab badge and the campus list load in the background
-  useQuietQueryErrors([profileMessages, sitesQuery]);
+  const inbox = useInbox();
+  // The tab badges and the campus list load in the background
+  useQuietQueryErrors([
+    inbox.notificationsQuery,
+    inbox.messagesQuery,
+    inbox.ticketsQuery,
+    sitesQuery,
+  ]);
 
   useInitFirebaseMessaging();
 
@@ -197,12 +202,11 @@ export const RootNavigator = ({
     inner: useInnerTitleOptions(),
   };
 
-  // Badges count unread items only, which reading them clears: course
-  // announcements, files and lectures; ticket replies; messages
+  // Badges count unread items only, which reading them clears. Teaching
+  // shows the inbox's unread total, the same number as the bell
   const unread = {
-    teaching: getUnreadsCount(['teaching']),
+    teaching: inbox.counts.all || undefined,
     services: getUnreadsCount(['services', 'tickets']),
-    profile: filterUnread(profileMessages.data || []).length || undefined,
   };
   const tabOptions = (
     title: string,
@@ -270,7 +274,7 @@ export const RootNavigator = ({
         <TabNavigator.Screen
           name="ProfileTab"
           component={UserNavigator}
-          options={tabOptions(t('profileScreen.title'), 'user', unread.profile)}
+          options={tabOptions(t('profileScreen.title'), 'user')}
         />
       </TabNavigator.Navigator>
       <OnboardingModal

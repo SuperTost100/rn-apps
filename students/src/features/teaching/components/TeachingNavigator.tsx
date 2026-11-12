@@ -32,11 +32,12 @@ import {
   CourseSharedScreensParamList,
 } from '../../courses/navigation/CourseSharedScreens';
 import { CoursesScreen } from '../../courses/screens/CoursesScreen';
+import { InboxScreen } from '../../inbox/screens/InboxScreen';
+import { MessageScreen } from '../../inbox/screens/MessageScreen';
 import { CpdSurveysScreen } from '../../surveys/screens/CpdSurveysScreen';
 import { TranscriptTopTabsNavigator } from '../../transcript/navigation/TranscriptTopTabsNavigator';
 import { ProvisionalGradeScreen } from '../../transcript/screens/ProvisionalGradeScreen';
 import { RecordedGradeScreen } from '../../transcript/screens/RecordedGradeScreen';
-import { MessagesScreen } from '../../user/screens/MessagesScreen';
 import { ExamQuestionScreen } from '../screens/ExamQuestionScreen';
 import { ExamRequestScreen } from '../screens/ExamRequestScreen';
 import { ExamRescheduleScreen } from '../screens/ExamRescheduleScreen';
@@ -44,7 +45,7 @@ import { ExamScreen } from '../screens/ExamScreen';
 import { ExamsScreen } from '../screens/ExamsScreen';
 import { GraduationCodeScreen } from '../screens/GraduationCodeScreen';
 import { TeachingScreen } from '../screens/TeachingScreen';
-import { MessagesBell } from './MessagesBell';
+import { InboxBell } from './InboxBell';
 
 export type TeachingStackParamList = CourseSharedScreensParamList &
   SharedScreensParamList & {
@@ -72,8 +73,9 @@ export type TeachingStackParamList = CourseSharedScreensParamList &
       seatId: number;
     };
     Deadline: { item: DeadlineItem };
-    // Opened by the bell until the inbox replaces it
-    Messages: undefined;
+    // Opened by the bell
+    Inbox: undefined;
+    Message: { id: number };
   };
 
 const Stack = createNativeStackNavigator<
@@ -98,7 +100,7 @@ export const TeachingNavigator = () => {
         options={{
           ...rootOptions,
           headerTitle: t('teachingScreen.title'),
-          headerRight: ({ tintColor }) => <MessagesBell color={tintColor} />,
+          headerRight: ({ tintColor }) => <InboxBell color={tintColor} />,
         }}
       />
       <Stack.Screen
@@ -224,9 +226,15 @@ export const TeachingNavigator = () => {
         options={{ headerTitle: t('common.deadline') }}
       />
       <Stack.Screen
-        name="Messages"
-        component={MessagesScreen}
-        options={{ headerTitle: t('messagesScreen.title') }}
+        name="Inbox"
+        component={InboxScreen}
+        options={{ headerTitle: t('inboxScreen.title') }}
+      />
+      <Stack.Screen
+        name="Message"
+        component={MessageScreen}
+        getId={({ params }) => `${params.id}`}
+        options={{ headerTitle: t('inboxScreen.message.title') }}
       />
       {CourseSharedScreens()}
       {SharedScreens()}

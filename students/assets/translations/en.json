@@ -778,22 +778,6 @@
     "fcmUnsupported": "An error occurred during push notifications setup. This problem can be caused by the lack of Google Play Services on this device. It is possible to keep using this app, however push notifications won't be received.",
     "SSO": "Login with SSO"
   },
-  "messageScreen": {
-    "backTitle": "Archive",
-    "sender": "Sender",
-    "title": "Message",
-    "viewProvisionalGrade": "Go to transcript",
-    "viewProvisionalGradeDescription": "Check your provisional grade and take action"
-  },
-  "messagesScreen": {
-    "empty": "You have no messages",
-    "end": "End",
-    "readNext": "Read next",
-    "sentAt": "Sent at",
-    "title": "Messages archive",
-    "unreadMessages": "Message ({{read}} of {{total}})",
-    "youHaveUnreadMessages": "You have {{total}} unread messages"
-  },
   "messagingView": {
     "pickFile": "Pick file max 32MB",
     "pickFileHint": "From your device or from the cloud",
@@ -1025,8 +1009,6 @@
     "cpdTitle": "CPD Surveys",
     "eventTitle": "QR Code Event Passes",
     "title": "Teaching",
-    "bellLabel": "Messages",
-    "bellLabelUnread": "Messages, {{count}} unread",
     "surveysTitle": "Teaching surveys: {{count}} to fill in",
     "surveysDue": "Due {{date}}. You need them to book exams.",
     "surveysNoDue": "You need them to book exams.",
@@ -1301,12 +1283,6 @@
       "failedOneTitle": "Couldn't load this ticket",
       "loadingOne": "Loading the ticket"
     },
-    "messages": {
-      "emptyTitle": "No messages",
-      "emptyText": "Messages from the university appear here, newest first.",
-      "failedTitle": "Couldn't load your messages",
-      "failedText": "Your messages are safe on the university's servers. Check your connection and try again."
-    },
     "exam": {
       "loading": "Loading the exam call",
       "goneTitle": "This exam call is no longer listed",
@@ -1397,6 +1373,101 @@
       "failedTitle": "Couldn't search the contacts",
       "failedOneTitle": "Couldn't load this contact",
       "loadingOne": "Loading the contact"
+    }
+  },
+  "inboxScreen": {
+    "title": "Inbox",
+    "bellLabel": "Inbox",
+    "bellLabelUnread": "Inbox, {{count}} unread",
+    "filtersLabel": "Show",
+    "filters": {
+      "all": "All",
+      "courses": "Courses",
+      "university": "University",
+      "tickets": "Tickets"
+    },
+    "filterUnread": "{{label}}, {{count}} unread",
+    "unreadCount": "{{count}} unread",
+    "allRead": "Everything is read",
+    "markAll": "Mark all as read",
+    "markAllProgress": "Marking as read: {{done}} of {{total}}",
+    "markAllConfirmTitle": "Mark {{count}} items as read?",
+    "markAllConfirmText": "The university's servers have no way to mark them as unread again.",
+    "markAllConfirm": "Mark as read",
+    "markAllDone": "Marked {{count}} item as read.",
+    "markAllDone_plural": "Marked {{count}} items as read.",
+    "markAllPartial": "Marked {{done}} of {{total}} as read. The rest didn't go through: try again.",
+    "groups": {
+      "pinned": "Pinned until you read it",
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "thisWeek": "Earlier this week",
+      "older": "Older"
+    },
+    "kinds": {
+      "announcement": "Announcement",
+      "files": "New files",
+      "lecture": "Lecture",
+      "message": "Message",
+      "ticket": "Ticket reply",
+      "news": "News",
+      "other": "Notification",
+      "urgent": "Urgent message"
+    },
+    "messageKinds": {
+      "teacher": "Message from the teacher",
+      "secretariat": "Message",
+      "exams": "Exams",
+      "event": "Event",
+      "personal": "Personal message",
+      "emergency": "Urgent message"
+    },
+    "senders": {
+      "studentOffice": "Student office",
+      "university": "Politecnico di Torino",
+      "news": "News",
+      "course": "Course",
+      "teacher": "Teacher",
+      "emergency": "Politecnico di Torino",
+      "event": "Events",
+      "secretariat": "Student office",
+      "exams": "Exams",
+      "personal": "Politecnico di Torino"
+    },
+    "rowLabel": "{{kind}} from {{sender}}: {{title}}, {{when}}",
+    "unreadPrefix": "Unread. ",
+    "urgentPrefix": "Urgent. ",
+    "when": {
+      "today": "today at {{time}}",
+      "yesterday": "yesterday at {{time}}",
+      "other": "{{date}} at {{time}}"
+    },
+    "emptyTitle": "Nothing here yet",
+    "emptyFilterTitle": "Nothing in this filter",
+    "emptyText": "Course announcements, new files, messages from the university and ticket replies appear here, newest first.",
+    "showAll": "Show everything",
+    "failedTitle": "Couldn't load the inbox",
+    "failedText": "Announcements and messages are safe on the university's servers. Check your connection and try again.",
+    "loading": "Loading the inbox",
+    "message": {
+      "title": "Message",
+      "delete": "Delete message",
+      "deleteConfirmTitle": "Delete this message?",
+      "deleteConfirmText": "It is deleted from the university's servers and can't be restored.",
+      "deleted": "Message deleted.",
+      "deleteFailed": "Couldn't delete the message. Check your connection and try again.",
+      "deletedTitle": "This message was deleted",
+      "deletedText": "It is no longer in your inbox.",
+      "goToInbox": "Go to the inbox",
+      "noText": "This message has no text.",
+      "openTranscript": "Open the transcript"
+    },
+    "urgent": {
+      "chip": "Urgent message",
+      "gotIt": "Got it",
+      "openInInbox": "Open in the inbox",
+      "from": "Politecnico di Torino · {{date}}",
+      "announce": "Urgent message from Politecnico di Torino"
     }
   }
 }

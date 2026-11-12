@@ -245,6 +245,18 @@ export const useNotifications = () => {
         });
       }
 
+      // Messages: the inbox, where they are listed with the rest. The
+      // payload as typed has no message id to open the message itself
+      if (
+        transaction !== TransactionId.Mfa &&
+        (Object.values(MessageType) as string[]).includes(transaction)
+      ) {
+        navigation.navigate('TeachingTab', {
+          screen: 'Inbox',
+          initial: false,
+        });
+      }
+
       if (transaction === TransactionId.Mfa) {
         refetchMfaChallenge().catch(console.error);
       }
