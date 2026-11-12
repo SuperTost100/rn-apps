@@ -8,6 +8,7 @@ import {
 } from '@polito/lib/core';
 import { useUpdateAppInfo } from '@polito/lib/features/auth';
 
+import { isTestBuild } from '../../config/testBuild';
 import { getFcmToken } from '../utils/firebase';
 
 type UpdateInfo = {
@@ -39,7 +40,9 @@ export const useCheckForUpdate = () => {
           }, 3000);
           updateAppInfo(token)
             .then(({ data }) => {
-              if (data.suggestUpdate && isEnvProduction) {
+              // A test build is not in the stores: an update would mean
+              // the official app
+              if (data.suggestUpdate && isEnvProduction && !isTestBuild) {
                 checkVersion()
                   .then(res => {
                     if (res.error) {

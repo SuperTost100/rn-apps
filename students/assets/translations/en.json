@@ -1789,5 +1789,12 @@
     "fillBoth": "Enter your student ID and password to log in.",
     "logIn": "Log in",
     "mfaRequestedAt": "Requested at {{time}}"
+  },
+  "testBuild": {
+    "notice": "Unofficial test build. Not published by Politecnico di Torino.",
+    "officialRepository": "Official repository: {{url}}",
+    "version": "Version: {{version}} test {{build}}",
+    "ssoNote": "Single Sign-On may open the official app if it is installed. Use your username and password instead.",
+    "logoLabel": "Students test"
   }
 }

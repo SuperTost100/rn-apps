@@ -12,7 +12,12 @@ module.exports = function (api) {
           },
         },
       ],
-      'module:react-native-dotenv',
+      [
+        'module:react-native-dotenv',
+        // ENV_FILE picks another file, such as .env.test for test builds,
+        // so the local .env does not leak into them
+        { path: process.env.ENV_FILE || '.env' },
+      ],
     ],
     env: {
       production: {

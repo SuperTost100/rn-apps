@@ -1789,5 +1789,12 @@
     "fillBoth": "Inserisci matricola e password per accedere.",
     "logIn": "Accedi",
     "mfaRequestedAt": "Richiesta alle {{time}}"
+  },
+  "testBuild": {
+    "notice": "Build di prova non ufficiale. Non pubblicata dal Politecnico di Torino.",
+    "officialRepository": "Repository ufficiale: {{url}}",
+    "version": "Versione: {{version}} test {{build}}",
+    "ssoNote": "Il Single Sign-On può aprire l'app ufficiale, se è installata. Usa invece username e password.",
+    "logoLabel": "Students test"
   }
 }

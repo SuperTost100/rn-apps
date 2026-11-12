@@ -1,6 +1,7 @@
 build/
 .idea
 .env
+.env.test*
 
 # OSX
 #

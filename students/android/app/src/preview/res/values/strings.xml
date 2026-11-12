@@ -1,0 +1,5 @@
+<resources>
+    <!-- Test builds are not the official app: the licence forbids the
+         university's name and logo on modified versions -->
+    <string name="app_name">Students test</string>
+</resources>

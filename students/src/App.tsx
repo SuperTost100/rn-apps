@@ -29,6 +29,7 @@ import i18n from 'i18next';
 
 import { en, it } from '../assets/translations';
 import { updateGlobalApiConfiguration } from './config/api';
+import { isTestBuild } from './config/testBuild';
 import { AppContent } from './core/components/AppContent';
 import { DialogProvider } from './core/components/Dialog';
 import { RootParamList } from './core/types/navigation';
@@ -63,7 +64,8 @@ i18n.use(initReactI18next).init({
 
 initSentry({
   dsn: 'https://0b3fe6c2fc0bd91481a14b1ad5c6b00d@sentry.k8s.polito.it/3',
-  enabled: isEnvProduction,
+  // Test builds are private: they send nothing to the university's Sentry
+  enabled: isEnvProduction && !isTestBuild,
   appName: 'students',
   version: APP_VERSION,
   dist: BUILD_NO,

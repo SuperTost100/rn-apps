@@ -1,9 +1,8 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Linking, ScrollView, StyleSheet, View } from 'react-native';
-import DeviceInfo from 'react-native-device-info';
 
-import { getHtmlTextContent } from '@polito/lib/core';
+import { GITHUB_REPOSITORY_URL, getHtmlTextContent } from '@polito/lib/core';
 import {
   BottomBarSpacer,
   ListItem,
@@ -13,11 +12,14 @@ import {
   RefreshControl,
   SectionHeader,
   Text,
+  TextButton,
   Theme,
   useStylesheet,
   useTheme,
 } from '@polito/lib/ui';
 
+import { isTestBuild } from '../../../config/testBuild';
+import { useVersionText } from '../../../core/hooks/useVersionText';
 import {
   getAppInfoAnnouncements,
   getWhatsNewArchiveAnnouncements,
@@ -25,7 +27,6 @@ import {
 } from '../../../core/queries/announcementHooks';
 import { WhatsNewCard } from '../components/WhatsNewCard';
 
-const GITHUB_REPO_URL = 'https://github.com/polito/rn-apps';
 const POLITO_STUDENTS_TOPIC_ID = 1101;
 const TECHNICAL_ISSUES_SUBTOPIC_ID = 2001;
 const FEEDBACK_SUGGESTIONS_SUBTOPIC_ID = 1721;
@@ -48,8 +49,7 @@ export const AppInfoScreen = () => {
   const { t } = useTranslation();
   const styles = useStylesheet(createStyles);
   const { colors } = useTheme();
-  const version = DeviceInfo.getVersion();
-  const buildNumber = DeviceInfo.getBuildNumber().slice(-2);
+  const versionText = useVersionText();
 
   const announcementsQuery = useGetAnnouncements();
 
@@ -69,6 +69,23 @@ export const AppInfoScreen = () => {
       contentInsetAdjustmentBehavior="automatic"
       refreshControl={<RefreshControl queries={[announcementsQuery]} manual />}
     >
+      {isTestBuild && (
+        // The licence asks modified versions to say they are not official
+        // and to point to the official repository
+        <View style={styles.testNotice}>
+          <Text variant="secondaryText">{t('testBuild.notice')}</Text>
+          <TextButton
+            accessibilityRole="link"
+            accessibilityHint={t('common.externalLink')}
+            onPress={() => Linking.openURL(GITHUB_REPOSITORY_URL)}
+            style={styles.repoLink}
+          >
+            {t('testBuild.officialRepository', {
+              url: GITHUB_REPOSITORY_URL.replace('https://', ''),
+            })}
+          </TextButton>
+        </View>
+      )}
       <View style={styles.first}>
         <SectionHeader
           title={t('appInfoScreen.whatsNew')}
@@ -125,25 +142,29 @@ export const AppInfoScreen = () => {
         </View>
       )}
 
-      <View style={styles.section}>
-        <SectionHeader title={t('appInfoScreen.feedback')} />
-        <OverviewList>
-          <ListItem
-            title={t('appInfoScreen.reportProblemTitle')}
-            subtitle={t('appInfoScreen.reportProblemSubtitle')}
-            leadingItem={<OutlineIcon name="alert" color={iconColor} />}
-            accessibilityHint={t('appInfoScreen.reportProblemHint')}
-            linkTo={TECHNICAL_ISSUES_LINK}
-          />
-          <ListItem
-            title={t('appInfoScreen.suggestionTitle')}
-            subtitle={t('appInfoScreen.suggestionSubtitle')}
-            leadingItem={<OutlineIcon name="chat" color={iconColor} />}
-            accessibilityHint={t('appInfoScreen.suggestionHint')}
-            linkTo={SUGGESTIONS_LINK}
-          />
-        </OverviewList>
-      </View>
+      {/* Tickets from a test build would reach the student office about an
+          app it did not publish */}
+      {!isTestBuild && (
+        <View style={styles.section}>
+          <SectionHeader title={t('appInfoScreen.feedback')} />
+          <OverviewList>
+            <ListItem
+              title={t('appInfoScreen.reportProblemTitle')}
+              subtitle={t('appInfoScreen.reportProblemSubtitle')}
+              leadingItem={<OutlineIcon name="alert" color={iconColor} />}
+              accessibilityHint={t('appInfoScreen.reportProblemHint')}
+              linkTo={TECHNICAL_ISSUES_LINK}
+            />
+            <ListItem
+              title={t('appInfoScreen.suggestionTitle')}
+              subtitle={t('appInfoScreen.suggestionSubtitle')}
+              leadingItem={<OutlineIcon name="chat" color={iconColor} />}
+              accessibilityHint={t('appInfoScreen.suggestionHint')}
+              linkTo={SUGGESTIONS_LINK}
+            />
+          </OverviewList>
+        </View>
+      )}
 
       <View style={styles.section}>
         <SectionHeader title={t('appInfoScreen.about')} />
@@ -157,13 +178,13 @@ export const AppInfoScreen = () => {
             }
             accessibilityRole="link"
             accessibilityHint={t('common.externalLink')}
-            onPress={() => Linking.openURL(GITHUB_REPO_URL)}
+            onPress={() => Linking.openURL(GITHUB_REPOSITORY_URL)}
           />
         </OverviewList>
       </View>
 
       <Text variant="secondaryText" style={styles.version}>
-        {t('appInfoScreen.version', { version, build: buildNumber })}
+        {versionText}
       </Text>
       <BottomBarSpacer />
     </ScrollView>
@@ -174,6 +195,14 @@ const createStyles = ({ layout, spacing }: Theme) =>
   StyleSheet.create({
     first: {
       marginTop: spacing[4],
+    },
+    testNotice: {
+      paddingHorizontal: layout.gutter,
+      marginTop: spacing[4],
+    },
+    repoLink: {
+      alignSelf: 'flex-start',
+      marginLeft: -spacing[3],
     },
     section: {
       marginTop: layout.sectionGap,

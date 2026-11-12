@@ -125,6 +125,22 @@ android {
             def enablePngCrunchInRelease = findProperty('android.enablePngCrunchInReleaseBuilds') ?: 'true'
             crunchPngs enablePngCrunchInRelease.toBoolean()
         }
+        // A private test build: release code with the JS bundle embedded, the
+        // `.dev` id that google-services.json already knows, so it installs
+        // next to the official app, and its own name and icon (src/preview).
+        // Built by tools/scripts/build-test-android.sh.
+        preview {
+            initWith release
+            applicationIdSuffix ".dev"
+            matchingFallbacks = ['release']
+            // The debug keystore committed in the repo, as release uses
+            // without a store key: later test builds install over earlier ones
+            signingConfig signingConfigs.debug
+            // Only the native libraries of the ABIs it is built for
+            ndk {
+                abiFilters(*((findProperty('reactNativeArchitectures') ?: 'arm64-v8a,x86_64').split(',')*.trim()))
+            }
+        }
     }
 
     packagingOptions {
@@ -142,7 +158,25 @@ android {
         if (variant.name.contains("debug")) {
             variant.mergedFlavor.applicationId = "it.polito.students.dev"
         }
+        // Test builds: the official version they are based on and their own
+        // build number, 1 to 99, in the official scheme (1.9.5 build 3 is
+        // 1090503), so each new test build installs over the previous one
+        def previewVersion = null
+        def previewVersionCode = null
+        if (variant.buildType.name == "preview") {
+            previewVersion = findProperty('testVersion') ?: '1.9.5'
+            def previewBuild = (findProperty('testBuildNo') ?: '1').toInteger()
+            def parts = previewVersion.tokenize('.')*.toInteger()
+            if (parts.size() != 3 || previewBuild < 1 || previewBuild > 99) {
+                throw new GradleException("testVersion must be X.Y.Z and testBuildNo 1 to 99")
+            }
+            previewVersionCode = parts[0] * 1000000 + parts[1] * 10000 + parts[2] * 100 + previewBuild
+        }
         variant.outputs.each { output ->
+            if (previewVersion != null) {
+                output.versionNameOverride = previewVersion
+                output.versionCodeOverride = previewVersionCode
+            }
             // For each separate APK per architecture, set a unique version code as described here:
             // https://developer.android.com/studio/build/configure-apk-splits.html
             // Example: versionCode 1 will generate 1001 for armeabi-v7a, 1002 for x86, etc.

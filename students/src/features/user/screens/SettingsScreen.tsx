@@ -8,7 +8,6 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import DeviceInfo from 'react-native-device-info';
 
 import {
   PreferencesContextBase,
@@ -44,6 +43,7 @@ import i18next from 'i18next';
 import { Settings } from 'luxon';
 
 import { useConfirmationDialog } from '../../../core/hooks/useConfirmationDialog';
+import { useVersionText } from '../../../core/hooks/useVersionText';
 import { useUpdateDevicePreferences } from '../../../core/queries/studentHooks';
 import { formatSize } from '../../courses/utils/fileTree';
 import { OptionSheet } from '../components/OptionSheet';
@@ -388,6 +388,7 @@ export const SettingsScreen = () => {
   const isOffline = useOfflineDisabled();
   const authenticator = useAuthenticatorState();
   const storage = useStorageLocation();
+  const versionText = useVersionText();
   const [sheet, setSheet] = useState<Sheet | null>(null);
   const closeSheet = () => setSheet(null);
 
@@ -479,11 +480,7 @@ export const SettingsScreen = () => {
           </OverviewList>
         </View>
         <Text variant="secondaryText" style={styles.version}>
-          {t('appInfoScreen.version', {
-            // The installed build, as App info shows it
-            version: DeviceInfo.getVersion(),
-            build: DeviceInfo.getBuildNumber().slice(-2),
-          })}
+          {versionText}
         </Text>
         <BottomBarSpacer />
       </ScrollView>

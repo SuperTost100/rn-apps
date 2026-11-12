@@ -19,7 +19,9 @@ import {
   useStylesheet,
 } from '@polito/lib/ui';
 
+import { isTestBuild } from '~/config/testBuild.ts';
 import { PolitoLogo } from '~/core/components/Logo.tsx';
+import { TestBuildLogo } from '~/core/components/TestBuildLogo.tsx';
 
 /**
  * The username and password form: boxed fields, an error from the server
@@ -62,7 +64,11 @@ export const LoginScreen = () => {
       ]}
     >
       <View style={styles.logo}>
-        <PolitoLogo width="100%" height="100%" />
+        {isTestBuild ? (
+          <TestBuildLogo width="100%" height="100%" />
+        ) : (
+          <PolitoLogo width="100%" height="100%" />
+        )}
       </View>
       <Text variant="cardTitle" role="heading" style={styles.title}>
         {t('loginScreen.title')}

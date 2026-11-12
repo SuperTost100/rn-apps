@@ -16,6 +16,12 @@ type SSOScreenProps = {
   loggedOut?: boolean;
   onLoginPress: () => void;
   onSsoPress: () => void;
+  /**
+   * A build that is not the official app: the screen says so under the
+   * logo, leads with the username and password form, and notes under Single
+   * Sign-On that the login may return to the official app
+   */
+  unofficial?: { notice: string; ssoNote: string };
 };
 
 /**
@@ -29,6 +35,7 @@ export const SSOScreen = ({
   loggedOut = false,
   onLoginPress,
   onSsoPress,
+  unofficial,
 }: SSOScreenProps) => {
   const { t } = useTranslation();
   const styles = useStylesheet(createStyles);
@@ -43,6 +50,11 @@ export const SSOScreen = ({
     >
       <View style={styles.top}>
         <View style={styles.logo}>{logo}</View>
+        {unofficial && (
+          <Text variant="secondaryText" style={styles.center}>
+            {unofficial.notice}
+          </Text>
+        )}
         {loggedOut && (
           <View style={styles.notice} accessible>
             <Text variant="cardTitle" role="heading" style={styles.center}>
@@ -54,18 +66,39 @@ export const SSOScreen = ({
           </View>
         )}
       </View>
-      <View style={styles.actions}>
-        <CtaButton
-          absolute={false}
-          title={t('ssoScreen.ssoButton')}
-          action={onSsoPress}
-          loading={isLoading}
-          containerStyle={styles.button}
-        />
-        <TextButton onPress={onLoginPress} style={styles.link}>
-          {t('ssoScreen.ssoLink')}
-        </TextButton>
-      </View>
+      {unofficial ? (
+        <View style={styles.actions}>
+          <CtaButton
+            absolute={false}
+            title={t('ssoScreen.ssoLink')}
+            action={onLoginPress}
+            containerStyle={styles.button}
+          />
+          <TextButton
+            onPress={onSsoPress}
+            loading={isLoading}
+            style={styles.link}
+          >
+            {t('ssoScreen.ssoButton')}
+          </TextButton>
+          <Text variant="secondaryText" style={styles.center}>
+            {unofficial.ssoNote}
+          </Text>
+        </View>
+      ) : (
+        <View style={styles.actions}>
+          <CtaButton
+            absolute={false}
+            title={t('ssoScreen.ssoButton')}
+            action={onSsoPress}
+            loading={isLoading}
+            containerStyle={styles.button}
+          />
+          <TextButton onPress={onLoginPress} style={styles.link}>
+            {t('ssoScreen.ssoLink')}
+          </TextButton>
+        </View>
+      )}
     </ScrollView>
   );
 };
