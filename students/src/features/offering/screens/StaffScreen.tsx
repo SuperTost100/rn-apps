@@ -2,7 +2,12 @@ import { useMemo } from 'react';
 import { SafeAreaView, ScrollView } from 'react-native';
 
 import { useGetPersons } from '@polito/lib/features/people';
-import { OverviewList, Section } from '@polito/lib/ui';
+import {
+  BottomBarSpacer,
+  OverviewList,
+  Section,
+  useTheme,
+} from '@polito/lib/ui';
 import { OfferingCourseStaff, Person } from '@polito/student-api-client';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
@@ -13,6 +18,7 @@ type Props = NativeStackScreenProps<ServiceStackParamList, 'Staff'>;
 
 export const StaffScreen = ({ route }: Props) => {
   const { staff } = route.params;
+  const { spacing } = useTheme();
 
   const staffIds = useMemo(() => staff.map(s => s.id), [staff]);
 
@@ -39,7 +45,7 @@ export const StaffScreen = ({ route }: Props) => {
   return (
     <ScrollView contentInsetAdjustmentBehavior="automatic">
       <SafeAreaView>
-        <Section>
+        <Section style={{ paddingTop: spacing[2] }}>
           <OverviewList
             loading={isLoading}
             skeleton={{ count: staffIds?.length ?? 3, leading: 'avatar' }}
@@ -52,6 +58,7 @@ export const StaffScreen = ({ route }: Props) => {
             ))}
           </OverviewList>
         </Section>
+        <BottomBarSpacer />
       </SafeAreaView>
     </ScrollView>
   );

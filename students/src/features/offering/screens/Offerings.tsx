@@ -8,7 +8,10 @@ import {
   QueryStateView,
   RefreshControl,
   Section,
-  SkeletonDetail,
+  SectionHeader,
+  SkeletonLine,
+  SkeletonRegion,
+  SkeletonRows,
   Text,
   Theme,
   useStylesheet,
@@ -16,6 +19,22 @@ import {
 
 import { useGetOffering } from '../../../core/queries/offeringHooks';
 
+/** Two groups while loading: a section title, then degree rows */
+const OfferingSkeleton = () => {
+  const styles = useStylesheet(createStyles);
+  return (
+    <SkeletonRegion>
+      {[3, 2].map((count, i) => (
+        <Section key={i}>
+          <SkeletonLine variant="heading" width="55%" style={styles.gutter} />
+          <SkeletonRows count={count} subtitle={false} />
+        </Section>
+      ))}
+    </SkeletonRegion>
+  );
+};
+
+/** The degree groups of one level: a section per class, degrees as rows */
 export const Offerings = ({ type }: { type: 'master' | 'bachelor' }) => {
   const offeringQuery = useGetOffering();
   const { data } = offeringQuery;
@@ -32,62 +51,61 @@ export const Offerings = ({ type }: { type: 'master' | 'bachelor' }) => {
     >
       <QueryStateView
         queries={offeringQuery}
-        isEmpty={() => false}
-        skeleton={<SkeletonDetail title={false} cards={[200, 200]} />}
+        isEmpty={() => !offerings?.length}
+        skeleton={<OfferingSkeleton />}
         errorState={{ title: t('states.offering.failedTitle') }}
+        emptyState={{ title: t('offeringScreen.emptyState') }}
       >
-        {!!offerings && offerings?.length > 0 ? (
-          offerings?.map(item => (
-            <Section key={item.code} style={styles.section}>
-              <Text variant="subHeading" style={styles.offeringClass}>
-                {item?.name || item.code}
-              </Text>
-              <OverviewList>
-                {item?.degrees.map((degree, index) => (
-                  <ListItem
-                    containerStyle={styles.offeringListItem}
-                    key={index}
-                    title={degree?.name || degree.id}
-                    titleProps={{
-                      ellipsizeMode: undefined,
-                      numberOfLines: undefined,
-                    }}
-                    accessibilityRole="button"
-                    linkTo={{
-                      screen: 'Degree',
-                      params: {
-                        id: degree.id,
-                      },
-                    }}
-                  />
-                ))}
-              </OverviewList>
-            </Section>
-          ))
-        ) : (
-          <OverviewList emptyStateText={t('offeringScreen.emptyState')} />
-        )}
+        {offerings?.map(item => (
+          <Section key={item.code}>
+            <SectionHeader
+              title={item?.name || item.code}
+              ellipsizeTitle={false}
+              accessibilityLabel={
+                item.name ? `${item.name}, ${item.code}` : item.code
+              }
+              trailingItem={
+                item.name ? (
+                  <Text variant="secondaryText" style={styles.code}>
+                    {item.code}
+                  </Text>
+                ) : undefined
+              }
+            />
+            <OverviewList>
+              {item?.degrees.map((degree, index) => (
+                <ListItem
+                  key={index}
+                  title={degree?.name || degree.id}
+                  multilineTitle
+                  linkTo={{
+                    screen: 'Degree',
+                    params: {
+                      id: degree.id,
+                    },
+                  }}
+                />
+              ))}
+            </OverviewList>
+          </Section>
+        ))}
       </QueryStateView>
       <BottomBarSpacer />
     </ScrollView>
   );
 };
 
-const createStyles = ({ spacing }: Theme) =>
+const createStyles = ({ spacing, layout }: Theme) =>
   StyleSheet.create({
+    // 24 px under the tab row to the first section mark
     container: {
-      paddingVertical: spacing[5],
+      paddingTop: spacing[6],
     },
-    offeringClass: {
-      marginHorizontal: spacing[4],
+    gutter: {
+      marginHorizontal: layout.gutter,
+      marginBottom: spacing[1],
     },
-    emptyMessage: {
-      marginTop: spacing[4],
-    },
-    offeringListItem: {
-      minHeight: 45,
-    },
-    section: {
-      marginBottom: spacing[2],
+    code: {
+      paddingBottom: spacing[0.5],
     },
   });

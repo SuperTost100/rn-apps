@@ -1,11 +1,13 @@
 import { useTranslation } from 'react-i18next';
-import { SafeAreaView, ScrollView } from 'react-native';
+import { SafeAreaView, ScrollView, StyleSheet } from 'react-native';
 
 import {
   BottomBarSpacer,
   OverviewList,
   RefreshControl,
   Section,
+  Theme,
+  useStylesheet,
 } from '@polito/lib/ui';
 
 import { useGetNews } from '../../../core/queries/newsHooks';
@@ -14,6 +16,7 @@ import { NewsListItem } from '../components/NewsListItem';
 export const NewsScreen = () => {
   const newsQuery = useGetNews();
   const { t } = useTranslation();
+  const styles = useStylesheet(createStyles);
 
   return (
     <ScrollView
@@ -21,10 +24,10 @@ export const NewsScreen = () => {
       refreshControl={<RefreshControl queries={[newsQuery]} manual />}
     >
       <SafeAreaView>
-        <Section>
+        <Section style={styles.list}>
           <OverviewList
             queries={newsQuery}
-            skeleton={{ count: 6, subtitleLines: 2 }}
+            skeleton={{ count: 5, leading: 'tile', subtitleLines: 2 }}
             emptyState={{
               title: t('states.news.emptyTitle'),
               text: t('states.news.emptyText'),
@@ -46,3 +49,9 @@ export const NewsScreen = () => {
     </ScrollView>
   );
 };
+
+// The card's own 8 px plus these 8: 16 px under the header
+const createStyles = ({ spacing }: Theme) =>
+  StyleSheet.create({
+    list: { paddingTop: spacing[2] },
+  });

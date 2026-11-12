@@ -2,30 +2,25 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
-import {
-  ListItem,
-  OverviewList,
-  Text,
-  Theme,
-  useStylesheet,
-} from '@polito/lib/ui';
+import { Text, Theme, useStylesheet, useTheme } from '@polito/lib/ui';
 
 import {
   getTracksCoursesGrouped,
   getTracksCoursesWithoutGroup,
 } from '../../../utils/offerings';
-import { useDegreeContext } from '../contexts/DegreeContext';
 import { OfferingCourseYear } from '../screens/DegreeTracksScreen';
-import { CourseTrailingItem } from './CourseTrailingItem';
 import { GroupCourses } from './GroupCourses';
+import { GroupCoursesExpanded } from './GroupCoursesExpanded';
 
 interface DegreeTrackYearProps {
   item: OfferingCourseYear;
 }
 
+/** One year of an open track: its label, its courses, its elective groups */
 export const DegreeTrackYear = ({ item }: DegreeTrackYearProps) => {
   const { teachingYear, data: courses } = item;
   const { t } = useTranslation();
+  const { layout } = useTheme();
   const styles = useStylesheet(createStyles);
   const firstLevelCourses = getTracksCoursesWithoutGroup(courses);
   const coursesByGroup = useMemo(
@@ -33,77 +28,40 @@ export const DegreeTrackYear = ({ item }: DegreeTrackYearProps) => {
     [courses],
   );
 
-  const { year } = useDegreeContext();
-
   const [expandedGroupIndex, setExpandedGroupIndex] = useState<number>();
   return (
-    <View style={styles.trackSectionContainer}>
-      <Text variant="subHeading" style={styles.subHeading}>
-        {teachingYear}° {t('common.year')}
+    <View>
+      <Text variant="label" accessibilityRole="header" style={styles.yearLabel}>
+        {t('serviceInfo.catalogue.year', { year: teachingYear })}
       </Text>
-      <OverviewList rounded={true} style={styles.firstLevelOverviewList}>
-        {firstLevelCourses.map((course, index) => (
-          <ListItem
-            title={course.name}
-            titleProps={{ numberOfLines: undefined }}
-            key={`${course.teachingYear.toString()}-${
-              course.shortcode
-            }-${index}`}
-            style={styles.listItem}
-            containerStyle={styles.listItemContainer}
-            linkTo={{
-              screen: 'DegreeCourse',
-              params: {
-                courseShortcode: course.shortcode,
-                year,
-              },
-            }}
-            accessibilityRole="button"
-            trailingItem={<CourseTrailingItem cfu={course.cfu} />}
-          />
-        ))}
-        {coursesByGroup.map((group, index) => (
-          <GroupCourses
-            key={index}
-            group={group}
-            isExpanded={expandedGroupIndex === index}
-            toggleExpand={() =>
-              setExpandedGroupIndex(prevIndex =>
-                prevIndex !== index ? index : undefined,
-              )
-            }
-          />
-        ))}
-      </OverviewList>
+      <GroupCoursesExpanded
+        courses={firstLevelCourses}
+        indent={layout.cardPadding}
+      />
+      {coursesByGroup.map((group, index) => (
+        <GroupCourses
+          key={index}
+          group={group}
+          indent={layout.cardPadding}
+          isExpanded={expandedGroupIndex === index}
+          toggleExpand={() =>
+            setExpandedGroupIndex(prevIndex =>
+              prevIndex !== index ? index : undefined,
+            )
+          }
+        />
+      ))}
     </View>
   );
 };
 
-const createStyles = ({ spacing, colors, palettes, dark }: Theme) =>
+const createStyles = ({ colors, layout, spacing }: Theme) =>
   StyleSheet.create({
-    firstLevelOverviewList: {
-      marginHorizontal: spacing[4],
-      elevation: 0,
-    },
-    icon: {
-      marginRight: -spacing[1],
-    },
-    subHeading: {
-      color: dark ? palettes.info['400'] : palettes.info['700'],
-      marginBottom: spacing[2],
-      marginHorizontal: spacing[4],
-      textTransform: 'none',
-    },
-    trackSectionContainer: {
-      marginTop: spacing[2],
-    },
-    list: {
-      marginHorizontal: spacing[4],
-    },
-    listItem: {
-      backgroundColor: dark ? colors.surfaceDark : palettes.gray['100'],
-    },
-    listItemContainer: {
-      minHeight: 45,
+    yearLabel: {
+      color: colors.secondaryText,
+      paddingLeft: layout.cardPadding * 2,
+      paddingRight: layout.cardPadding,
+      paddingTop: spacing[3],
+      paddingBottom: spacing[1],
     },
   });

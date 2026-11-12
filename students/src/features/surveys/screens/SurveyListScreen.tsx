@@ -1,14 +1,13 @@
-import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList, Platform } from 'react-native';
+import { SafeAreaView, ScrollView, StyleSheet } from 'react-native';
 
-import { useQueryStates, useScreenTitle } from '@polito/lib/core';
+import { useScreenTitle } from '@polito/lib/core';
 import {
   BottomBarSpacer,
-  IndentedDivider,
-  QueryStateView,
+  OverviewList,
   RefreshControl,
-  useSafeAreaSpacing,
+  Theme,
+  useStylesheet,
 } from '@polito/lib/ui';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
@@ -18,58 +17,64 @@ import { SurveyListItem } from '../components/SurveyListItem';
 
 type Props = NativeStackScreenProps<ServiceStackParamList, 'SurveyList'>;
 
+/** Every completed survey, or every one still to fill in, newest first */
 export const SurveyListScreen = ({ route }: Props) => {
   const { t } = useTranslation();
+  const styles = useStylesheet(createStyles);
   const { isCompiled } = route.params;
 
   const surveysQuery = useGetSurveys();
-  const { paddingHorizontal } = useSafeAreaSpacing();
 
-  const compiledSurveys = (surveysQuery.data || [])
+  const surveys = (surveysQuery.data || [])
     .filter(survey => survey.isCompiled === isCompiled)
     .sort(
       (a, b) =>
         b.startsAt.getTime() - a.startsAt.getTime() ||
         b.title.localeCompare(a.title),
     );
-  const states = useQueryStates(surveysQuery, {
-    isEmpty: () => compiledSurveys.length === 0,
-  });
 
-  const labels = useMemo(() => {
-    return {
-      title: isCompiled
-        ? t('surveysScreen.compiledTitle')
-        : t('cpdSurveysScreen.toBeCompiledTitle'),
-      emptyState: isCompiled
-        ? t('ticketsScreen.closedEmptyState')
-        : t('ticketsScreen.openEmptyState'),
-    };
-  }, [isCompiled, t]);
-
-  useScreenTitle(labels.title);
+  useScreenTitle(
+    isCompiled
+      ? t('serviceInfo.surveys.completedTitle')
+      : t('serviceInfo.surveys.toFillInTitle'),
+  );
 
   return (
-    <FlatList
+    <ScrollView
       contentInsetAdjustmentBehavior="automatic"
-      contentContainerStyle={paddingHorizontal}
+      contentContainerStyle={styles.container}
       refreshControl={<RefreshControl queries={[surveysQuery]} manual />}
-      data={compiledSurveys}
-      renderItem={({ item }) => <SurveyListItem survey={item} key={item.id} />}
-      ItemSeparatorComponent={Platform.select({
-        ios: IndentedDivider,
-      })}
-      ListFooterComponent={<BottomBarSpacer />}
-      ListEmptyComponent={
-        <QueryStateView
-          states={states}
-          skeleton={{ count: 6, card: false }}
-          emptyState={{ title: t('surveysScreen.compiledEmptyState') }}
+    >
+      <SafeAreaView>
+        <OverviewList
+          queries={surveysQuery}
+          isEmpty={() => surveys.length === 0}
+          skeleton={{ count: 6, trailing: isCompiled ? 'chip' : 'chevron' }}
+          emptyState={{
+            title: isCompiled
+              ? t('serviceInfo.surveys.noneCompletedTitle')
+              : t('serviceInfo.surveys.noneToFillInTitle'),
+          }}
           errorState={{ title: t('states.surveys.failedTitle') }}
         >
-          {null}
-        </QueryStateView>
-      }
-    />
+          {surveys.map(survey => (
+            <SurveyListItem
+              survey={survey}
+              key={survey.id}
+              showStatus={survey.isMandatory}
+            />
+          ))}
+        </OverviewList>
+        <BottomBarSpacer />
+      </SafeAreaView>
+    </ScrollView>
   );
 };
+
+const createStyles = ({ spacing }: Theme) =>
+  StyleSheet.create({
+    // The card's own 8 px plus these 8: 16 px under the header
+    container: {
+      paddingTop: spacing[2],
+    },
+  });

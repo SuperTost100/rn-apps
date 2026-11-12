@@ -1,21 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, SectionList, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import {
+  BottomBarSpacer,
   Icon,
-  IndentedDivider,
+  ListItem,
   OverviewList,
   RefreshControl,
-  SectionHeader,
   Theme,
   useStylesheet,
   useTheme,
 } from '@polito/lib/ui';
 import { OfferingCourseOverview } from '@polito/student-api-client';
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 
 import { useGetOfferingDegree } from '../../../core/queries/offeringHooks';
 import { getTracksCoursesSections } from '../../../utils/offerings';
@@ -27,103 +25,82 @@ export type OfferingCourseYear = {
   data: OfferingCourseOverview[];
 };
 
-type DegreeTrackSection = {
-  title: string;
-  isExpanded?: boolean;
-  index: number;
-  data: OfferingCourseYear[];
-};
-
+/**
+ * The degree's tracks as rows in one card. A track opens in place to show
+ * its courses year by year; one track is open at a time.
+ */
 export const DegreeTracksScreen = () => {
-  const bottomBarHeight = useBottomTabBarHeight();
   const { t } = useTranslation();
-  const safeAreaInsets = useSafeAreaInsets();
   const { degreeId, year } = useDegreeContext();
   const degreeQuery = useGetOfferingDegree({ degreeId, year });
-  const { spacing, colors } = useTheme();
-  const [sections, setSections] = useState<DegreeTrackSection[]>([]);
+  const { colors } = useTheme();
   const styles = useStylesheet(createStyles);
-  const degree = degreeQuery?.data;
-
-  useEffect(() => {
-    if (!degreeQuery.isLoading) {
-      setSections(getTracksCoursesSections(degree?.tracks));
-    }
-  }, [degree?.tracks, degreeQuery.isLoading]);
-
-  const toggleSection = (toggleIndex: number) => {
-    setSections(oldSections =>
-      oldSections.map((section, index) => ({
-        ...section,
-        isExpanded: index === toggleIndex ? !section.isExpanded : false,
-      })),
-    );
-  };
+  const [expandedIndex, setExpandedIndex] = useState<number>();
+  const sections = useMemo(
+    () => getTracksCoursesSections(degreeQuery.data?.tracks),
+    [degreeQuery.data?.tracks],
+  );
 
   return (
-    <OverviewList
-      queries={degreeQuery}
-      isEmpty={() => false}
-      skeleton={{ count: 6, subtitle: false }}
-      errorState={{ title: t('states.offering.failedDegreeTitle') }}
-      indented={true}
-      style={{
-        marginTop: spacing[4],
-        marginBottom: bottomBarHeight + spacing[2],
-      }}
+    <ScrollView
+      contentInsetAdjustmentBehavior="automatic"
+      refreshControl={<RefreshControl queries={[degreeQuery]} manual />}
+      contentContainerStyle={styles.container}
     >
-      <SectionList
-        refreshControl={<RefreshControl queries={[degreeQuery]} manual />}
-        stickySectionHeadersEnabled
-        sections={sections}
-        keyExtractor={(item, index) => `${item.teachingYear}-${index}`}
-        renderSectionFooter={({ section: { index } }) =>
-          index !== sections.length - 1 ? <IndentedDivider indent={14} /> : null
-        }
-        initialNumToRender={2}
-        renderSectionHeader={({ section: { title, index, isExpanded } }) => (
-          <Pressable
-            onPress={() => toggleSection(index)}
-            accessibilityLabel={`${title}. ${t(
-              `common.openedStatus.${isExpanded}`,
-            )}. ${t(`common.openedStatusAction.${isExpanded}`)}`}
-          >
-            <View
-              style={{
-                paddingLeft: safeAreaInsets.left,
-                paddingRight: safeAreaInsets.right,
-                ...styles.sectionHeader,
-              }}
-            >
-              <SectionHeader
+      <OverviewList
+        queries={degreeQuery}
+        isEmpty={() => sections.length === 0}
+        skeleton={{ count: 3 }}
+        emptyState={{ title: t('serviceInfo.catalogue.noTracks') }}
+        errorState={{ title: t('states.offering.failedDegreeTitle') }}
+      >
+        {sections.map(({ title, index, data }) => {
+          const isExpanded = expandedIndex === index;
+          const count = t('serviceInfo.catalogue.courses', {
+            count: data.reduce((sum, y) => sum + y.data.length, 0),
+          });
+          return (
+            <View key={index}>
+              <ListItem
                 title={title}
-                titleStyle={styles.titleStyle}
-                separator={false}
+                multilineTitle
+                subtitle={count}
+                onPress={() =>
+                  setExpandedIndex(prev => (prev === index ? undefined : index))
+                }
+                accessibilityLabel={`${title}, ${count}`}
+                accessibilityState={{ expanded: isExpanded }}
                 trailingItem={
                   <Icon
                     icon={isExpanded ? faChevronUp : faChevronDown}
+                    size={16}
                     color={colors.secondaryText}
                   />
                 }
               />
+              {isExpanded && (
+                <View style={styles.expanded}>
+                  {data.map(item => (
+                    <DegreeTrackYear key={item.teachingYear} item={item} />
+                  ))}
+                </View>
+              )}
             </View>
-          </Pressable>
-        )}
-        renderItem={({ item, section }) =>
-          section?.isExpanded ? <DegreeTrackYear item={item} /> : null
-        }
-      />
-    </OverviewList>
+          );
+        })}
+      </OverviewList>
+      <BottomBarSpacer />
+    </ScrollView>
   );
 };
 
-const createStyles = ({ spacing, fontWeights, colors }: Theme) =>
+const createStyles = ({ spacing }: Theme) =>
   StyleSheet.create({
-    sectionHeader: {
-      paddingVertical: spacing[3],
-      backgroundColor: colors.surface,
+    // The card's own 8 px plus these 8: 16 px under the tab row
+    container: {
+      paddingTop: spacing[2],
     },
-    titleStyle: {
-      fontWeight: fontWeights.medium,
+    expanded: {
+      paddingBottom: spacing[2],
     },
   });

@@ -24,12 +24,12 @@ export const OfferingTopTabsNavigator = () => {
       <TopTabs.Screen
         name="OfferingBachelorScreen"
         component={OfferingBachelorScreen}
-        options={{ title: t('offeringBachelorScreen.title') }}
+        options={{ title: t('serviceInfo.catalogue.bachelor') }}
       />
       <TopTabs.Screen
         name="OfferingMasterScreen"
         component={OfferingMasterScreen}
-        options={{ title: t('offeringMasterScreen.title') }}
+        options={{ title: t('serviceInfo.catalogue.master') }}
       />
     </TopTabs.Navigator>
   );

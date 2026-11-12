@@ -1,20 +1,15 @@
 import { useTranslation } from 'react-i18next';
-import {
-  Platform,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { SafeAreaView, ScrollView, StyleSheet } from 'react-native';
 
 import { getHtmlTextContent } from '@polito/lib/core';
 import {
   BottomBarSpacer,
   Card,
+  KeyValueList,
   QueryStateView,
   RefreshControl,
-  ScreenTitle,
   Section,
+  SectionHeader,
   SkeletonDetail,
   Text,
   Theme,
@@ -24,12 +19,17 @@ import {
 import { useGetOfferingDegree } from '../../../core/queries/offeringHooks';
 import { useDegreeContext } from '../contexts/DegreeContext';
 
+/** A degree's facts in one card, then its notes and objectives */
 export const DegreeInfoScreen = () => {
   const { degreeId, year } = useDegreeContext();
   const { t } = useTranslation();
   const styles = useStylesheet(createStyles);
   const degreeQuery = useGetOfferingDegree({ degreeId, year });
   const degree = degreeQuery?.data;
+  const notes = (degree?.notes ?? [])
+    .map(note => getHtmlTextContent(note))
+    .filter(Boolean);
+  const objectives = getHtmlTextContent(degree?.objectives?.content ?? '');
 
   return (
     <ScrollView
@@ -40,71 +40,52 @@ export const DegreeInfoScreen = () => {
         <QueryStateView
           queries={degreeQuery}
           isEmpty={() => false}
-          skeleton={<SkeletonDetail cards={[120, 200]} />}
+          skeleton={<SkeletonDetail title={false} cards={[240, 96, 160]} />}
           errorState={{ title: t('states.offering.failedDegreeTitle') }}
         >
-          <>
-            <ScreenTitle
-              style={styles.heading}
-              title={degree?.name || degree?.id}
+          <Card padded style={styles.firstCard}>
+            <KeyValueList
+              items={[
+                { label: t('common.location'), value: degree?.location },
+                {
+                  label: t('common.department'),
+                  value: degree?.department?.name,
+                },
+                { label: t('common.faculty'), value: degree?.faculty?.name },
+                { label: t('common.duration'), value: degree?.duration },
+                {
+                  label: t('degreeScreen.degreeClass'),
+                  value: degree?._class
+                    ? [degree._class.name, degree._class.code]
+                        .filter(Boolean)
+                        .join(' · ')
+                    : undefined,
+                },
+              ]}
             />
-            <Card padded style={styles.overviewCard}>
-              {degree?.location && (
-                <Text>
-                  <Text style={styles.label}>{t('common.location')}: </Text>
-                  <Text>{degree?.location}</Text>
-                </Text>
-              )}
-              {degree?.department?.name && (
-                <Text>
-                  <Text style={styles.label}>{t('common.department')}: </Text>
-                  <Text>{degree?.department?.name}</Text>
-                </Text>
-              )}
-              {degree?.faculty?.name && (
-                <Text>
-                  <Text style={styles.label}>{t('common.faculty')}: </Text>
-                  <Text>{degree?.faculty.name}</Text>
-                </Text>
-              )}
-              {degree?.duration && (
-                <Text>
-                  <Text style={styles.label}>{t('common.duration')}: </Text>
-                  <Text>{degree?.duration}</Text>
-                </Text>
-              )}
-              {degree?._class && (
-                <Text>
-                  <Text style={styles.label}>
-                    {t('degreeScreen.degreeClass')}:{' '}
-                  </Text>
-                  <Text>
-                    {degree?._class.name} ({degree._class.code})
-                  </Text>
-                </Text>
-              )}
-            </Card>
-          </>
-          <Section>
-            <Card padded gapped>
-              <View>
-                <Text variant="subHeading">{t('common.notes')}</Text>
-                {degree?.notes?.map((note, index) => (
+          </Card>
+          {notes.length > 0 && (
+            <Section style={styles.section}>
+              <SectionHeader title={t('common.notes')} />
+              <Card padded style={styles.prose}>
+                {notes.map((note, index) => (
                   <Text key={index} variant="longProse">
-                    {getHtmlTextContent(note)}
+                    {note}
                   </Text>
                 ))}
-              </View>
-              {degree?.objectives?.content && (
-                <View>
-                  <Text variant="subHeading">{t('common.objectives')}</Text>
-                  <Text variant="longProse">
-                    {getHtmlTextContent(degree?.objectives?.content)}
-                  </Text>
-                </View>
-              )}
-            </Card>
-          </Section>
+              </Card>
+            </Section>
+          )}
+          {!!objectives && (
+            <Section style={!notes.length && styles.section}>
+              <SectionHeader
+                title={degree?.objectives?.title || t('common.objectives')}
+              />
+              <Card padded>
+                <Text variant="longProse">{objectives}</Text>
+              </Card>
+            </Section>
+          )}
         </QueryStateView>
         <BottomBarSpacer />
       </SafeAreaView>
@@ -112,20 +93,16 @@ export const DegreeInfoScreen = () => {
   );
 };
 
-const createStyles = ({ spacing, fontWeights, fontSizes }: Theme) =>
+const createStyles = ({ spacing, layout }: Theme) =>
   StyleSheet.create({
-    overviewCard: {
-      gap: spacing[1],
+    // 16 px under the tab row
+    firstCard: {
+      marginTop: spacing[4],
     },
-    heading: {
-      paddingHorizontal: Platform.select({
-        android: spacing[2],
-        ios: spacing[4],
-      }),
-      paddingTop: spacing[3],
+    section: {
+      marginTop: layout.sectionGap - spacing[2],
     },
-    label: {
-      fontSize: fontSizes.md,
-      fontWeight: fontWeights.medium,
+    prose: {
+      gap: spacing[2],
     },
   });

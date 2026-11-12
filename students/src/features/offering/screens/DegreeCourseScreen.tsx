@@ -1,17 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  Platform,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { SafeAreaView, ScrollView, StyleSheet, View } from 'react-native';
 
 import {
   faAngleDown,
   faBriefcase,
-  faChartLine,
   faFlaskVial,
   faMicroscope,
   faPersonChalkboard,
@@ -25,11 +18,11 @@ import {
   Icon,
   ListItem,
   Metric,
+  OutlineIcon,
   OverviewList,
   QueryStateView,
   RefreshControl,
   Row,
-  ScreenTitle,
   Section,
   SectionHeader,
   SkeletonDetail,
@@ -49,7 +42,6 @@ import { ServiceStackParamList } from '../../services/components/ServicesNavigat
 import { StaffListItem } from '../components/StaffListItem';
 
 type Props = NativeStackScreenProps<ServiceStackParamList, 'DegreeCourse'>;
-const listTitleProps = { numberOfLines: 4 };
 export const DegreeCourseScreen = ({ route }: Props) => {
   const { courseShortcode, year: initialYear } = route.params;
   const styles = useStylesheet(createStyles);
@@ -63,7 +55,7 @@ export const DegreeCourseScreen = ({ route }: Props) => {
     courseShortcode,
     year: selectedYear,
   });
-  const { palettes, spacing } = useTheme();
+  const { colors, spacing } = useTheme();
   const offeringCourse = courseQuery.data;
 
   const moreStaffCount = useMemo(() => {
@@ -108,12 +100,12 @@ export const DegreeCourseScreen = ({ route }: Props) => {
           skeleton={<SkeletonDetail cards={[96, 160, 120]} />}
           errorState={{ title: t('states.offering.failedCourseTitle') }}
         >
-          <Section>
-            <ScreenTitle style={styles.heading} title={offeringCourse?.name} />
-            <Text style={styles.shortCode} variant="caption">
-              {offeringCourse?.shortcode}
+          <View style={styles.titleBlock}>
+            <Text variant="cardTitle" accessibilityRole="header">
+              {offeringCourse?.name}
             </Text>
-          </Section>
+            <Text variant="secondaryText">{offeringCourse?.shortcode}</Text>
+          </View>
           <Card style={styles.metricsCard}>
             <Row justify="space-between">
               <Grid>
@@ -145,7 +137,7 @@ export const DegreeCourseScreen = ({ route }: Props) => {
                       {yearOptions.length > 0 && (
                         <Icon
                           icon={faAngleDown}
-                          color={palettes.secondary['500']}
+                          color={colors.link}
                           size={14}
                           style={{
                             marginLeft: spacing[2],
@@ -170,20 +162,20 @@ export const DegreeCourseScreen = ({ route }: Props) => {
               </Grid>
             </Row>
           </Card>
-          {offeringCourse?.hours &&
-            (offeringCourse.hours.lecture ||
+          {!!offeringCourse?.hours &&
+            !!(
+              offeringCourse.hours.lecture ||
               offeringCourse.hours.classroomExercise ||
               offeringCourse.hours.labExercise ||
-              offeringCourse.hours.tutoring) && (
-              <OverviewList>
+              offeringCourse.hours.tutoring
+            ) && (
+              <OverviewList style={styles.nextCard}>
                 {!!offeringCourse.hours.lecture && (
                   <ListItem
                     inverted
                     title={t('degreeCourseScreen.hours', {
                       hours: offeringCourse.hours.lecture.toString(),
                     })}
-                    titleStyle={styles.title}
-                    titleProps={listTitleProps}
                     subtitle={t('degreeCourseScreen.lecture')}
                     leadingItem={<Icon size={20} icon={faBriefcase} />}
                   />
@@ -194,8 +186,6 @@ export const DegreeCourseScreen = ({ route }: Props) => {
                     title={t('degreeCourseScreen.hours', {
                       hours: offeringCourse.hours.classroomExercise.toString(),
                     })}
-                    titleStyle={styles.title}
-                    titleProps={listTitleProps}
                     subtitle={t('degreeCourseScreen.classroomExercise')}
                     leadingItem={<Icon size={20} icon={faMicroscope} />}
                   />
@@ -206,8 +196,6 @@ export const DegreeCourseScreen = ({ route }: Props) => {
                     title={t('degreeCourseScreen.hours', {
                       hours: offeringCourse?.hours?.labExercise?.toString(),
                     })}
-                    titleStyle={styles.title}
-                    titleProps={listTitleProps}
                     subtitle={t('degreeCourseScreen.labExercise')}
                     leadingItem={<Icon size={20} icon={faFlaskVial} />}
                   />
@@ -218,33 +206,14 @@ export const DegreeCourseScreen = ({ route }: Props) => {
                     title={t('degreeCourseScreen.hours', {
                       hours: offeringCourse.hours.tutoring.toString(),
                     })}
-                    titleStyle={styles.title}
-                    titleProps={listTitleProps}
                     subtitle={t('degreeCourseScreen.tutoring')}
                     leadingItem={<Icon size={20} icon={faPersonChalkboard} />}
-                  />
-                )}
-                {offeringCourse && (
-                  <ListItem
-                    title={t('degreeCourseScreen.statistics')}
-                    titleStyle={styles.title}
-                    titleProps={listTitleProps}
-                    subtitle={t('degreeCourseScreen.statistics')}
-                    linkTo={{
-                      screen: 'CourseStatistics',
-                      params: {
-                        courseShortcode: offeringCourse.shortcode,
-                        filter: CourseStatisticsFilterType.DEFAULT,
-                        nameCourse: offeringCourse.name,
-                      },
-                    }}
-                    leadingItem={<Icon size={20} icon={faChartLine} />}
                   />
                 )}
               </OverviewList>
             )}
 
-          <Section style={styles.staffSection}>
+          <Section style={styles.section}>
             <SectionHeader
               title={t('degreeCourseScreen.staff')}
               linkToMoreCount={moreStaffCount}
@@ -273,7 +242,27 @@ export const DegreeCourseScreen = ({ route }: Props) => {
           <Section>
             <SectionHeader title={t('common.other')} />
             <OverviewList>
+              {offeringCourse && (
+                <ListItem
+                  title={t('degreeCourseScreen.statistics')}
+                  subtitle={t('degreeCourseScreen.statisticsSubtitle')}
+                  linkTo={{
+                    screen: 'CourseStatistics',
+                    params: {
+                      courseShortcode: offeringCourse.shortcode,
+                      filter: CourseStatisticsFilterType.DEFAULT,
+                      nameCourse: offeringCourse.name,
+                    },
+                  }}
+                  leadingItem={
+                    <OutlineIcon name="chart" color={colors.secondaryText} />
+                  }
+                />
+              )}
               <ListItem
+                leadingItem={
+                  <OutlineIcon name="bookopen" color={colors.secondaryText} />
+                }
                 title={t('courseGuideScreen.title')}
                 linkTo={{
                   screen: 'DegreeCourseGuide',
@@ -292,34 +281,22 @@ export const DegreeCourseScreen = ({ route }: Props) => {
   );
 };
 
-const createStyles = ({ spacing, palettes, fontSizes }: Theme) =>
+const createStyles = ({ spacing, layout }: Theme) =>
   StyleSheet.create({
-    heading: {
-      paddingHorizontal: Platform.select({
-        android: spacing[2],
-        ios: spacing[4],
-      }),
-      paddingTop: spacing[2],
-      marginBottom: spacing[1],
+    titleBlock: {
+      paddingHorizontal: layout.gutter,
+      paddingTop: spacing[4],
+      gap: spacing[1],
     },
+    // 16 px under the title
     metricsCard: {
-      paddingHorizontal: spacing[5],
-      paddingVertical: spacing[4],
-      marginTop: 0,
-      marginBottom: spacing[7],
+      marginTop: spacing[4],
+      padding: layout.cardPadding,
     },
-    shortCode: {
-      paddingHorizontal: Platform.select({
-        android: spacing[2],
-        ios: spacing[4],
-      }),
+    nextCard: {
+      marginTop: spacing[2],
     },
-    title: {
-      fontSize: fontSizes.sm,
-      lineHeight: fontSizes.md * 1.2,
-    },
-    staffSection: {},
-    label: {
-      color: palettes.secondary['500'],
+    section: {
+      marginTop: layout.sectionGap - spacing[2],
     },
   });

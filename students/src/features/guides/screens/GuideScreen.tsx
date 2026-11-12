@@ -11,6 +11,7 @@ import {
   RefreshControl,
   ScreenTitle,
   Section,
+  SectionHeader,
   SkeletonDetail,
   Text,
   Theme,
@@ -62,38 +63,38 @@ export const GuideScreen = ({ navigation, route }: Props) => {
       refreshControl={<RefreshControl queries={[query]} manual />}
     >
       <SafeAreaView>
-        {states.status === 'ready' ? (
+        {states.status === 'ready' && guide ? (
           <>
-            <Section style={styles.paddingTop}>
-              <ScreenTitle title={guide?.title ?? ''} padded />
-            </Section>
-            <Section>
-              <Card padded style={styles.card}>
-                <Text>{guide?.intro}</Text>
-              </Card>
-              <OverviewList indented>
-                {guide?.fields.map(field => {
-                  return <GuideFieldListItem field={field} key={field.label} />;
-                })}
-              </OverviewList>
-              <Card padded style={styles.card}>
-                {guide?.sections.map(section => {
-                  return (
-                    <GuideSectionListItem
-                      section={section}
-                      key={section.title}
-                    />
-                  );
-                })}
-              </Card>
-            </Section>
+            {guide.title !== guide.listTitle && (
+              <ScreenTitle title={guide.title} padded style={styles.title} />
+            )}
+            <Card padded style={styles.firstCard}>
+              <Text variant="longProse">{guide.intro}</Text>
+            </Card>
+            {guide.fields.length > 0 && (
+              <Section style={styles.section}>
+                <SectionHeader title={t('serviceInfo.guides.settingsToCopy')} />
+                <OverviewList>
+                  {guide.fields.map(field => (
+                    <GuideFieldListItem field={field} key={field.label} />
+                  ))}
+                </OverviewList>
+              </Section>
+            )}
+            {guide.sections.map((section, index) => (
+              <GuideSectionListItem
+                section={section}
+                key={`${index}-${section.title}`}
+              />
+            ))}
           </>
         ) : (
           <QueryStateView
             states={states}
             skeleton={
               <SkeletonDetail
-                cards={[80, 200]}
+                title={false}
+                cards={[80, 160, 120]}
                 label={t('states.guides.loadingOne')}
               />
             }
@@ -112,8 +113,10 @@ export const GuideScreen = ({ navigation, route }: Props) => {
   );
 };
 
-const createStyles = ({ spacing }: Theme) =>
+const createStyles = ({ spacing, layout }: Theme) =>
   StyleSheet.create({
-    paddingTop: { paddingTop: spacing[2] },
-    card: { paddingHorizontal: spacing[5] },
+    title: { paddingTop: spacing[4] },
+    // 16 px under the header, as every first card
+    firstCard: { marginTop: spacing[4] },
+    section: { marginTop: layout.sectionGap - spacing[2] },
   });

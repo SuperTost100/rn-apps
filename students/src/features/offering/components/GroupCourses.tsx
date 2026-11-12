@@ -1,15 +1,8 @@
-import { Pressable, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { View } from 'react-native';
 
 import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
-import {
-  Col,
-  Icon,
-  Row,
-  Text,
-  Theme,
-  useStylesheet,
-  useTheme,
-} from '@polito/lib/ui';
+import { Icon, ListItem, useTheme } from '@polito/lib/ui';
 import { OfferingCourseOverview } from '@polito/student-api-client';
 
 import { GroupCoursesExpanded } from './GroupCoursesExpanded';
@@ -19,64 +12,48 @@ interface GroupCoursesProps {
   isExpanded: boolean;
   toggleExpand: () => void;
   disabled?: boolean;
+  /** How far the rows sit from the card's edge, in px past its padding */
+  indent?: number;
 }
 
+/** A group of elective courses: a row that opens to show them */
 export const GroupCourses = ({
   disabled,
   group,
   isExpanded,
   toggleExpand,
+  indent = 0,
 }: GroupCoursesProps) => {
-  const { colors } = useTheme();
-  const styles = useStylesheet(createStyles);
+  const { t } = useTranslation();
+  const { colors, layout } = useTheme();
+  const count = t('serviceInfo.catalogue.courses', {
+    count: group.data.length,
+  });
   return (
-    <Col style={styles.container}>
-      <Pressable onPress={toggleExpand}>
-        <Row justify="space-between" align="center">
-          <Text variant="title" style={styles.title}>
-            {group.name}
-          </Text>
+    <View>
+      <ListItem
+        title={group.name}
+        multilineTitle
+        subtitle={count}
+        onPress={toggleExpand}
+        accessibilityLabel={`${group.name}, ${count}`}
+        accessibilityState={{ expanded: isExpanded }}
+        containerStyle={{ paddingLeft: layout.cardPadding + indent }}
+        trailingItem={
           <Icon
             icon={isExpanded ? faChevronUp : faChevronDown}
+            size={16}
             color={colors.secondaryText}
-            style={styles.icon}
           />
-        </Row>
-      </Pressable>
+        }
+      />
       {isExpanded && (
-        <GroupCoursesExpanded courses={group.data} disabled={disabled} />
+        <GroupCoursesExpanded
+          courses={group.data}
+          disabled={disabled}
+          indent={indent + layout.cardPadding}
+        />
       )}
-    </Col>
+    </View>
   );
 };
-
-const createStyles = ({
-  spacing,
-  fontSizes,
-  fontWeights,
-  colors,
-  palettes,
-  dark,
-}: Theme) =>
-  StyleSheet.create({
-    icon: {
-      marginRight: -spacing[1],
-    },
-    subHeading: {
-      color: dark ? palettes.info['400'] : palettes.info['700'],
-      marginBottom: spacing[2],
-      marginHorizontal: spacing[4],
-      textTransform: 'none',
-    },
-    container: {
-      backgroundColor: dark ? colors.surfaceDark : palettes.gray['100'],
-      paddingVertical: spacing[3],
-      paddingHorizontal: spacing[4],
-    },
-    title: {
-      fontSize: fontSizes.md,
-      lineHeight: fontSizes.md * 1.4,
-      fontWeight: fontWeights.medium,
-      maxWidth: '80%',
-    },
-  });

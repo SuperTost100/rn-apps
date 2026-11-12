@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Platform, SafeAreaView, ScrollView, StyleSheet } from 'react-native';
+import { SafeAreaView, ScrollView, StyleSheet } from 'react-native';
 
 import { getHtmlTextContent } from '@polito/lib/core';
 import {
@@ -8,6 +8,7 @@ import {
   QueryStateView,
   RefreshControl,
   Section,
+  SectionHeader,
   SkeletonDetail,
   Text,
   Theme,
@@ -17,34 +18,35 @@ import {
 import { useGetOfferingDegree } from '../../../core/queries/offeringHooks';
 import { useDegreeContext } from '../contexts/DegreeContext';
 
+/** Where the degree leads: the text the university publishes, in a card */
 export const DegreeJobOpportunitiesScreen = () => {
   const { degreeId, year } = useDegreeContext();
   const { t } = useTranslation();
   const degreeQuery = useGetOfferingDegree({ degreeId, year });
   const styles = useStylesheet(createStyles);
   const degree = degreeQuery?.data;
+  const content = getHtmlTextContent(degree?.jobOpportunities?.content ?? '');
 
   return (
     <ScrollView
       contentInsetAdjustmentBehavior="automatic"
       refreshControl={<RefreshControl queries={[degreeQuery]} manual />}
-      contentContainerStyle={styles.list}
     >
       <SafeAreaView>
         <QueryStateView
           queries={degreeQuery}
-          isEmpty={() => false}
+          isEmpty={() => !content}
           skeleton={<SkeletonDetail title={false} cards={[240]} />}
           errorState={{ title: t('states.offering.failedDegreeTitle') }}
+          emptyState={{ title: t('serviceInfo.catalogue.noJobs') }}
+          style={styles.section}
         >
-          <Section>
+          <Section style={styles.section}>
+            {!!degree?.jobOpportunities?.title && (
+              <SectionHeader title={degree.jobOpportunities.title} />
+            )}
             <Card padded>
-              <Text variant="subHeading" style={styles.subHeading}>
-                {degree?.jobOpportunities?.title}
-              </Text>
-              <Text variant="longProse">
-                {getHtmlTextContent(degree?.jobOpportunities?.content ?? '')}
-              </Text>
+              <Text variant="longProse">{content}</Text>
             </Card>
           </Section>
         </QueryStateView>
@@ -54,17 +56,10 @@ export const DegreeJobOpportunitiesScreen = () => {
   );
 };
 
-const createStyles = ({ spacing }: Theme) =>
+const createStyles = ({ spacing, layout }: Theme) =>
   StyleSheet.create({
-    card: {
-      marginTop: Platform.select({ android: spacing[4] }),
-      paddingHorizontal: spacing[2.5],
-      paddingVertical: spacing[2.5],
-    },
-    list: {
-      paddingTop: spacing[2],
-    },
-    subHeading: {
-      marginBottom: spacing[2],
+    // The section mark 24 px under the tab row
+    section: {
+      marginTop: layout.sectionGap - spacing[2],
     },
   });

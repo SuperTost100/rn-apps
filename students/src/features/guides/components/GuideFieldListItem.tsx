@@ -1,58 +1,48 @@
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
 import { useFeedbackContext } from '@polito/lib/core';
-import { ListItem, Text, Theme, useStylesheet } from '@polito/lib/ui';
+import { ListItem, OutlineIconButton } from '@polito/lib/ui';
 import { GuideField } from '@polito/student-api-client';
 import Clipboard from '@react-native-clipboard/clipboard';
 
 type Props = {
   field: GuideField;
 };
+
+/**
+ * A setting to copy: the value as the title, so it wraps on its own column,
+ * its label under it, and a copy button when the guide allows copying
+ */
 export const GuideFieldListItem = ({ field }: Props) => {
   const { t } = useTranslation();
-  const styles = useStylesheet(createStyles);
   const { setFeedback } = useFeedbackContext();
   const copyToClipboard = () => {
-    if (!field.isCopyEnabled) return;
     Clipboard.setString(field.value);
     setFeedback({
-      text: t('guideScreen.copiedFieldFeedback', { field: field.label }),
+      text: t('serviceInfo.guides.copied', { value: field.value }),
     });
   };
 
   return (
     <ListItem
-      title={
-        <View style={styles.row}>
-          <Text style={[styles.text, styles.label]}>{field.label}</Text>
-          <TouchableOpacity
-            activeOpacity={field.isCopyEnabled ? 0.2 : 1}
+      title={field.value}
+      multilineTitle
+      subtitle={field.label}
+      // With a copy button the row lets screen readers reach it: the value,
+      // the label and the button are read one by one
+      accessible={!field.isCopyEnabled}
+      accessibilityLabel={`${field.label}: ${field.value}`}
+      trailingItem={
+        field.isCopyEnabled ? (
+          <OutlineIconButton
+            icon="copy"
             onPress={copyToClipboard}
-          >
-            <Text weight="semibold" style={styles.text}>
-              {field.value}
-            </Text>
-          </TouchableOpacity>
-        </View>
+            accessibilityLabel={t('serviceInfo.guides.copy', {
+              label: field.label,
+            })}
+          />
+        ) : undefined
       }
     />
   );
 };
-
-const createStyles = ({ fontSizes, spacing }: Theme) =>
-  StyleSheet.create({
-    row: {
-      display: 'flex',
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: spacing[2],
-    },
-    text: {
-      fontSize: fontSizes.md,
-    },
-    label: {
-      flexShrink: 1,
-    },
-  });

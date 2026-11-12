@@ -65,6 +65,8 @@ export const DegreeTopTabsNavigator = ({ route, navigation }: Props) => {
       }),
     ].join(' ');
     navigation.setOptions({
+      // The degree's name is the page title, so the tabs do not repeat it
+      headerTitle: degreeQuery.data.name || degreeQuery.data.id,
       headerRight: () => (
         <View
           accessibilityLabel={accessibilityLabel}

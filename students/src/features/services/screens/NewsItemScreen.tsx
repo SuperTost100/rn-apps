@@ -1,34 +1,22 @@
+import { useLayoutEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  TouchableHighlight,
-} from 'react-native';
+import { SafeAreaView, ScrollView, StyleSheet, View } from 'react-native';
 
-import {
-  faCalendarAlt,
-  faFileAlt,
-  faInfoCircle,
-} from '@fortawesome/free-solid-svg-icons';
-import {
-  formatDate,
-  formatDateFromString,
-  useQueryStates,
-} from '@polito/lib/core';
+import { APP_TIMEZONE, useQueryStates } from '@polito/lib/core';
 import { useOpenInAppLink } from '@polito/lib/core';
 import {
   BottomBarSpacer,
   Card,
-  Col,
   HtmlView,
-  Icon,
   ImageLoader,
+  ListItem,
+  OutlineIcon,
+  OutlineIconName,
+  OverviewList,
   QueryStateView,
   RefreshControl,
-  Row,
-  ScreenTitle,
   Section,
+  SectionHeader,
   SkeletonDetail,
   Text,
   Theme,
@@ -37,21 +25,59 @@ import {
 } from '@polito/lib/ui';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
+import { DateTime } from 'luxon';
+
 import { useGetNewsItem } from '../../../core/queries/newsHooks';
 import { ServiceStackParamList } from '../components/ServicesNavigator';
 
 type Props = NativeStackScreenProps<ServiceStackParamList, 'NewsItem'>;
 
-export const NewsItemScreen = ({ route }: Props) => {
+const dayWithYear = (date: Date) =>
+  DateTime.fromJSDate(date, { zone: APP_TIMEZONE }).toFormat('d LLLL yyyy');
+
+/** "example.org" for a link, so the row says where it leads */
+const hostOf = (url: string) => {
+  const match = /^[a-z]+:\/\/([^/?#]+)/i.exec(url);
+  return match ? match[1].replace(/^www\./, '') : undefined;
+};
+
+export const NewsItemScreen = ({ route, navigation }: Props) => {
   const { id } = route?.params || {};
-  const { palettes, spacing, colors } = useTheme();
+  const { spacing, colors } = useTheme();
   const { t } = useTranslation();
   const useNewsItemQuery = useGetNewsItem(id);
   const { data: newsItem } = useNewsItemQuery;
   const states = useQueryStates(useNewsItemQuery);
   const styles = useStylesheet(createStyles);
   const openInAppLink = useOpenInAppLink();
-  const { title, eventStartTime, createdAt, htmlContent } = newsItem || {};
+  const {
+    title,
+    isEvent,
+    eventStartTime,
+    eventEndTime,
+    createdAt,
+    htmlContent,
+    location,
+  } = newsItem || {};
+  const eventStart = eventStartTime
+    ? DateTime.fromISO(eventStartTime, { zone: APP_TIMEZONE })
+    : undefined;
+  const eventEnd = eventEndTime
+    ? DateTime.fromISO(eventEndTime, { zone: APP_TIMEZONE })
+    : undefined;
+
+  useLayoutEffect(() => {
+    if (!newsItem) return;
+    navigation.setOptions({
+      headerTitle: newsItem.isEvent
+        ? t('serviceInfo.news.event')
+        : t('serviceInfo.news.news'),
+    });
+  }, [navigation, newsItem, t]);
+
+  const icon = (name: OutlineIconName, size?: number) => (
+    <OutlineIcon name={name} size={size} color={colors.secondaryText} />
+  );
 
   const links = newsItem?.extras.filter(e => ['link', 'file'].includes(e.type));
   const logo = newsItem?.extras.find(
@@ -64,24 +90,49 @@ export const NewsItemScreen = ({ route }: Props) => {
       refreshControl={<RefreshControl queries={[useNewsItemQuery]} manual />}
     >
       <SafeAreaView>
-        {states.status === 'ready' ? (
+        {states.status === 'ready' && newsItem ? (
           <>
-            <Section>
-              <ScreenTitle title={title ?? ''} style={styles.heading} />
-            </Section>
-            {createdAt && (
-              <Card accessible padded>
-                <Text variant="heading" weight="semibold" numberOfLines={1}>
-                  {t('newsScreen.createdAt')}
-                  {formatDate(createdAt)}
-                </Text>
-              </Card>
+            <View style={styles.titleBlock}>
+              <Text
+                variant="cardTitle"
+                accessibilityRole="header"
+                style={styles.title}
+              >
+                {title}
+              </Text>
+              <Text variant="secondaryText">
+                {t('serviceInfo.news.published', {
+                  date: dayWithYear(createdAt!),
+                })}
+              </Text>
+            </View>
+            {isEvent && eventStart && (
+              <OverviewList style={styles.firstCard}>
+                <ListItem
+                  leadingItem={icon('calendar')}
+                  title={eventStart.toFormat('cccc d LLLL yyyy')}
+                  subtitle={
+                    eventEnd
+                      ? `${eventStart.toFormat('HH:mm')} - ${eventEnd.toFormat('HH:mm')}`
+                      : eventStart.toFormat('HH:mm')
+                  }
+                />
+                {!!location && (
+                  <ListItem
+                    leadingItem={icon('pin')}
+                    title={location}
+                    multilineTitle
+                    subtitle={t('serviceInfo.news.where')}
+                  />
+                )}
+              </OverviewList>
             )}
             {!!logo && (
               <Card
                 accessible
                 accessibilityLabel={t('newsScreen.logo')}
                 accessibilityRole="image"
+                style={styles.firstCard}
               >
                 <ImageLoader
                   source={{ uri: logo.url }}
@@ -91,75 +142,57 @@ export const NewsItemScreen = ({ route }: Props) => {
                 />
               </Card>
             )}
-            {htmlContent && (
-              <Card accessible>
+            {!!htmlContent && (
+              <Card padded style={styles.firstCard}>
                 <HtmlView
-                  props={{ source: { html: htmlContent } }}
+                  props={{
+                    source: { html: htmlContent },
+                    baseStyle: { padding: 0 },
+                  }}
                   variant="longProse"
                 />
               </Card>
             )}
-            <Card padded>
-              <Text
-                variant="subHeading"
-                weight="semibold"
-                style={{ marginBottom: spacing[1] }}
-              >
-                {t('newsScreen.information')}
-              </Text>
-              <Col>
-                {eventStartTime && (
-                  <Row
-                    style={styles.infoRow}
-                    accessible
-                    accessibilityRole="text"
-                  >
-                    <Icon
-                      icon={faCalendarAlt}
-                      style={styles.iconCalendar}
-                      color={palettes.secondary[600]}
-                    />
-                    <Text
-                      weight="normal"
-                      accessibilityLabel={[
-                        t('newsScreen.eventStartTime'),
-                        formatDateFromString(eventStartTime),
-                      ].join(' ')}
-                    >
-                      {formatDateFromString(eventStartTime)}
-                    </Text>
-                  </Row>
-                )}
-                {links?.map((link, index) => (
-                  <TouchableHighlight
-                    underlayColor={colors.touchableHighlight}
-                    onPress={() => openInAppLink(link.url)}
-                    key={index}
-                    accessible
-                    accessibilityRole="link"
-                    style={styles.infoRow}
-                  >
-                    <Row align="center">
-                      <Icon
-                        icon={link.type === 'link' ? faInfoCircle : faFileAlt}
-                        style={styles.iconCalendar}
-                        color={palettes.secondary[600]}
+            {!!links?.length && (
+              <Section style={styles.section}>
+                <SectionHeader title={t('serviceInfo.news.attachments')} />
+                <OverviewList>
+                  {links.map((link, index) => {
+                    const isFile = link.type === 'file';
+                    const detail = isFile
+                      ? link.sizeInKiloBytes
+                        ? t('serviceInfo.news.fileSize', {
+                            size: link.sizeInKiloBytes,
+                          })
+                        : t('serviceInfo.news.file')
+                      : hostOf(link.url);
+                    const name = link.description || link.url;
+                    return (
+                      <ListItem
+                        key={index}
+                        leadingItem={icon(isFile ? 'file' : 'ext')}
+                        title={name}
+                        subtitle={detail}
+                        onPress={() => openInAppLink(link.url)}
+                        accessibilityRole="link"
+                        accessibilityLabel={t('serviceInfo.opensInBrowser', {
+                          label: [name, detail].filter(Boolean).join(', '),
+                        })}
+                        trailingItem={isFile ? icon('download', 20) : undefined}
+                        isAction
                       />
-                      <Text weight="normal" variant="link" style={styles.link}>
-                        {link.description}
-                      </Text>
-                    </Row>
-                  </TouchableHighlight>
-                ))}
-              </Col>
-            </Card>
+                    );
+                  })}
+                </OverviewList>
+              </Section>
+            )}
           </>
         ) : (
           <QueryStateView
             states={states}
             skeleton={
               <SkeletonDetail
-                cards={[56, 240]}
+                cards={[112, 240]}
                 label={t('states.news.loadingOne')}
               />
             }
@@ -174,21 +207,21 @@ export const NewsItemScreen = ({ route }: Props) => {
   );
 };
 
-const createStyles = ({ spacing }: Theme) =>
+const createStyles = ({ spacing, layout }: Theme) =>
   StyleSheet.create({
-    heading: {
-      paddingHorizontal: spacing[5],
-      paddingTop: spacing[3],
+    titleBlock: {
+      paddingHorizontal: layout.gutter,
+      paddingTop: spacing[4],
+      gap: spacing[1],
     },
-    infoRow: {
-      marginVertical: spacing[1],
-      paddingVertical: spacing[2],
+    title: {
+      flexShrink: 1,
     },
-    iconCalendar: {
-      marginRight: spacing[2],
+    // The standard gap between cards: 16 px from the block above
+    firstCard: {
+      marginTop: spacing[4],
     },
-    link: {
-      textDecorationLine: 'underline',
-      maxWidth: '90%',
+    section: {
+      marginTop: layout.sectionGap - spacing[2],
     },
   });

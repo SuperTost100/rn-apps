@@ -1,23 +1,37 @@
 import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Linking, SafeAreaView, ScrollView, StyleSheet } from 'react-native';
+import {
+  Linking,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native';
 import replace from 'react-string-replace';
 
-import { formatDate, useQueryStates } from '@polito/lib/core';
+import { APP_TIMEZONE, sanitizeHtml, useQueryStates } from '@polito/lib/core';
 import { useOpenInAppLink } from '@polito/lib/core';
 import {
   BottomBarSpacer,
   Card,
+  HtmlView,
+  KeyValueList,
+  ListItem,
+  OutlineIcon,
+  OverviewList,
   QueryStateView,
   RefreshControl,
-  ScreenTitle,
   Section,
+  SectionHeader,
   SkeletonDetail,
   Text,
   Theme,
   useStylesheet,
+  useTheme,
 } from '@polito/lib/ui';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+
+import { DateTime } from 'luxon';
 
 import { useGetJobOffer } from '../../../core/queries/jobOfferHooks';
 import { ServiceStackParamList } from '../components/ServicesNavigator';
@@ -42,10 +56,16 @@ export const JobOfferScreen = ({ route }: Props) => {
     freePositions,
     url,
     email,
+    companyLocation,
     companyMission,
+    description,
     requirements,
     salary,
   } = jobOffer || {};
+  const { colors } = useTheme();
+  const icon = (name: 'brief' | 'ext' | 'mail') => (
+    <OutlineIcon name={name} color={colors.secondaryText} />
+  );
 
   const onPressUrl = (uri: string) => {
     !!uri && openInAppLink(uri);
@@ -87,99 +107,138 @@ export const JobOfferScreen = ({ route }: Props) => {
       refreshControl={<RefreshControl queries={[useGetJobOfferQuery]} manual />}
     >
       <SafeAreaView>
-        {states.status === 'ready' ? (
+        {states.status === 'ready' && jobOffer ? (
           <>
-            <Section>
-              <ScreenTitle title={title ?? ''} style={styles.heading} />
-            </Section>
-            <Card accessible padded>
-              <Text variant="heading" weight="bold" numberOfLines={1}>
-                {companyName}
+            <View style={styles.titleBlock}>
+              <Text variant="cardTitle" accessibilityRole="header">
+                {title}
               </Text>
+            </View>
+            <OverviewList style={styles.firstCard}>
+              <ListItem
+                leadingItem={icon('brief')}
+                title={companyName ?? ''}
+                subtitle={companyLocation || undefined}
+                multilineTitle
+              />
+            </OverviewList>
+            <Card padded style={styles.nextCard}>
+              <KeyValueList
+                items={[
+                  {
+                    label: t('serviceInfo.jobs.contract'),
+                    value: contractType,
+                  },
+                  { label: t('serviceInfo.jobs.pay'), value: salary },
+                  { label: t('serviceInfo.jobs.where'), value: location },
+                  {
+                    label: t('serviceInfo.jobs.openPositions'),
+                    value: freePositions || undefined,
+                  },
+                  {
+                    label: t('serviceInfo.jobs.applyByLabel'),
+                    value: endsAtDate
+                      ? DateTime.fromJSDate(endsAtDate, {
+                          zone: APP_TIMEZONE,
+                        }).toFormat('d LLLL yyyy')
+                      : undefined,
+                  },
+                ]}
+              />
             </Card>
-            <Card accessible padded gapped>
-              {!!contractType && (
-                <Text variant="longProse" weight="semibold">
-                  {t('jobOfferScreen.contractType')}
-                  <Text>{contractType}</Text>
-                </Text>
-              )}
-              {!!salary && (
-                <Text variant="longProse" weight="semibold">
-                  {t('jobOfferScreen.salary')}
-                  <Text variant="longProse">{salary}</Text>
-                </Text>
-              )}
-              {!!location && (
-                <Text variant="longProse" weight="semibold">
-                  {t('jobOfferScreen.location')}
-                  <Text>{location}</Text>
-                </Text>
-              )}
-              {!!endsAtDate && (
-                <Text variant="longProse" weight="semibold">
-                  {t('jobOfferScreen.endsAtDate')}
-                  <Text>{formatDate(endsAtDate)}</Text>
-                </Text>
-              )}
-              {!!freePositions && (
-                <Text variant="longProse" weight="semibold">
-                  {t('jobOfferScreen.freePositions')}
-                  <Text>{freePositions}</Text>
-                </Text>
-              )}
-            </Card>
-            <Card accessible padded gapped>
-              <>
-                <Text variant="subHeading">
-                  {t('jobOfferScreen.description')}
-                </Text>
-                <Text variant="longProse">{companyMission ?? ' - '}</Text>
-              </>
-              <>
-                <Text variant="subHeading">
-                  {t('jobOfferScreen.requirements')}
-                </Text>
-                <Text variant="longProse">
-                  {requirements ? requirements : ' - '}
-                </Text>
-              </>
-              <>
-                {(contactInfo[0] || email || url) && (
-                  <Text variant="subHeading">
-                    {t('jobOfferScreen.application')}
-                  </Text>
+            {!!description && (
+              <Section style={styles.section}>
+                <SectionHeader title={t('jobOfferScreen.description')} />
+                <Card padded>
+                  <HtmlView
+                    props={{
+                      source: { html: sanitizeHtml(description) },
+                      baseStyle: { padding: 0 },
+                    }}
+                    variant="longProse"
+                  />
+                </Card>
+              </Section>
+            )}
+            {!!companyMission && (
+              <Section style={!description && styles.section}>
+                <SectionHeader title={t('jobOfferScreen.companyMission')} />
+                <Card padded>
+                  <Text variant="longProse">{companyMission}</Text>
+                </Card>
+              </Section>
+            )}
+            {!!requirements && (
+              <Section
+                style={!description && !companyMission && styles.section}
+              >
+                <SectionHeader title={t('jobOfferScreen.requirements')} />
+                <Card padded>
+                  <HtmlView
+                    props={{
+                      source: { html: sanitizeHtml(requirements) },
+                      baseStyle: { padding: 0 },
+                    }}
+                    variant="longProse"
+                  />
+                </Card>
+              </Section>
+            )}
+            {(!!url || !!email || !!contactInformation) && (
+              <Section
+                style={
+                  !description &&
+                  !companyMission &&
+                  !requirements &&
+                  styles.section
+                }
+              >
+                <SectionHeader title={t('serviceInfo.jobs.howToApply')} />
+                {(!!url || !!email) && (
+                  <OverviewList>
+                    {!!url && (
+                      <ListItem
+                        leadingItem={icon('ext')}
+                        title={url}
+                        titleProps={{ numberOfLines: 3 }}
+                        subtitle={t('serviceInfo.jobs.website')}
+                        accessibilityRole="link"
+                        accessibilityLabel={t('serviceInfo.opensInBrowser', {
+                          label: `${t('serviceInfo.jobs.website')}, ${url}`,
+                        })}
+                        onPress={() => onPressUrl(url)}
+                        isAction
+                      />
+                    )}
+                    {!!email && (
+                      <ListItem
+                        leadingItem={icon('mail')}
+                        title={email}
+                        titleProps={{ numberOfLines: 3 }}
+                        subtitle={t('common.email')}
+                        accessibilityLabel={t('serviceInfo.person.write', {
+                          email,
+                        })}
+                        onPress={() => onPressEmail(email)}
+                        isAction
+                      />
+                    )}
+                  </OverviewList>
                 )}
-                {!!url && (
-                  <Text
-                    numberOfLines={1}
-                    accessibilityRole="link"
-                    weight="semibold"
-                  >
-                    {t('jobOfferScreen.url')}
-                    <Text variant="link" onPress={() => onPressUrl(url)}>
-                      {url}
-                    </Text>
-                  </Text>
+                {!!contactInformation && (
+                  <Card padded>
+                    <Text variant="longProse">{contactInfo}</Text>
+                  </Card>
                 )}
-                {!!contactInfo && <Text>{contactInfo}</Text>}
-                {!!email && (
-                  <Text weight="semibold">
-                    {t('jobOfferScreen.email')}
-                    <Text variant="link" onPress={() => onPressEmail(email)}>
-                      {email}
-                    </Text>
-                  </Text>
-                )}
-              </>
-            </Card>
+              </Section>
+            )}
           </>
         ) : (
           <QueryStateView
             states={states}
             skeleton={
               <SkeletonDetail
-                cards={[96, 200]}
+                cards={[56, 200, 160]}
                 label={t('states.jobOffers.loadingOne')}
               />
             }
@@ -194,10 +253,20 @@ export const JobOfferScreen = ({ route }: Props) => {
   );
 };
 
-const createStyles = ({ spacing }: Theme) =>
+const createStyles = ({ spacing, layout }: Theme) =>
   StyleSheet.create({
-    heading: {
-      paddingHorizontal: spacing[5],
-      paddingTop: spacing[3],
+    titleBlock: {
+      paddingHorizontal: layout.gutter,
+      paddingTop: spacing[4],
+    },
+    firstCard: {
+      marginTop: spacing[4],
+    },
+    // With the card above: 16 px between the two
+    nextCard: {
+      marginTop: spacing[2],
+    },
+    section: {
+      marginTop: layout.sectionGap - spacing[2],
     },
   });

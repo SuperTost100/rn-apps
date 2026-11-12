@@ -1,10 +1,19 @@
-import { StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { StyleSheet, View } from 'react-native';
 
-import { faChevronRight } from '@fortawesome/free-solid-svg-icons';
-import { formatDate, getHtmlTextContent } from '@polito/lib/core';
+import { APP_TIMEZONE, getHtmlTextContent } from '@polito/lib/core';
 import { useAccessibility } from '@polito/lib/core';
-import { Icon, ListItem, Theme, useStylesheet, useTheme } from '@polito/lib/ui';
+import {
+  ListItem,
+  OutlineIcon,
+  Text,
+  Theme,
+  useStylesheet,
+  useTheme,
+} from '@polito/lib/ui';
 import { NewsItemOverview } from '@polito/student-api-client';
+
+import { DateTime } from 'luxon';
 
 import { useNotifications } from '../../../core/hooks/useNotifications';
 
@@ -14,58 +23,103 @@ interface Props {
   totalData: number;
 }
 
-export const NewsListItem = ({ newsItem, index, totalData }: Props) => {
-  const { colors } = useTheme();
+/** A neutral tile with the kind of item: a calendar for events, news otherwise */
+export const NewsTile = ({ isEvent }: { isEvent: boolean }) => {
   const styles = useStylesheet(createStyles);
+  const { colors } = useTheme();
+  return (
+    <View style={styles.tile}>
+      <OutlineIcon
+        name={isEvent ? 'calendar' : 'news'}
+        size={20}
+        color={colors.neutralChipText}
+      />
+    </View>
+  );
+};
 
+/** "Event · Thu 21 Nov, 10:30" or "News · Mon 11 Nov" */
+export const useNewsMeta = () => {
+  const { t } = useTranslation();
+  return (
+    item: Pick<NewsItemOverview, 'isEvent' | 'eventStartTime' | 'createdAt'>,
+  ) => {
+    if (item.isEvent && item.eventStartTime) {
+      const start = DateTime.fromISO(item.eventStartTime, {
+        zone: APP_TIMEZONE,
+      });
+      return t('serviceInfo.news.eventMeta', {
+        day: start.toFormat('ccc d LLL'),
+        time: start.toFormat('HH:mm'),
+      });
+    }
+    return t('serviceInfo.news.newsMeta', {
+      day: DateTime.fromJSDate(item.createdAt, { zone: APP_TIMEZONE }).toFormat(
+        'ccc d LLL',
+      ),
+    });
+  };
+};
+
+export const NewsListItem = ({ newsItem, index, totalData }: Props) => {
+  const { t } = useTranslation();
   const { accessibilityListLabel } = useAccessibility();
   const { getUnreadsCount } = useNotifications();
+  const meta = useNewsMeta();
 
-  const accessibilityLabel = accessibilityListLabel(index, totalData);
   const title = getHtmlTextContent(newsItem?.title);
   const shortDescription = getHtmlTextContent(newsItem?.shortDescription);
-  const createdAt = formatDate(newsItem.createdAt);
-  const subTitle = `${createdAt} - ${shortDescription}`;
+  const subtitle = meta(newsItem);
+  const unread = !!getUnreadsCount([
+    'services',
+    'news',
+    newsItem?.id.toString(),
+  ]);
 
   return (
     <ListItem
       title={title}
-      titleStyle={styles.title}
+      leadingItem={<NewsTile isEvent={newsItem.isEvent} />}
       linkTo={{
         screen: 'NewsItem',
         params: {
           id: newsItem?.id,
         },
       }}
-      accessibilityRole="button"
-      accessibilityLabel={[accessibilityLabel, title, subTitle].join(', ')}
-      subtitle={subTitle}
-      subtitleStyle={styles.subtitle}
-      trailingItem={
-        <Icon
-          icon={faChevronRight}
-          color={colors.secondaryText}
-          style={styles.icon}
-        />
+      accessibilityLabel={[
+        accessibilityListLabel(index, totalData),
+        unread ? t('primitives.unread') : undefined,
+        title,
+        subtitle,
+        shortDescription,
+      ]
+        .filter(Boolean)
+        .join(', ')}
+      subtitle={
+        <View>
+          <Text variant="secondaryText" numberOfLines={2}>
+            {subtitle}
+          </Text>
+          {!!shortDescription && (
+            <Text variant="secondaryText" numberOfLines={1}>
+              {shortDescription}
+            </Text>
+          )}
+        </View>
       }
-      unread={!!getUnreadsCount(['services', 'news', newsItem?.id.toString()])}
+      unread={unread}
     />
   );
 };
 
-const createStyles = ({ spacing, fontSizes, fontWeights, palettes }: Theme) =>
+const createStyles = ({ colors, controls, shapes }: Theme) =>
   StyleSheet.create({
-    title: {
-      fontSize: fontSizes.md,
-      fontWeight: fontWeights.medium,
-    },
-    subtitle: {
-      color: palettes.text['500'],
-      fontWeight: fontWeights.normal,
-      fontSize: fontSizes.sm,
-      marginTop: spacing[0.5],
-    },
-    icon: {
-      marginRight: -spacing[1],
+    tile: {
+      width: controls.courseTileSize,
+      height: controls.courseTileSize,
+      borderRadius: shapes.md,
+      backgroundColor: colors.neutralChipBg,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
   });

@@ -9,6 +9,7 @@ import {
   OverviewList,
   RefreshControl,
   Section,
+  useTheme,
 } from '@polito/lib/ui';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
@@ -26,6 +27,7 @@ export const CpdSurveysScreen = ({ route }: Props) => {
   const { data } = useGetCpdSurveys();
 
   const { t } = useTranslation();
+  const { spacing } = useTheme();
   const { accessibilityListLabel } = useAccessibility();
 
   const { categoryId, typeId, typeName } = route.params;
@@ -51,20 +53,19 @@ export const CpdSurveysScreen = ({ route }: Props) => {
       refreshControl={<RefreshControl queries={[surveysQuery]} manual />}
     >
       <SafeAreaView>
-        <Section>
+        <Section style={{ paddingTop: spacing[2] }}>
           <OverviewList
             queries={surveysQuery}
             isEmpty={() => (surveys?.length ?? 0) === 0}
-            skeleton={{ count: 3 }}
+            skeleton={{ count: 3, trailing: 'chip' }}
             emptyState={{ title: t('cpdSurveysScreen.emptyState') }}
             errorState={{ title: t('states.surveys.failedTitle') }}
-            indented
           >
             {surveys?.map((survey, index) => (
               <SurveyListItem
                 key={survey.id}
                 survey={survey}
-                accessible={true}
+                showStatus
                 accessibilityLabel={accessibilityListLabel(
                   index,
                   surveys.length,
