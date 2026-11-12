@@ -39,8 +39,9 @@ export const SwitchListItem = ({
           value={value ?? false}
           disabled={disabled}
           onValueChange={toggle}
+          accessible={false}
           accessibilityElementsHidden
-          importantForAccessibility="no-hide-descendants"
+          importantForAccessibility="no"
         />
       }
       disabled={disabled}
