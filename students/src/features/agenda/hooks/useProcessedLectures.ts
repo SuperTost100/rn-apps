@@ -1,9 +1,6 @@
-import { useMemo } from 'react';
-
-import { usePreferencesContext } from '@polito/lib/core';
 import { resolvePlaceId } from '@polito/lib/features/places';
 
-import { AppPreferences, CoursesPreferences } from '~/core/types/preferences';
+import { CoursesPreferences } from '~/core/types/preferences';
 
 import { AgendaItem } from '../types/AgendaItem';
 
@@ -73,8 +70,3 @@ export const processLectures = (
 
       return true;
     });
-
-export const useProcessedLectures = (data: AgendaItem[]) => {
-  const { courses } = usePreferencesContext<AppPreferences>();
-  return useMemo(() => processLectures(data, courses), [courses, data]);
-};

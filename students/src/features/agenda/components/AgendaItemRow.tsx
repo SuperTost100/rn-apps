@@ -33,7 +33,7 @@ const TONES: Record<AgendaItem['type'], StatusChipTone> = {
 };
 
 /** The tile of a booking or a deadline: a glyph on a neutral tile */
-export const NeutralTile = ({ type }: { type: 'booking' | 'deadline' }) => {
+const NeutralTile = ({ type }: { type: 'booking' | 'deadline' }) => {
   const styles = useStylesheet(createStyles);
   const { colors } = useTheme();
   return (
@@ -51,7 +51,7 @@ export const NeutralTile = ({ type }: { type: 'booking' | 'deadline' }) => {
   );
 };
 
-export const ItemTile = ({ item }: { item: AgendaItem }) =>
+const ItemTile = ({ item }: { item: AgendaItem }) =>
   item.type === 'lecture' || item.type === 'exam' ? (
     <CourseTile color={item.color} icon={item.icon} />
   ) : (

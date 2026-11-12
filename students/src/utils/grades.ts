@@ -8,14 +8,3 @@ export const formatGrade = (grade: string) =>
     .replace(/^assente$/i, 'grades.absent')
     .replace(/^fallito$/i, 'grades.fail')
     .replace(/^superato$/i, 'grades.pass');
-
-export const formatFinalGrade = (grade?: number | null) =>
-  [grade ?? '--', 110].join('/');
-
-export const formatExamOnTime = (
-  totalOnTimeExamPoints: number | null,
-  maxOnTimeExamPoints: number,
-) => (totalOnTimeExamPoints ?? '0') + '/' + maxOnTimeExamPoints;
-
-export const formatThirtiethsGrade = (grade?: number | null) =>
-  [grade ?? '--', 30].join('/');

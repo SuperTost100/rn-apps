@@ -154,8 +154,3 @@ export const errorPresentation = (query: {
     return 'quiet';
   return 'alert';
 };
-
-/** Whether a mounted region shows this query's loading, failed and empty states */
-export const isShownWithStates = (query: {
-  observers: readonly { refetch: unknown }[];
-}) => errorPresentation(query) === 'states';

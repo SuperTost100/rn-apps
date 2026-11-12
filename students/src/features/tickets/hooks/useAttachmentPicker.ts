@@ -15,7 +15,7 @@ import {
 import { Attachment } from '../../services/types/Attachment';
 
 /** The largest file a ticket or a reply takes, in bytes */
-export const MAX_ATTACHMENT_BYTES = 32 * 1000 * 1000;
+const MAX_ATTACHMENT_BYTES = 32 * 1000 * 1000;
 
 const FILE_TYPES = [
   types.pdf,

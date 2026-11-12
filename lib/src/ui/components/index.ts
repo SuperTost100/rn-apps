@@ -8,7 +8,6 @@ export * from './BottomBarSpacer';
 export * from './BottomModal';
 export * from './BottomSheet';
 export * from './BottomSheetTextField';
-export * from './Callout';
 export * from './Card';
 export * from './CardRow';
 export * from './CarouselDots';

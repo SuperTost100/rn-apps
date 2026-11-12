@@ -14,7 +14,7 @@ export const dayKeyOf = (ms: number, zone: Zone | string): DayKey =>
   DateTime.fromMillis(ms, { zone }).toISODate()!;
 
 /** Midnight at the start of a day key, in the given zone */
-export const startOfDay = (day: DayKey, zone: Zone | string) =>
+const startOfDay = (day: DayKey, zone: Zone | string) =>
   DateTime.fromISO(day, { zone }).startOf('day');
 
 /**
@@ -94,14 +94,6 @@ export const countsByDay = <T extends Timed>(
     days.map(day => [day, grouped.get(day)?.length ?? 0]),
   );
 };
-
-/** The first day after `day` that has items, if any */
-export const nextDayWithItems = <T extends Timed>(
-  day: DayKey,
-  items: readonly T[],
-  zone: Zone | string,
-): DayKey | undefined =>
-  [...groupByDay(items, zone).keys()].find(key => key > day);
 
 /** A timed block of the week grid, placed in its day column */
 export interface GridBlock<T> {

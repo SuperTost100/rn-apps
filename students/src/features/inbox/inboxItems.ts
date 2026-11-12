@@ -117,7 +117,7 @@ const ENTITIES: Record<string, string> = {
 };
 
 /** A plain text version of a short HTML string */
-export const stripHtml = (html: string) =>
+const stripHtml = (html: string) =>
   html
     .replace(/<br\s*\/?>/gi, ' ')
     .replace(/<\/(p|li|div|h\d)>/gi, ' ')
@@ -172,7 +172,7 @@ export type ParsedScope =
  * as well as `['courses', id, 'notices']`, and anything it cannot read is
  * `unknown` instead of an error.
  */
-export const parseScope = (scope: unknown): ParsedScope => {
+const parseScope = (scope: unknown): ParsedScope => {
   if (!Array.isArray(scope)) return { type: 'unknown' };
   const parts = scope.map(s => String(s ?? '').trim()).filter(Boolean);
   const at = (name: string) => parts.indexOf(name);
@@ -430,12 +430,6 @@ export const unreadCounts = (items: InboxItem[]) => {
   }
   return counts;
 };
-
-/** Unread items of the given courses (a course, its modules or editions) */
-export const unreadForCourses = (items: InboxItem[], courseIds: number[]) =>
-  items.filter(
-    i => i.unread && i.courseId !== undefined && courseIds.includes(i.courseId),
-  ).length;
 
 export type InboxGroupId =
   | 'pinned'

@@ -50,7 +50,7 @@ export const provisionalStatus = (
   return 'published';
 };
 
-export const PROVISIONAL_TONE: Record<ProvisionalStatus, StatusChipTone> = {
+const PROVISIONAL_TONE: Record<ProvisionalStatus, StatusChipTone> = {
   decide: 'warning',
   published: 'info',
   accepted: 'success',

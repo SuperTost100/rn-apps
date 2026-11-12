@@ -43,7 +43,7 @@ const KIND_ICONS: Record<InboxKind, IconDefinition> = {
 };
 
 /** The words for an item's kind: the row's subtitle and the start of its label */
-export const useKindLabel = () => {
+const useKindLabel = () => {
   const { t } = useTranslation();
   return (item: InboxItem) => {
     if (item.urgent) return t('inboxScreen.kinds.urgent');

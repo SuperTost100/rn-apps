@@ -24,7 +24,7 @@ interface Props {
 }
 
 /** A neutral tile with the kind of item: a calendar for events, news otherwise */
-export const NewsTile = ({ isEvent }: { isEvent: boolean }) => {
+const NewsTile = ({ isEvent }: { isEvent: boolean }) => {
   const styles = useStylesheet(createStyles);
   const { colors } = useTheme();
   return (
@@ -39,7 +39,7 @@ export const NewsTile = ({ isEvent }: { isEvent: boolean }) => {
 };
 
 /** "Event · Thu 21 Nov, 10:30" or "News · Mon 11 Nov" */
-export const useNewsMeta = () => {
+const useNewsMeta = () => {
   const { t } = useTranslation();
   return (
     item: Pick<NewsItemOverview, 'isEvent' | 'eventStartTime' | 'createdAt'>,

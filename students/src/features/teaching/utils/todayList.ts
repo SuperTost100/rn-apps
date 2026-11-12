@@ -55,10 +55,6 @@ export type TodayModel<T extends TimedItem> =
 export const dayKey = (ms: number, zone: ZoneLike) =>
   DateTime.fromMillis(ms, { zone }).toISODate()!;
 
-/** Monday 00:00 of the week of `now`, in `zone` */
-export const weekStart = (now: number, zone: ZoneLike) =>
-  DateTime.fromMillis(now, { zone }).startOf('week');
-
 const byTime = (a: TimedItem, b: TimedItem) =>
   a.start - b.start || a.end - b.end;
 
@@ -88,7 +84,7 @@ export const firstOfNextDay = <T extends TimedItem>(
 };
 
 /** "now" is start <= now < end */
-export const stateAt = (item: TimedItem, now: number): TodayState =>
+const stateAt = (item: TimedItem, now: number): TodayState =>
   item.end <= now ? 'ended' : item.start <= now ? 'now' : 'later';
 
 /**
@@ -165,9 +161,6 @@ export const countdown = (row: TodayRow<TimedItem>, now: number): Countdown => {
     minutes: total % 60,
   };
 };
-
-/** Milliseconds until the next minute starts, so the ticks land on :00 */
-export const msToNextMinute = (now: number) => 60000 - (now % 60000);
 
 /** The translation function, as i18next's `t` */
 export type Translate = (

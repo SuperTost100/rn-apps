@@ -156,7 +156,7 @@ const toItems = (
  * time order. It holds no notion of today, which the screens compute when
  * they render, so the today mark is right after midnight.
  */
-export const buildAgendaWeek = (
+const buildAgendaWeek = (
   monday: DateTime,
   coursesPreferences: CoursesPreferences,
   exams: Exam[],
