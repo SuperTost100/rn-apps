@@ -14,11 +14,53 @@ interface Props {
   navigateEnabled?: boolean;
 }
 
-const initialsOf = (person: Person) =>
+type AvatarPerson = Pick<Person, 'firstName' | 'lastName'> & {
+  picture?: string | null;
+};
+
+const initialsOf = (person: AvatarPerson) =>
   [person.firstName, person.lastName]
     .map(name => name?.trim().charAt(0) ?? '')
     .join('')
     .toUpperCase();
+
+/**
+ * A person's picture, or their initials on a round tile. Decorative: the row
+ * or card around it names the person.
+ */
+export const PersonAvatar = ({
+  person,
+  size,
+}: {
+  person: AvatarPerson | undefined;
+  /** Default: the 40 px leading column */
+  size?: number;
+}) => {
+  const styles = useStylesheet(createStyles);
+  const sized = size ? { width: size, height: size } : undefined;
+  return person?.picture ? (
+    <Image
+      source={{ uri: person.picture }}
+      style={[styles.avatar, sized]}
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+    />
+  ) : (
+    <View
+      style={[styles.avatar, styles.initials, sized]}
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+    >
+      <Text
+        variant={size && size > 48 ? 'cardTitle' : 'label'}
+        style={styles.initialsText}
+        maxFontSize={size && size > 48 ? 32 : 20}
+      >
+        {person ? initialsOf(person) : ''}
+      </Text>
+    </View>
+  );
+};
 
 /**
  * A person: their picture, or their initials on a round avatar, in the
@@ -29,21 +71,9 @@ export const PersonListItem = ({
   subtitle,
   navigateEnabled = true,
 }: TouchableHighlightProps & Props) => {
-  const styles = useStylesheet(createStyles);
-
   return (
     <ListItem
-      leadingItem={
-        person?.picture ? (
-          <Image source={{ uri: person.picture }} style={styles.avatar} />
-        ) : (
-          <View style={[styles.avatar, styles.initials]}>
-            <Text variant="label" style={styles.initialsText} maxFontSize={20}>
-              {person ? initialsOf(person) : ''}
-            </Text>
-          </View>
-        )
-      }
+      leadingItem={<PersonAvatar person={person} />}
       title={person ? `${person.firstName} ${person.lastName}` : ''}
       accessibilityLabel={
         person
