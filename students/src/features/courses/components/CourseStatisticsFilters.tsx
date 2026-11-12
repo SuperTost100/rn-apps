@@ -55,9 +55,11 @@ export const CourseStatisticsFilters = ({
                 <View style={styles.filterMetricWrap}>
                   <Metric
                     title={t('courseStatisticsScreen.period')}
-                    value={currentYear?.title ?? '--'}
+                    value={
+                      currentYear?.title ?? t('courseStatisticsScreen.notGiven')
+                    }
                     accessibilityLabel={`${t('courseStatisticsScreen.period')}: ${
-                      currentYear?.title ?? '--'
+                      currentYear?.title ?? t('courseStatisticsScreen.notGiven')
                     }`}
                     style={styles.filterMetric}
                     valueNumberOfLines={1}
@@ -77,9 +79,11 @@ export const CourseStatisticsFilters = ({
             <Row>
               <Metric
                 title={t('courseStatisticsScreen.period')}
-                value={currentYear?.title ?? '--'}
+                value={
+                  currentYear?.title ?? t('courseStatisticsScreen.notGiven')
+                }
                 accessibilityLabel={`${t('courseStatisticsScreen.period')}: ${
-                  currentYear?.title ?? '--'
+                  currentYear?.title ?? t('courseStatisticsScreen.notGiven')
                 }`}
               />
             </Row>
@@ -98,9 +102,13 @@ export const CourseStatisticsFilters = ({
                 <View style={styles.filterMetricWrap}>
                   <Metric
                     title={t('courseStatisticsScreen.teacher')}
-                    value={currentTeacher?.title ?? '--'}
+                    value={
+                      currentTeacher?.title ??
+                      t('courseStatisticsScreen.notGiven')
+                    }
                     accessibilityLabel={`${t('courseStatisticsScreen.teacher')}: ${
-                      currentTeacher?.title ?? '--'
+                      currentTeacher?.title ??
+                      t('courseStatisticsScreen.notGiven')
                     }`}
                     style={styles.filterMetric}
                     valueNumberOfLines={1}
@@ -120,9 +128,11 @@ export const CourseStatisticsFilters = ({
             <Row>
               <Metric
                 title={t('courseStatisticsScreen.teacher')}
-                value={currentTeacher?.title ?? '--'}
+                value={
+                  currentTeacher?.title ?? t('courseStatisticsScreen.notGiven')
+                }
                 accessibilityLabel={`${t('courseStatisticsScreen.teacher')}: ${
-                  currentTeacher?.title ?? '--'
+                  currentTeacher?.title ?? t('courseStatisticsScreen.notGiven')
                 }`}
               />
             </Row>

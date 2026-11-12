@@ -278,6 +278,11 @@ export const AgendaWeekGrid = ({
               styles.allDayLabel,
               { width: GUTTER },
             ]}
+            // The gutter is narrower than "giorno": the label shrinks
+            // instead of breaking the word
+            numberOfLines={2}
+            adjustsFontSizeToFit
+            minimumFontScale={0.5}
           >
             {t('agendaScreen.allDay')}
           </Text>

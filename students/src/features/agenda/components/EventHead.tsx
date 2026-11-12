@@ -36,14 +36,18 @@ export const EventHead = ({ caption, date, time, subtitle }: Props) => {
       <View style={styles.when}>
         <View style={styles.part}>
           <Icon icon={faCalendar} size={20} color={colors.secondaryText} />
-          <Text variant="title" weight="semibold">
+          <Text variant="title" weight="semibold" style={styles.slack}>
             {date}
           </Text>
         </View>
         {time && (
           <View style={styles.part}>
             <Icon icon={faClock} size={20} color={colors.secondaryText} />
-            <Text variant="title" weight="semibold" style={styles.number}>
+            <Text
+              variant="title"
+              weight="semibold"
+              style={[styles.number, styles.slack]}
+            >
               {time}
             </Text>
           </View>
@@ -81,5 +85,11 @@ const createStyles = ({ colors, layout, spacing }: Theme) =>
     },
     number: {
       fontVariant: ['tabular-nums'],
+    },
+    // shortcut: Android measured "Thu 12 Nov" a fraction narrower than it
+    // draws, and the last word went to a hidden second line. A pixel of
+    // slack avoids it; drop it if a React Native update fixes the rounding
+    slack: {
+      paddingRight: 1,
     },
   });

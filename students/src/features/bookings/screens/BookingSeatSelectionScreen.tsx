@@ -127,12 +127,7 @@ export const BookingSeatSelectionScreen = ({ route }: Props) => {
             })}
           >
             {!isEmpty(bookingSeatsQuery.data?.rows) && (
-              <Row
-                align="center"
-                justify="center"
-                key="desk"
-                style={{ width: SCREEN_WIDTH, gap }}
-              >
+              <Row align="center" justify="center" key="desk" style={{ gap }}>
                 <BookingDeskCell seatSize={seatSize} />
               </Row>
             )}
@@ -200,8 +195,9 @@ const createStyles = ({ spacing, colors }: Theme) =>
       padding: spacing[2],
       width: '100%',
       backgroundColor: colors.surface,
-      justifyContent: 'flex-start',
-      alignItems: 'flex-start',
+      // The room is centred on the screen, desk on top
+      justifyContent: 'center',
+      alignItems: 'center',
       flexDirection: 'column',
     },
     recapContainer: {

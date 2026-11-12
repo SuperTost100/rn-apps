@@ -79,8 +79,8 @@ export const SharedScreens = () => {
         name="UsefulContact"
         component={UsefulContactScreen}
         getId={({ params: { id } }) => id}
+        // The screen sets the contact's name as its title
         options={{
-          headerTitle: '',
           headerBackTitle: t('contactsScreen.title'),
         }}
       />

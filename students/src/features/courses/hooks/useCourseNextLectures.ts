@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import { usePreferencesContext } from '@polito/lib/core';
+import { usePreferencesContext, useQuietQueryErrors } from '@polito/lib/core';
 
 import { romeMonday } from '../../../core/queries/weekQueries';
 import { AppPreferences } from '../../../core/types/preferences';
@@ -38,6 +38,9 @@ export const useCourseNextLectures = (courseId: number, count: number) => {
     [],
   );
   const weeks = useGetLectureWeeks(coursesPreferences, mondays);
+  // A screen that shows these weeks renders their states; elsewhere a failed
+  // week only leaves the list shorter, with no alert on top
+  useQuietQueryErrors(weeks.queries);
   const { nextLecture, isLoadingNextLecture } = useGetNextLecture(courseId);
 
   const entries = useMemo((): CourseLectureEntry[] => {

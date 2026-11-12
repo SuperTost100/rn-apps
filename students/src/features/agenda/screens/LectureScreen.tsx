@@ -299,6 +299,7 @@ export const LectureScreen = ({ route, navigation }: Props) => {
         <CtaButton
           title={t('lectureScreen.hideEventButtonTitle')}
           action={hideEvent}
+          variant="outlined"
           destructive
           absolute={false}
           containerStyle={{

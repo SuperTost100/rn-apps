@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SafeAreaView, ScrollView } from 'react-native';
 
-import { formatDateWithTimeIfNotNull } from '@polito/lib/core';
+import { APP_TIMEZONE, usePreferencesContext } from '@polito/lib/core';
 import { useGetPerson } from '@polito/lib/features/people';
 import {
   BottomBarSpacer,
@@ -12,6 +12,8 @@ import {
   RefreshControl,
 } from '@polito/lib/ui';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+
+import { DateTime } from 'luxon';
 
 import { EventDetails } from '../../../core/components/EventDetails';
 import { VideoPlayer } from '../../../core/components/VideoPlayer';
@@ -26,6 +28,7 @@ type Props = NativeStackScreenProps<
 export const CourseVideolectureScreen = ({ route }: Props) => {
   const { courseId, lectureId, teacherId } = route.params;
   const { t } = useTranslation();
+  const { language } = usePreferencesContext();
   const videolecturesQuery = useGetCourseVideolectures(courseId);
   const teacherQuery = useGetPerson(teacherId);
 
@@ -50,8 +53,11 @@ export const CourseVideolectureScreen = ({ route }: Props) => {
           title={lecture?.title ?? ''}
           type={t('common.videoLecture')}
           time={
+            // Written like the dates on the lecture rows and the lecture page
             lecture?.createdAt
-              ? formatDateWithTimeIfNotNull(lecture?.createdAt)
+              ? DateTime.fromJSDate(lecture.createdAt, { zone: APP_TIMEZONE })
+                  .setLocale(language)
+                  .toFormat('ccc, d LLL yyyy')
               : undefined
           }
         />

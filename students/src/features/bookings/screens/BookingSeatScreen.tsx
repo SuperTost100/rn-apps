@@ -101,20 +101,15 @@ export const BookingSeatScreen = ({ route, navigation }: Props) => {
           minZoom={1}
         >
           <Col
-            align="flex-start"
-            justify="flex-start"
+            align="center"
+            justify="center"
             style={StyleSheet.compose(styles.rowsContainer, {
               height: viewHeight,
               gap,
             })}
           >
             {!isEmpty(bookingSeatsQuery.data?.rows) && (
-              <Row
-                align="center"
-                justify="center"
-                key="desk"
-                style={{ width: SCREEN_WIDTH, gap }}
-              >
+              <Row align="center" justify="center" key="desk" style={{ gap }}>
                 <BookingDeskCell seatSize={seatSize} />
               </Row>
             )}
@@ -184,10 +179,13 @@ const createStyles = ({ spacing, colors }: Theme) =>
       flex: 1,
       width: SCREEN_WIDTH,
     },
+    // The room is centred on the screen, desk on top
     rowsContainer: {
       padding: spacing[2],
       width: '100%',
       backgroundColor: colors.surface,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     recapContainer: {
       marginHorizontal: spacing[4],

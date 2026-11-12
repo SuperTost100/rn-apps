@@ -158,7 +158,7 @@ export const NewOverlayScreen = ({ route, navigation }: Props) => {
           accessibilityRole="header"
           accessibilityLabel={announcement.title}
         >
-          <Text variant="title" accessible={false} style={styles.title}>
+          <Text variant="cardTitle" accessible={false} style={styles.title}>
             {announcement.title}
           </Text>
         </View>
@@ -179,8 +179,6 @@ export const NewOverlayScreen = ({ route, navigation }: Props) => {
           title={t('appInfoScreen.gotIt')}
           action={() => navigation.goBack()}
           containerStyle={styles.ctaContainer}
-          style={styles.ctaButton}
-          textStyle={styles.ctaButtonText}
           accessibilityHint={t('appInfoScreen.gotItHint')}
         />
       </View>
@@ -188,13 +186,7 @@ export const NewOverlayScreen = ({ route, navigation }: Props) => {
   );
 };
 
-const createStyles = ({
-  colors,
-  shapes,
-  spacing,
-  fontSizes,
-  fontWeights,
-}: Theme) =>
+const createStyles = ({ colors, spacing, fontSizes, fontWeights }: Theme) =>
   StyleSheet.create({
     screen: {
       backgroundColor: colors.background,
@@ -221,51 +213,20 @@ const createStyles = ({
       paddingHorizontal: spacing[5],
       paddingVertical: spacing[4],
     },
-    ctaButton: {
-      alignItems: 'center',
-      alignSelf: 'stretch',
-      backgroundColor: colors.link,
-      borderColor: colors.link,
-      borderRadius: shapes.lg,
-      elevation: 0,
-      gap: spacing[2],
-      height: 45,
-      justifyContent: 'center',
-      paddingHorizontal: 20,
-      paddingVertical: 12,
-    },
-    ctaButtonText: {
-      color: colors.white,
-      fontFamily: 'Montserrat-SemiBold',
-      fontSize: fontSizes.sm,
-      fontStyle: 'normal',
-      fontWeight: fontWeights.semibold,
-      lineHeight: fontSizes.xl,
-      textAlign: 'center',
-    },
     title: {
       color: colors.title,
-      fontFamily: 'Montserrat-SemiBold',
-      fontSize: fontSizes.sm,
-      fontStyle: 'normal',
-      fontWeight: fontWeights.semibold,
-      lineHeight: fontSizes.xl,
       paddingHorizontal: spacing[5],
     },
     date: {
       color: colors.secondaryText,
-      fontFamily: 'Montserrat-Regular',
-      fontStyle: 'normal',
-      fontWeight: fontWeights.normal,
-      lineHeight: fontSizes.xl,
       paddingHorizontal: spacing[5],
     },
     body: {
       color: colors.prose,
       fontFamily: 'Montserrat-Regular',
-      fontSize: fontSizes.sm,
+      fontSize: fontSizes.md,
       fontStyle: 'normal',
       fontWeight: fontWeights.normal,
-      lineHeight: fontSizes.xl,
+      lineHeight: fontSizes.md * 1.5,
     },
   });

@@ -203,20 +203,26 @@ export const CreateTicketScreen = ({ navigation, route }: Props) => {
       automaticallyAdjustKeyboardInsets
       contentContainerStyle={styles.content}
     >
-      <InfoMessage style={styles.faqNote}>
-        <Text variant="prose" style={styles.faqText}>
-          {t('createTicketScreen.faqLine')}
-        </Text>
-        <TextButton
-          onPress={() => navigation.navigate('TicketFaqs')}
-          style={styles.faqLink}
-        >
-          {t('createTicketScreen.readFaqs')}
-        </TextButton>
-      </InfoMessage>
-      <Text variant="secondaryText" style={styles.intro}>
-        {t('createTicketScreen.intro')}
-      </Text>
+      {/* A ticket about the app (from App info) comes with its topic: the
+          student office FAQs don't cover it */}
+      {!initialTopicId && (
+        <>
+          <InfoMessage style={styles.faqNote}>
+            <Text variant="prose" style={styles.faqText}>
+              {t('createTicketScreen.faqLine')}
+            </Text>
+            <TextButton
+              onPress={() => navigation.navigate('TicketFaqs')}
+              style={styles.faqLink}
+            >
+              {t('createTicketScreen.readFaqs')}
+            </TextButton>
+          </InfoMessage>
+          <Text variant="secondaryText" style={styles.intro}>
+            {t('createTicketScreen.intro')}
+          </Text>
+        </>
+      )}
 
       <Select
         variant="boxed"

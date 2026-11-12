@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
 
-import { getHtmlTextContent } from '@polito/lib/core';
+import { getHtmlTextContent, useQuietQueryErrors } from '@polito/lib/core';
 import { useQueryClient } from '@tanstack/react-query';
 
 import {
@@ -32,6 +32,9 @@ export const useInbox = () => {
   const messagesQuery = useGetMessages();
   const ticketsQuery = useGetTickets();
   const coursesQuery = useGetCourses();
+  // The bell and the tab badge read the inbox in the background: a failure
+  // shows on the inbox screen itself, never as an alert over another screen
+  useQuietQueryErrors([notificationsQuery, messagesQuery, ticketsQuery]);
 
   const courses = coursesQuery.data;
   const lookup = useMemo(() => buildCourseLookup(courses ?? []), [courses]);

@@ -7,7 +7,7 @@ import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 
 import { isEmpty } from 'lodash';
 
-import { minBookableCellSize } from '../constant';
+import { maxSeatCellSize } from '../constant';
 
 export const useCalculateSeatsDimension = (
   seats?: BookingSeats,
@@ -35,7 +35,7 @@ export const useCalculateSeatsDimension = (
       const minHeight = realViewHeight / numberOfRows;
       const minWidth = realViewWidth / maxSeatsPerRows;
       setGap(calculatedGap);
-      setSeatSize(Math.min(minHeight, minWidth, minBookableCellSize));
+      setSeatSize(Math.min(minHeight, minWidth, maxSeatCellSize));
     }
   }, [seats, spacing, viewHeight, bottomTabBarHeight, basicPadding]);
 

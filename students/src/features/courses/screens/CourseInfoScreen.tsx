@@ -20,6 +20,7 @@ import {
   PersonListItem,
   QueryStateView,
   RefreshControl,
+  RegionStateBlock,
   SectionHeader,
   SkeletonDetail,
   SkeletonRows,
@@ -79,6 +80,8 @@ export const CourseInfoScreen = () => {
   const coursesQuery = useGetCourses();
   const now = useMinuteClock();
   const nextLectures = useCourseNextLectures(courseId, NEXT_LECTURES);
+  // A failed week shows as a failure with Try again, not as "no lectures"
+  const lectureStates = useQueryStates(nextLectures.queries);
   const openInAppLink = useOpenInAppLink();
   const navigation =
     useNavigation<NativeStackNavigationProp<TeachingStackParamList>>();
@@ -282,6 +285,11 @@ export const CourseInfoScreen = () => {
                   ))}
                 </List>
               </Card>
+            ) : lectureStates.status === 'error' ? (
+              <RegionStateBlock
+                states={lectureStates}
+                errorState={{ title: t('states.agenda.failedTitle') }}
+              />
             ) : (
               <StateBlock
                 card
