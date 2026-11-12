@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Platform,
   SafeAreaView,
@@ -84,6 +85,7 @@ export const CalendarBody = <T extends ICalendarEventBase>({
   startHour = 8,
 }: CalendarBodyProps<T>) => {
   const scrollView = useRef<ScrollView>(null);
+  const { t } = useTranslation();
   const { now } = useNow(!hideNowIndicator);
   const bottomBarHeight = useBottomTabBarHeight();
 
@@ -200,7 +202,7 @@ export const CalendarBody = <T extends ICalendarEventBase>({
                 <HourGuideColumn
                   key="all-day"
                   cellHeight={cellHeight}
-                  hour="All day"
+                  hour={t('common.allDay')}
                   ampm={ampm}
                   centerVertically={false}
                 />

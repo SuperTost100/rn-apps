@@ -271,7 +271,10 @@
     "fromTime": "dalle",
     "toTime": "alle",
     "document": "Allegato",
-    "warning": "Attenzione"
+    "warning": "Attenzione",
+    "allDay": "Tutto il giorno",
+    "live": "In diretta",
+    "more": "Altro"
   },
   "contactsScreen": {
     "cancelRecentSearch": "Rimuovi",
@@ -696,7 +699,8 @@
     "capacity_plural": "{{count}} posti",
     "placeNotFound": "Questo luogo non esiste",
     "title": "Luogo",
-    "placeDetail": "Dettagli luogo"
+    "placeDetail": "Dettagli luogo",
+    "getDirections": "Ottieni indicazioni"
   },
   "placesScreen": {
     "changeFloor": "Cambia piano",
@@ -706,7 +710,8 @@
     "noPlacesFound": "Nessun posto trovato",
     "searchCategories": "Cerca categorie",
     "title": "Luoghi",
-    "viewWholeCampus": "Vedi tutta la sede"
+    "viewWholeCampus": "Vedi tutta la sede",
+    "searchIn": "in {{campus}}"
   },
   "placesSearchScreen": {
     "searchPlaceholder": "Prova con \"Aula 1\""

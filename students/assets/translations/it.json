@@ -1,8 +1,5 @@
 {
   "accessibilitySettingsScreen": {
-    "customFontAction": "Seleziona un font",
-    "customFontDefault": "No custom font",
-    "customFontPlacement": "Usalo per",
     "customFontSectionTitle": "Spaziature testi lunghi",
     "customThemeSectionTitle": "Tema accessibile",
     "customFontSizeTitle": "Grandezza font",
@@ -19,7 +16,6 @@
     "wordSpacingSubtitle": "Amplia la distanza tra le parole"
   },
   "agendaScreen": {
-    "backToToday": "Torna a oggi",
     "dailyLayout": "Layout giornaliero",
     "emptyDay": "Non hai impegni oggi",
     "emptyWeek": "Non hai impegni questa settimana",
@@ -29,7 +25,6 @@
     "selectDate": "Seleziona data",
     "title": "Agenda",
     "weeklyLayout": "Layout settimanale",
-    "hideEvent": "Preferenze agenda",
     "noHiddenEvents": "Non ci sono eventi nascosti",
     "day": "Giorno",
     "week": "Settimana",
@@ -106,30 +101,17 @@
   },
   "AgendaPreferences": {
     "hideInAgenda": "Nascondi in agenda",
-    "hideEvent": "Nascondi evento",
     "showInAgenda": "Mostra in agenda",
     "hiddenCount": "{{count}} nascosto",
     "hiddenCount_plural": "{{count}} nascosti"
   },
   "bookingScreen": {
     "barCodeTitle": "Barcode",
-    "bookingStatus": {
-      "available": "Prenotabile",
-      "booked": "Prenotato",
-      "concluded": "Concluso",
-      "full": "Non prenotabile",
-      "notAvailable": "Non ancora prenotabile"
-    },
     "cancelBooking": "Annulla prenotazione",
     "cancelBookingText": "Sei sicuro di voler annullare la prenotazione?",
-    "cancelFeedback": "Prenotazione annullata",
     "checkIn": "Check-in",
     "checkInFeedback": "Check in eseguito!",
     "checkLocationErrorFeedback": "Sei troppo distante per effettuare il check-in della prenotazione",
-    "locationType": {
-      "place": "Luogo",
-      "virtualPlace": "Link sportello virtuale"
-    },
     "nextWeek": "Prossima settimana",
     "previousWeek": "Settimana precedente",
     "locationAction": {
@@ -141,32 +123,24 @@
   "bookingSeatScreen": {
     "confirm": "Conferma prenotazione",
     "confirmSuccess": "Prenotazione confermata",
-    "deadlineExpired": "Siamo spiacenti,\nè scaduto il termine ultimo per potersi prenotare a questo turno",
     "noSeatSelected": "Nessuna",
-    "noSeatsAvailable": "Siamo spiacenti,\nnon ci sono posti disponibili",
     "seatStatus": {
       "unavailable": "Non prenotabile",
       "available": "Disponibile",
-      "booked": "Prenotato",
-      "notAvailable": "Non prenotabile"
+      "booked": "Prenotato"
     },
-    "slotBookableFrom": "Questo slot sarà prenotabile a partire dal ",
     "title": "Scegli il posto",
     "zoomInToEnableSeatSelection": "Zoom in per abilitare la selezione del posto"
   },
   "bookingsScreen": {
-    "emptyState": "Non hai prenotazioni attive",
     "emptyWeek": "Non hai eventi disponibili in questa settimana",
     "newBooking": "Nuova prenotazione",
-    "sectionTitle": "Attive",
     "title": "Prenotazione aule"
   },
   "colors": {
     "amber": "Ambra",
     "blue": "Blu",
     "cyan": "Ciano",
-    "darkBlue": "Blu scuro",
-    "darkOrange": "Arancione scuro",
     "emerald": "Smeraldo",
     "fuchsia": "Fucsia",
     "green": "Verde",
@@ -183,77 +157,46 @@
     "yellow": "Giallo"
   },
   "common": {
-    "accessibility": "Accessibilità",
-    "active": "Attivo",
-    "disabledPreviousValue": "Disattivato perche non sono stati inseriti i precedenti valori",
     "actionPotentiallyNotUndoable": "Questa azione potrebbe non essere annullabile",
     "activeStatus": {
       "false": "Non attiva",
       "true": "Attiva"
     },
     "agenda": "Agenda",
-    "agent": "Operatore",
-    "all": "Tutti",
     "appFeedback": "Segnalazioni App",
     "areYouSure?": "Sei sicuro?",
-    "areYouSureColorAccessibility": "Sei sicuro? Il colore seelzionato non è stato testato per accessibilità.",
-    "back": "Indietro",
     "booking": "Prenotazione",
     "booking_plural": "Prenotazioni",
     "building": "Edificio",
     "cache": "Cache",
     "cacheMiss": "Torna online per visualizzare",
-    "camera": "Fotocamera",
     "campus": "Sede",
     "cancel": "Annulla",
     "capacity": "Capacità",
     "career": "Carriera",
     "cfu": "CFU",
-    "classroomsNotSpecified": "Luogo non specificato",
     "cleanCourseFiles": "Rimuovi file dei corsi",
     "close": "Chiudi",
     "color": "Colore",
-    "comingSoon": "Coming soon",
     "confirm": "Conferma",
     "contact": "Contatto",
-    "correct": "Correggi",
     "course": "Corso",
     "course_plural": "Corsi",
     "createdAt": "Creato il",
     "credits": "Crediti",
     "creditsWithUnit": "{{credits}} CFU",
-    "creditsWithoutUnit": "{{credits}}",
-    "customColorWarning": "Colori a scelta",
-    "customColor": "Selettore di colori",
-    "customColorSubtitle": "Seleziona un colore personalizzato",
-    "dateAndHours": "Data e ora",
     "dateToBeDefined": "Data da definire",
     "dateToBeDefinedShort": "Da definire",
     "day": "Giorno",
-    "deadline": "Segreteria",
-    "deadline_plural": "Segreteria",
+    "deadline": "Scadenza",
+    "deadline_plural": "Scadenze",
     "delete": "Elimina",
     "department": "Dipartimento",
     "desk": "Cattedra",
-    "done": "Fatto",
-    "cancelSelection": "Annulla selezione",
     "gotIt": "Ho capito",
-    "selectAll": "Seleziona tutto",
-    "deselectAll": "Deseleziona tutto",
-    "selectDirectories": "Seleziona directory",
-    "hideFolders": "Visualizza per file",
-    "showFolders": "Visualizza per cartelle",
-    "selectEverything": "Seleziona tutto",
-    "doubleClickToSeeLinks": "Premi due volte per vedere i link",
-    "doubleTapToActive": "Doppio tocco per attivare",
-    "doubleTapToDeactivate": "Doppio tocco per disattivare",
-    "download": "Scarica",
     "downloadError": "Qualcosa è andato storto con durante il download",
-    "downloadInProgress": "Download in corso",
     "downloadInProgressCount": "Download in corso {{current}}/{{total}}",
     "downloadLargeFilesPleaseWait": "Alcuni file sono molto grandi, attendere.",
-    "downloadProgress": "Scaricando {{current}} di {{total}}",
-    "downloadCompleted": "Tutti i file scaricati con successo",
     "downloadCompletedShort": "Download completato",
     "removeInProgress": "Rimozione file in corso",
     "removeCompletedShort": "Download rimossi dal telefono. I file restano nel corso.",
@@ -263,130 +206,64 @@
       "true": "Scaricato"
     },
     "duration": "Durata",
-    "earnedCredits": "Crediti acquisiti",
-    "ects": "CFU",
     "elementCount": "Elemento {{count}} di {{total}}",
     "email": "Email",
     "en": "Inglese",
-    "enroll": {
-      "device": "ID Dispositivo",
-      "serial": "Seriale"
-    },
-    "enabled": "Abilitato",
-    "enableLocationPermissionFeedback": "Abilita il servizio di geolocalizzazione",
-    "enableLocationServiceFeedback": "Attiva la geolocalizzazione per completare l'operazione",
     "endRefresh": "Caricamento terminato",
     "error": "Errore",
-    "event": "Evento",
-    "event_plural": "Eventi",
-    "exam": "Esame",
     "examCall": "Appello",
     "examCall_plural": "Appelli",
-    "examStatus": {
-      "available": "Disponibile",
-      "booked": "Prenotato",
-      "requestAccepted": "Prenotato",
-      "requestRejected": "Richiesta rifiutata",
-      "requestable": "Prenotabile",
-      "requested": "Richiesto",
-      "unavailable": "Non prenotabile"
-    },
     "externalLink": "Link esterno. Premendo il link verrai reindirizzato su un browser esterno",
     "facilities": "Dotazioni",
     "faculty": "Collegio",
-    "file": "File",
     "file_plural": "File",
     "floor": "Piano",
-    "follow": "Segui",
     "free": "Libera",
     "goToGithub": "Scarica da Github",
     "goToStore": "Accedi allo store",
     "grade": "Voto",
     "hiddenEvents": "Eventi nascosti",
     "hide": "Nascondi",
-    "hiddenEvent": "Nascondi evento",
-    "hideInAgenda": "Nascondi in agenda",
     "hour": "Orario",
-    "hours": "Ore",
     "icon": "Icona",
     "image": "Immagine",
-    "inYourAgenda": "nella tua agenda",
     "it": "Italiano",
     "language": "Lingua",
     "lecture": "Lezione",
     "lecture_plural": "Lezioni",
     "legend": "Legenda",
-    "less": "Meno",
     "loading": "Caricamento",
     "location": "Sede",
     "logout": "Logout",
-    "mightTakeAWhile": "Potrebbe volerci un momento",
-    "module": "Modulo",
-    "minutes": "Minuti",
-    "more": "Più",
+    "more": "Altro",
     "navigate": "Naviga",
-    "newest": "Data più recente",
     "newItems": "Nuovo elemento",
     "newItems_plural": "Nuovi elementi",
     "newVersionTitle": "Nuova versione disponibile!",
     "newVersionBody": "È disponibile una nuova versione di PoliTO Students ({{newVersion}}).\n\nAggiornala per avere a disposizione tutte le nuove funzionalità e non incorrere in malfunzionamenti.",
     "next": "Avanti",
-    "noInternet": "Sei offline, alcune funzionalità potrebbero non essere disponibili",
     "noValue": "Nessun valore",
     "notFound": "Luogo inesistente",
     "notes": "Note",
     "notice": "Avviso",
     "notice_plural": "Avvisi",
     "notifications": "Notifiche",
-    "now": "Adesso",
     "objectives": "Obiettivi formativi",
-    "of": "Su",
     "ok": "Ok",
-    "oldest": "Meno recente",
-    "yes": "Sì",
-    "no": "No",
-    "or": "oppure",
-    "open": "Apri",
     "openSettings": "Apri impostazioni",
-    "openSource": "Open Source",
-    "openSourceAccessibilityLabel": "Open Source, Tocca per andare al repository GitHub della App",
-    "openedStatus": {
-      "false": "Chiuso",
-      "true": "Aperto"
-    },
-    "openedStatusAction": {
-      "false": "Doppio click per aprire",
-      "true": "Doppio click per chiudere"
-    },
     "options": "Opzioni",
-    "orderByNameAZ": "Nome A-Z",
-    "orderByNameZA": "Nome Z-A",
     "other": "Altro",
-    "pause": "Pausa",
     "period": "Semestre",
     "phone": "Telefono",
-    "phoneContacts": "Contatto telefonico",
-    "play": "Riproduci",
     "preferences": "Preferenze",
     "preferencesAgenda": "Preferenze agenda",
-    "profilePic": "Immagine di profilo",
     "recentlyViewed": "Visto di recente",
-    "refresh": "Aggiorna",
-    "remaining": "{{value}} rimanenti",
-    "remove": "Rimuovi",
-    "removeAll": "Rimuovi tutti",
-    "removeAllDownloaded": "Rimuovi tutti i file scaricati",
-    "downloadAttachment": "Scarica allegato",
-    "removeAttachment": "Rimuovi allegato",
-    "reset": "Reimposta",
     "restore": "Ripristina",
     "roleCollaborator": "Collaboratore",
     "roleHolder": "Titolare",
     "search": "Cerca",
     "seat": "Postazione",
-    "select": "Seleziona",
     "selectAnOption": "Seleziona una delle opzioni",
-    "selectColor": "Seleziona il colore",
     "series": "Serie",
     "services": "Servizi",
     "show": "Mostra",
@@ -395,7 +272,6 @@
     "startRefresh": "Caricamento in corso",
     "status": "Stato",
     "stop": "Stop",
-    "stopFollowing": "Non seguire",
     "structure": "Struttura",
     "switchCareerLabel": "Premi per effettuare un cambio matricola",
     "teacher": "Docente",
@@ -414,25 +290,16 @@
     "username": "Matricola",
     "videoLecture": "Video lezione",
     "videoLecture_plural": "Video lezioni",
-    "virtualClassroom": "Virtual classroom",
     "virtualClassroom_plural": "Virtual classroom",
     "visualization": "Visualizzazione",
     "warning": "Attenzione",
     "withdraw": "Ritira",
-    "year": "anno",
     "yesterday": "Ieri",
-    "fromTime": "dalle",
-    "toTime": "alle",
-    "document": "Allegato",
-    "sizeExc": "File di dimensioni eccessive, massimo 32 MB"
+    "allDay": "Tutto il giorno",
+    "live": "In diretta"
   },
   "contactsScreen": {
-    "cancelRecentSearch": "Rimuovi",
-    "cancelRecentSearchText": "Rimuovi ricerca recente",
     "clearSearch": "Cancella ricerca",
-    "clearSearches": "Cancella ricerche",
-    "emptyState": "Nessun contatto trovato",
-    "recentSearch": "Ricerca recente",
     "recentSearches": "Ricerche recenti",
     "search": "Cerca contatti",
     "usefulContacts": "Contatti utili",
@@ -451,10 +318,7 @@
   "courseAssignmentUploadConfirmationScreen": {
     "ctaUpload": "Invia",
     "descriptionLabel": "Descrizione elaborato",
-    "emptyDescriptionError": "Inserisci una descrizione",
-    "previewSectionTitle": "Anteprima del file",
-    "successFeedback": "Elaborato caricato correttamente",
-    "title": "Anteprima elaborato"
+    "successFeedback": "Elaborato caricato correttamente"
   },
   "courseAssignmentUploadScreen": {
     "backTitle": "Scegli file",
@@ -465,7 +329,6 @@
     "title": "Carica elaborato"
   },
   "courseAssignmentsTab": {
-    "emptyState": "Non ci sono elaborati",
     "title": "Elaborati"
   },
   "courseColorPickerScreen": {
@@ -473,71 +336,25 @@
     "areYouSureMessage": "Il colore scelto dal selettore non fa parte della palette testata e potrebbe non garantire un contrasto ideale.",
     "areYouSureTitle": "Vuoi procedere?",
     "customColorTitle": "Colori a scelta",
-    "dontShowAgain": "Non mostrare più",
-    "title": "Seleziona un colore"
-  },
-  "courseDirectoryListItem": {
-    "subtitle": "{{count}} file",
-    "subtitle_plural": "{{count}} file",
-    "fileCount": "{{count}} file",
-    "fileCount_plural": "{{count}} file",
-    "folderCount": "{{count}} cartella",
-    "folderCount_plural": "{{count}} cartelle",
-    "empty": "Vuota",
-    "unavailableDuringDownload": "cartella non accessibile durante il download"
-  },
-  "courseDirectoryScreen": {
-    "selectFiles": "Seleziona file",
-    "clearSearch": "Cancella ricerca",
-    "emptyRootFolder": "Non ci sono file",
-    "emptyFolder": "La cartella è vuota",
-    "noResult": "Nessun risultato trovato",
-    "navigateRecentFiles": "Sfoglia file recenti",
-    "search": "Cerca",
-    "downloadSelected": "Scarica file selezionati",
-    "stopDownload": "Ferma download"
+    "dontShowAgain": "Non mostrare più"
   },
   "courseFileListItem": {
-    "openFileError": "Impossibile aprire il file.",
-    "reDownloadFile": "Ri-scarica file",
-    "fileSavedPrefix": "File salvato in"
+    "openFileError": "Impossibile aprire il file."
   },
   "courseFilesTab": {
-    "browseFiles": "Esplora file",
-    "empty": "Non ci sono file",
-    "navigateFolders": "Sfoglia le cartelle",
-    "recentSectionTitle": "File recenti",
-    "removeFilesTitle": "Rimuovi file",
-    "removeFileConfirmation": "Il file verrà rimosso localmente dal tuo dispositivo. Vuoi continuare?",
-    "removeFilesConfirmation": "I {{count}} file verranno rimossi localmente dal tuo dispositivo. Vuoi continuare?",
-    "title": "Materiale",
-    "updateDownloadedTitle": "Aggiorna file scaricati",
-    "updateDownloadedMessage": "{{count}} file selezionati sono già scaricati. Vuoi aggiornarli?",
-    "updateDownloadedInfoTitle": "Download",
-    "updateDownloadedInfoMessage": "1 file già scaricato verrà aggiornato e 1 nuovo file verrà scaricato.",
-    "updateDownloadedInfoMessageOnlyUpdate": "1 file già scaricato verrà aggiornato.",
-    "updateDownloadedInfoMessageOnlyUpdates": "{{downloadedCount}} file già scaricati verranno aggiornati.",
-    "updateDownloadedInfoMessageOneUpdate": "1 file già scaricato verrà aggiornato e {{newCount}} nuovi file verranno scaricati.",
-    "updateDownloadedInfoMessageOneDownload": "{{downloadedCount}} file già scaricati verranno aggiornati e 1 nuovo file verrà scaricato.",
-    "updateDownloadedInfoMessages": "{{downloadedCount}} file già scaricati verranno aggiornati e {{newCount}} nuovi file verranno scaricati.",
-    "downloadOnlyNew": "Solo nuovi",
-    "downloadAll": "Scarica tutti"
+    "title": "Materiale"
   },
   "courseGuideScreen": {
     "title": "Guida del corso"
   },
   "courseStatisticsScreen": {
     "title": "Statistiche",
-    "subtitle": "Accedi alle statistiche d'esame",
     "noData": "Dati non disponibili",
     "period": "Periodo",
     "teacher": "Docente",
     "enrolledExamTitle": "Superamento esame",
-    "enrolledExamInfo": "Informazioni superamento esame",
     "enrolledExamDetailTitle": "Dettaglio superamento esame",
-    "enrolledExamDetailInfo": "Informazioni dettaglio superamento esame",
     "examGradeDetailTitle": "Dettaglio voti",
-    "examGradeDetailInfo": "Informazioni dettaglio voti",
     "enrolledExamBottomSheet": {
       "title": "Superamento esame",
       "content": "Statistica riguardante il numero di superi totali all’esame con due tipi di visualizzazione:",
@@ -572,10 +389,6 @@
       "item2": {
         "title": "iscritti al 2° anno in poi",
         "content": " studenti che si sono iscritti all’esame durante il secondo anno di frequenza in poi."
-      },
-      "item3": {
-        "title": "iscritti dal 3° anno in poi",
-        "content": " studenti che si sono iscritti all’esame dal terzo anno di frequenza in poi."
       }
     },
     "gradesDetailLegend": {
@@ -602,28 +415,16 @@
     "button": "Mostra in agenda",
     "selectItems": "Seleziona tutti"
   },
-  "courseIconPickerScreen": {
-    "title": "Seleziona un'icona"
-  },
   "courseInfoTab": {
-    "agendaSectionEmptyState": "Non ci sono eventi relativi a questo corso",
-    "agendaSectionTitle": "nell'agenda",
     "creditsLabel": "Crediti",
     "linkDefaultTitle": "Collegamento a",
-    "linksSectionEmptyState": "Non ci sono link relativi al corso",
     "linksSectionTitle": "Link utili",
     "moreSectionTitle": "Altro",
     "staffSectionTitle": "Docenti",
-    "teacherLabel": "Docente",
-    "title": "Info",
-    "yearLabel": "Anno",
-    "nextLectureLabel": "Corso nell'agenda",
-    "nextLectureEmptyState": "Nessun corso trovato nell'agenda"
+    "title": "Info"
   },
   "courseLecturesTab": {
-    "emptyState": "Non ci sono lezioni",
-    "title": "Lezioni",
-    "virtualClassroomsSectionTitle": "Virtual classrooms"
+    "title": "Lezioni"
   },
   "courseListItem": {
     "extra": "Extra carico",
@@ -639,20 +440,15 @@
     "ititle": "Dettagli non ancora disponibili"
   },
   "courseNoticesTab": {
-    "emptyState": "Non ci sono avvisi",
     "title": "Avvisi"
   },
   "coursePreferencesScreen": {
-    "cleanCacheConfirmMessage": "Dovrai nuovamente scaricare i file per poterli visualizzare",
-    "cleanCacheFeedback": "I file sono stati rimossi correttamente",
     "cleanCourseFiles": "Rimuovi file del corso",
     "cleanCourseFilesSubtitle": "Libera circa {{size}} di memoria",
     "colorSubtitle": "Seleziona un colore per il corso",
     "iconSubtitle": "Seleziona un'icona per il corso",
     "filesSubtitle": "Nuovi materiali disponibili",
-    "hideInExtracts": "Nascondi negli estratti",
     "lecturesSubtitle": "Nuove lezioni disponibili",
-    "noticesSubtitle": "Avvisi mandati dai professori",
     "showInExtracts": "Mostra negli estratti",
     "showInExtractsSubtitle": "In home screen e agenda"
   },
@@ -662,7 +458,6 @@
     "fileNotFound": "Il file non è stato trovato sul dispositivo. Prova a riscaricarlo."
   },
   "courseVirtualClassroomScreen": {
-    "liveCta": "Collegati alla diretta",
     "title": "Virtual classroom"
   },
   "coursesScreen": {
@@ -677,23 +472,11 @@
   },
   "createTicketScreen": {
     "duplicateMessage": "Hai già creato un ticket simile.",
-    "duplicateTitle": "Ticket già esistente",
-    "addFile": "Aggiungi file",
-    "insert": "Inserimento ticket",
-    "messageLabel": "Descrivi il tuo problema e, se vuoi, allega un file",
     "sendTicket": "Invia ticket",
     "subject": "Oggetto",
-    "subjectLabel": "Inserisci l'oggetto del ticket",
-    "subtitle": "Inserisci la tua richiesta",
-    "subtopicDescription": "Seleziona il sottoargomento",
     "subtopicDropdownLabel": "Sottoargomento",
-    "subtopicDropdownLabelAccessibility": "Sottoargomento, apri e scegli tra le opzioni",
-    "topicDropdownLabelAccessibility": "Argomento, apri e scegli tra le opzioni",
-    "subtopicDropdownPlaceholder": "Seleziona il sottoargomento",
     "title": "Nuovo ticket",
-    "topicDescription": "Seleziona l'argomento",
     "topicDropdownLabel": "Argomento",
-    "topicDropdownPlaceholder": "Seleziona l'argomento",
     "faqLine": "Molte domande hanno già una risposta nelle FAQ.",
     "readFaqs": "Leggi le FAQ",
     "intro": "Oppure scrivi alla segreteria. Le risposte arrivano in Ticket e nella posta in arrivo.",
@@ -725,7 +508,6 @@
   },
   "degreeCourseScreen": {
     "classroomExercise": "Esercitazioni in aula",
-    "examMode": "Modalità di esame",
     "hours": "{{hours}} Ore",
     "labExercise": "Esercitazioni in laboratorio",
     "lecture": "Lezioni",
@@ -767,8 +549,7 @@
       "mail": "Mail istituzionale",
       "studyProgram": "Programma di studio"
     },
-    "authorize": "Autorizza",
-    "escModalInfo": "Tutte le impostazioni di gestione e revoca della carta si trovano nel Portale dell'istruzione."
+    "authorize": "Autorizza"
   },
   "escModalInfo": {
     "revoke": "Revoca autorizzazione",
@@ -790,9 +571,6 @@
     "title": "Questionario CPD"
   },
   "examRequestScreen": {
-    "error": "Compila il campo di testo prima di procedere con la richiesta",
-    "placeholder": "Inserisci qui le motivazioni della richiesta di sostenere l'esame anticipatamente",
-    "title": "Puoi richiedere al titolare del corso di sostenere l'esame senza avere acquisito la frequenza",
     "headerTitle": "Richiedi un posto",
     "intro": "I posti per questo appello si ottengono su richiesta. Spiega a {{teacher}} perché ti serve.",
     "introNoTeacher": "I posti per questo appello si ottengono su richiesta. Spiega al docente perché ti serve.",
@@ -804,15 +582,6 @@
   },
   "examRescheduleScreen": {
     "button": "Invia richiesta",
-    "ctaRescheduleSuccess": "Richiesta inviata",
-    "ctaRequest": "Richiedi cambio data appello",
-    "error": "Compilare il campo di testo prima di procedere con la richiesta",
-    "requestDetails": "Inserisci qui le date da suggerire",
-    "requestDetailsTitle": "Quale date consiglieresti al coordinatore?",
-    "responsibilityDeclaration": "Dichiaro di prendere la responsabilità di quanto dichiarato",
-    "requestReason": "Inserisci qui le tue motivazioni della richiesta di cambio data appello",
-    "requestReasonTitle": "Puoi chiedere al titolare del corso di poter cambiare data del tuo appello",
-    "screenTitle": "Cambio data appello",
     "headerTitle": "Chiedi un’altra data",
     "intro": "Chiedi a {{teacher}} un’altra data, per esempio perché si sovrappone a un altro esame.",
     "introNoTeacher": "Chiedi al docente un’altra data, per esempio perché si sovrappone a un altro esame.",
@@ -827,19 +596,11 @@
   },
   "examScreen": {
     "bookedCount": "Studenti prenotati",
-    "bookingEndsAt": "Prenotazione entro il",
     "ctaBook": "Prenota appello",
-    "ctaBookSuccess": "Appello prenotato",
     "ctaCancel": "Annulla prenotazione",
-    "ctaCancelSuccess": "Prenotazione annullata",
-    "ctaRequest": "Richiedi",
     "location": "Luogo",
-    "noClassroom": "Nessun luogo specificato per questo appello",
     "noLocation": "Aula da definire",
-    "notAvailable": "Prenotazione non disponibile",
     "notes": "Note",
-    "title": "Appello",
-    "noBookedCount": "Dato non disponibile",
     "requestReasonTitle": "Motivazioni della richiesta",
     "requestDetailsTitle": "Dettagli della richiesta",
     "placesLeft": "Posti liberi",
@@ -886,7 +647,6 @@
     "timeToBeDefinedInline": "orario da definire"
   },
   "examsScreen": {
-    "emptyState": "Non ci sono appelli disponibili",
     "title": "Appelli",
     "total": "Sono presenti {{ total }} appelli"
   },
@@ -901,7 +661,6 @@
     "pass": "Superato"
   },
   "guideScreen": {
-    "copiedFieldFeedback": "{{field}} copiato",
     "title": "Guida"
   },
   "guidesScreen": {
@@ -909,31 +668,15 @@
     "total": "Sono presenti {{ total }} guide"
   },
   "jobOfferScreen": {
-    "application": "Candidatura",
     "companyMission": "Mission",
-    "contactInformation": "Per informazioni contattare",
-    "contractType": "Tipo di contratto: ",
     "description": "Compiti",
-    "email": "E-mail: ",
-    "endsAtDate": "Scadenza: ",
-    "freePositions": "Posti disponibili: ",
-    "location": "Sede di lavoro: ",
     "requirements": "Requisiti",
-    "salary": "Retribuzione: ",
-    "title": "Offerta di lavoro",
-    "url": "Sito web: "
+    "title": "Offerta di lavoro"
   },
   "jobOffersScreen": {
-    "endsAtDate": "Scadenza: ",
-    "title": "Offerte di lavoro"
-  },
-  "josOffersScreen": {
     "title": "Offerte di lavoro"
   },
   "lectureScreen": {
-    "courseFilesCta": "Vai al materiale del corso",
-    "hideEventAlertTitle": "Nascondi Evento",
-    "hideEventAlertMessage": "Stai nascondendo l'evento di: {{ title }} di {{ day }} dalle {{ fromTime }} alle {{ toTime }}",
     "hideEventButtonTitle": "Nascondi evento dall'agenda",
     "roomSubtitle": "Aula",
     "roomLabel": "Aula {{room}}, la mostra in Luoghi",
@@ -941,11 +684,7 @@
     "openCourseSubtitle": "Avvisi, materiale e lezioni",
     "openCourseLabel": "Apri il corso {{course}}"
   },
-  "libraryScreen": {
-    "title": "Biblioteca"
-  },
   "loginScreen": {
-    "onboarding": "Onboarding",
     "authnError": "Errore di autenticazione",
     "authnErrorDescription": "Le credenziali che hai inserito potrebbero essere errate.",
     "cta": "Accedi",
@@ -961,57 +700,27 @@
     "fcmUnsupported": "Si è verificato un errore durante l'attivazione delle notifiche push. Questo problema può essere causato dall'assenza dei servizi Google su questo dispositivo. È possibile continuare ad utilizzare l'app ma non si riceveranno notifiche push.",
     "SSO": "oppure entra con SSO"
   },
-  "messagingView": {
-    "activeReplay": "Attivo, (tocca due volte per attivare)",
-    "pickFile": "Scegli un file max 32MB",
-    "pickFileHint": "Dal tuo dispositivo o dal cloud",
-    "pickPhoto": "Scegli un'immagine",
-    "pickPhotoHint": "Dalla tua galleria",
-    "takePhoto": "Acquisisci con la fotocamera",
-    "takePhotoHint": "Scatta una o più foto e genera un file"
-  },
   "navigation": {
     "courseSettings": "Impostazioni del corso",
     "unreadCount": "{{count}} da leggere"
   },
   "newsScreen": {
     "createdAt": "Pubblicato il ",
-    "eventStartTime": "Inizio evento",
-    "information": "Informazioni",
     "logo": "Logo",
     "title": "News & Eventi"
   },
-  "notifications": {
-    "events": "Eventi e iniziative",
-    "important": "Importanti",
-    "reservationPresence": "Prenotazione presenza"
-  },
   "notificationsScreen": {
     "title": "Notifiche",
-    "perCourseTitle": "Corsi",
-    "globalTitle": "Globali",
-    "globalSubtitle": "Le notifiche importanti sono sempre attive"
-  },
-  "offeringBachelorScreen": {
-    "title": "Lauree triennali"
-  },
-  "offeringMasterScreen": {
-    "title": "Lauree magistrali"
+    "perCourseTitle": "Corsi"
   },
   "offeringScreen": {
-    "bachelor": "Laurea triennale",
-    "emptyState": "Nessun corso disponibile",
-    "master": "Laurea magistrale",
-    "title": "Offerta formativa"
+    "emptyState": "Nessun corso disponibile"
   },
   "personScreen": {
-    "call": "Chiama",
     "contacts": "Contatti",
-    "coursesLabel": "Lista dei corsi offerti dal docente",
     "department": "Dipartimento",
     "moreInfo": "Maggiori informazioni",
     "role": "Ruolo",
-    "sentEmail": "Invia e-mail",
     "totalCourses": "Sono presenti {{total}} corsi"
   },
   "placeCategories": {
@@ -1035,24 +744,11 @@
     "noPlacesFound": "Nessun posto trovato",
     "searchCategories": "Cerca categorie",
     "title": "Luoghi",
-    "viewWholeCampus": "Vedi tutta la sede"
-  },
-  "placesSearchScreen": {
-    "searchPlaceholder": "Prova con \"Aula 1\""
+    "viewWholeCampus": "Vedi tutta la sede",
+    "searchIn": "in {{campus}}"
   },
   "profileScreen": {
-    "careerStatus": "Stato carriera:",
-    "careerStatusEnum": {
-      "active": "Attiva",
-      "cancelled": "Cancellata",
-      "career_closed": "Chiusa",
-      "closed": "Chiusa",
-      "graduated": "Laureato"
-    },
-    "cohort": "Coorte (a.a. di immatricolazione)",
-    "course": "Corso di laurea",
     "enrollmentYear": "Anno di immatricolazione {{- enrollmentYear}}",
-    "notifications": "Archivio notifiche",
     "qrCode": "Codice QR",
     "qrWarning": "Si raccomanda di non condividere o conservare screenshot: eventuali utilizzi impropri restano sotto la tua responsabilità.",
     "appInfo": "Info app",
@@ -1061,23 +757,9 @@
     "smartCard": "Smartcard",
     "smartCardTitle": "SMART CARD",
     "studentId": "Matricola",
-    "title": "Profilo",
-    "trainingOffer": "Offerta formativa"
+    "title": "Profilo"
   },
   "provisionalGradeScreen": {
-    "acceptGradeConfirmMessage": "Richiedendo la registrazione immediata la valutazione verrà inserita in libretto e non potrai più cambiare la tua decisione",
-    "acceptGradeCta": "Richiedi la registrazione immediata",
-    "acceptGradeFeedback": "Valutazione registrata, verrà visualizzata nel libretto",
-    "contactProfessorCta": "Contatta il docente",
-    "rejectGradeConfirmMessage": "Rifiutando la valutazione non potrai più cambiare la tua decisione",
-    "rejectGradeCta": "Rifiuta entro il:<br/><b>{{date}}</b>",
-    "rejectGradeFeedback": "Valutazione rifiutata, verrà registrata nelle prossime ore",
-    "teacherMessage": {
-      "title": "Messaggio del docente",
-      "readMore": " altro",
-      "readLess": " meno"
-    },
-    "title": "Valutazione",
     "headerTitle": "Voto provvisorio",
     "grade": "Voto",
     "published": "Pubblicato",
@@ -1108,10 +790,7 @@
     "failedTitle": "Impossibile caricare questo voto"
   },
   "recordedGradeScreen": {
-    "additionalPoint": "Punteggi aggiuntivi",
     "recordedGradeTitle": "Valutazione Registrata",
-    "staff": "Docente",
-    "teacher": "Titolare",
     "textModal": "Avendo sostenuto l’esame entro la prima sessione utile, ti viene riconosciuto un punteggio aggiuntivo di 0.5 che si sommerà al voto di laurea.\nPuoi consultare il totale dei tuoi punteggi on-time su carriera.\nMaggiori informazioni nella Guida Studenti",
     "titleOnTimePoint": "Punti Esame on-time",
     "ctaButtonModal": "Accedi alla tua carriera",
@@ -1124,12 +803,7 @@
     "ctaMoreSuffix": "(altri {{- count}})"
   },
   "servicesScreen": {
-    "subTitleOne": "Servizi informativi",
-    "subTitleTwo": "Servizi operativi",
     "title": "Servizi",
-    "newElement": ", hai Un nuovo elemento da visualizzare",
-    "favoriteActive": "Imposta preferito, Attivo",
-    "favoriteInactive": "Imposta preferito, Non attivo",
     "groups": {
       "help": "Assistenza",
       "campus": "Campus",
@@ -1156,7 +830,6 @@
     "whatsNew": "Novità",
     "news": "News",
     "whatsNewEmpty": "Non ci sono novità sull'app",
-    "showAll": "Mostra tutte",
     "gotIt": "Ho capito!",
     "daysAgo": "{{count}} giorni fa",
     "recentCommunications": "Comunicazioni recenti",
@@ -1169,7 +842,6 @@
     "githubTitle": "Repository GitHub",
     "githubSubtitle": "Vai alla pagina GitHub di Students App",
     "version": "Versione: {{version}} ({{build}})",
-    "showAllHint": "Apre l'elenco completo delle novità",
     "openNewsHint": "Apre il dettaglio della novità",
     "openCommunicationHint": "Apre il dettaglio della comunicazione",
     "reportProblemHint": "Apre un ticket per segnalare un problema",
@@ -1178,50 +850,37 @@
     "whatsNewListLabel": "{{count}} novità",
     "whatsNewListLoaded": "Elenco novità caricato",
     "whatsNewLoading": "Caricamento novità",
-    "recentCommunicationsListLabel": "Comunicazioni recenti",
     "recentCommunicationsLoading": "Caricamento comunicazioni",
     "recentCommunicationsListLoaded": "Elenco comunicazioni caricato",
     "recentCommunicationsListCount": "{{count}} comunicazioni",
-    "feedbackListLabel": "Opzioni di feedback",
     "about": "Informazioni",
     "whatsNewEmptyTitle": "Nessuna novità in questa versione",
     "whatsNewEmptyText": "Quando un aggiornamento cambia qualcosa che usi, lo trovi descritto qui."
   },
   "settingsScreen": {
     "appVersion": "Versione {{version}}",
-    "cleanCacheConfirmMessage": "Dovrai nuovamente scaricare i file per poterli visualizzare",
-    "openLanguageMenu": "Doppio click per aprire il menu di selezione lingua",
-    "openThemeMenu": "Doppio click per aprire il menu di selezione tema",
     "title": "Impostazioni",
-    "securityTitle": "Sicurezza",
     "authenticatorTitle": "PoliTO Authenticator",
     "storageTitle": "Archiviazione file",
-    "storageInternal": "Interno app",
-    "storageCustom": "Percorso personalizzato",
     "storageInternalDescription": "I file vengono salvati nella cartella privata dell'app",
     "storageCustomDescription": "I file vengono copiati anche nella cartella scelta",
     "storageChangeConfirmMessage": "Tutti i file dei corsi scaricati in locale verranno rimossi. Dovrai riscaricarli se confermi.",
     "storageChangeConfirmTitle": "Cambiare posizione di archiviazione?",
     "storageChanging": "Cambio storage in corso...",
     "storageCustomSet": "Cartella personalizzata impostata",
-    "storageInternalSet": "Storage interno impostato",
-    "storageMovingFiles": "Spostamento file in corso...",
-    "storageMovedFiles": "{{count}} file spostati"
+    "storageInternalSet": "Storage interno impostato"
   },
   "ssoScreen": {
     "ssoButton": "Accedi con Single Sign-On",
     "ssoLink": "Accedi con username e password"
   },
   "surveysScreen": {
-    "compiledEmptyState": "Non ci sono questionari compilati",
     "compiledTitle": "Questionari compilati",
     "title": "Questionari",
-    "toBeCompiledEmptyState": "Non ci sono questionari da compilare",
-    "toBeCompiledTitle": "Questionari da compilare"
+    "toBeCompiledEmptyState": "Non ci sono questionari da compilare"
   },
   "graduationCodeScreen": {
     "dateTime": "Data e ora",
-    "entries": "Ingressi utilizzati",
     "entriesValue": "{{used}}/{{max}} ingressi utilizzati",
     "instruction": "Mostra questo QR code per ogni partecipante al tuo gruppo compreso te stesso (massimo {{max}} accessi)",
     "location": "Luogo",
@@ -1231,7 +890,6 @@
       "accessInfo": "Informazioni accesso:",
       "codeId": "ID Codice:",
       "date": "Data:",
-      "description": "Descrizione:",
       "event": "Evento:",
       "footer": "Politecnico di Torino — documento generato automaticamente",
       "instruction": "Mostra questo QR code all'ingresso dell'evento per ogni partecipante al tuo gruppo compreso te stesso (massimo {{max}} accessi)",
@@ -1241,9 +899,7 @@
     },
     "qrCode": "QR code",
     "share": "Condividi",
-    "shareFailure": "Impossibile condividere il PDF: {{reason}}",
-    "title": "Sessione di laurea",
-    "validUntil": "Valido fino al {{date}} ore {{time}}"
+    "shareFailure": "Impossibile condividere il PDF: {{reason}}"
   },
   "teachingScreen": {
     "allCoursesHidden": "Hai nascosto tutti i tuoi corsi",
@@ -1260,7 +916,6 @@
     "creditsRingHiddenLabel": "Crediti nascosti",
     "ringCredits": "crediti",
     "modulesSubtitle": "{{credits}} crediti, {{count}} moduli",
-    "expandModules": "Mostra i moduli",
     "examChip": {
       "available": "Disponibile",
       "booked": "Prenotato",
@@ -1312,20 +967,10 @@
     "system": "Di sistema"
   },
   "ticketFaqScreen": {
-    "headerBackTitle": "Nuovo",
-    "noResultFound": "Non hai trovato quello che cerchi?",
-    "title": "FAQ",
-    "writeTicket": "Scrivi ticket",
-    "writeTicketMessage": "Scrivi ticket se non hai trovato quello che cerchi"
+    "title": "FAQ"
   },
   "ticketFaqsScreen": {
-    "searchButton": "Attiva per cercare le parole chiave inserite tra le faq",
-    "emptyState": "Nessun risultato trovato",
-    "findFAQ": "Cerca tra le FAQ",
-    "findFAQSubtitle": "Prima di inserire un ticket cerca una risposta tra le FAQ.",
     "noResultFound": "Non hai trovato la risposta?",
-    "search": "Cerca (inserisci almeno 3 caratteri)",
-    "searchMinLengthHint": "Per favore, inserisci almeno 3 caratteri.",
     "title": "FAQ",
     "writeTicket": "Scrivi un ticket",
     "intro": "Cerca una risposta prima di scrivere un ticket.",
@@ -1338,25 +983,14 @@
     "noResultsText": "Prova un'altra parola, come tasse o certificato, oppure scrivi un ticket."
   },
   "ticketScreen": {
-    "incomingMessage": "la tua risposta",
-    "outgoingMessage": "Risposta da operatore numero",
-    "yourQuestion": "La tua domanda",
-    "sendFirstMessage": "Fai la tua domanda",
     "send": "Invia risposta",
-    "headerBackTitle": "Ticket",
-    "new": "Nuovo ticket",
-    "pickFileTitle": "Puoi includere un allegato per messaggio",
     "reply": "Scrivi una risposta",
     "sendError": "C'è stato un'errore nell'invio del messaggio. Riprova.",
-    "virtualOperator": "OPERATORE VIRTUALE",
     "feedbackTitle": "Hai parlato con un operatore virtuale",
     "feedbackDescription": "Questo nuovo servizio nasce per darti un supporto più veloce ed efficace. Se hai bisogno di ulteriore assistenza, il nostro team ti risponderà al più presto!",
     "feedbackQuestion": "La risposta ti soddisfa?",
     "ticketNumber": "Numero ticket",
     "title": "Ticket",
-    "youCanReopenTheTicket": "Puoi riaprire il ticket in qualsiasi momento, inviando una risposta",
-    "resolveQuestion": "Questa risposta ti è stata utile?",
-    "resolveCta": "Sì, risolvi il ticket",
     "resolveConfirmTitle": "Segnare il ticket come risolto?",
     "resolveConfirmMessage": "La segreteria lo chiude e non potrai più rispondere.",
     "rateBarTitle": "Il ticket è stato risolto",
@@ -1435,10 +1069,6 @@
   },
   "ticketsScreen": {
     "addNew": "Nuovo ticket",
-    "emptyState": "Non ci sono ticket",
-    "insertFeedback": "Inserisci feedback",
-    "myTickets": "I miei ticket",
-    "openedOn": "Aperto il {{date}}",
     "title": "Ticket",
     "updated": "Aggiornato {{when}}",
     "rateTheReply": "Valuta la risposta ricevuta",
@@ -1446,20 +1076,12 @@
     "ticketNumber": "ticket {{id}}",
     "loading": "Caricamento dei ticket"
   },
-  "transcriptGradeScreen": {
-    "title": "Valutazione"
-  },
   "transcriptGradesScreen": {
-    "autoRegistration": "Registrazione automatica tra:",
-    "emptyState": "Non hai sostenuto nessun esame",
-    "expiredCountdown": "Scaduto",
     "provisionalEmptyState": "Non ci sono valutazioni provvisorie",
     "provisionalTitle": "Provvisorie",
     "recordedTitle": "Registrate",
     "rejectedSubtitle": "Rifiutato il {{-date}} alle {{-time}}",
-    "rejectionCountdown": "Rifiutabile entro:",
     "title": "Valutazioni",
-    "total": "Sono presenti {{total}} valutazioni",
     "publishedOn": "Pubblicato {{date}}",
     "rejectUntil": "Puoi rifiutarlo fino a {{date}}",
     "notCounted": "non conta per la laurea",
@@ -1473,8 +1095,7 @@
       "rejected": "Rifiutato"
     },
     "showGrades": "Mostra voti",
-    "hideGrades": "Nascondi voti",
-    "gradesHiddenLabel": "I voti sono nascosti"
+    "hideGrades": "Nascondi voti"
   },
   "transcriptMetricsScreen": {
     "acquiredCreditsLabel": "Crediti acquisiti",
@@ -1507,7 +1128,6 @@
       "description": "E’ la media, pesata in funzione dei crediti relativi ad ogni esame con voto*, espressa in trentesimi",
       "formula": "somma (voto * crediti) / somma crediti"
     },
-    "yourCareer": "La tua carriera",
     "howComputed": "Come si calcolano",
     "whatTheyAre": "Cosa sono",
     "ringLegendAttended": "Esterno: frequentati",
@@ -1515,16 +1135,6 @@
     "ringLabel": "Crediti: {{acquired}} su {{total}} acquisiti (anello interno), {{attended}} su {{total}} frequentati (anello esterno)",
     "figureLabel": "{{label}}: {{value}} su {{total}}",
     "hiddenValue": "nascosto"
-  },
-  "videoControls": {
-    "changePlaybackRate": "Cambia velocità di riproduzione",
-    "tenSec": "10s",
-    "tenSecForward": "Avanti 10 secondi",
-    "tenSecReverse": "Indietro 10 secondi",
-    "toggleFullscreen": "Entra/esci da schermo intero"
-  },
-  "videoPlayer": {
-    "speedSectionTitle": "Velocità"
   },
   "primitives": {
     "unread": "Non letto"
@@ -1567,11 +1177,9 @@
     "files": {
       "loading": "Caricamento dei file",
       "emptyTitle": "Ancora nessun file",
-      "emptyText": "Il materiale caricato dal docente compare qui, dal più recente.",
       "failedTitle": "Impossibile caricare i file",
       "failedText": "La pagina del corso non ha risposto. I file già scaricati restano sul telefono. Riprova tra poco.",
       "noMatchTitle": "Nessun file corrisponde a \"{{search}}\"",
-      "noMatchText": "La ricerca guarda i nomi dei file di questo corso.",
       "clearSearch": "Cancella la ricerca",
       "emptyFolderTitle": "Questa cartella è vuota",
       "emptyFolderText": "I file che il docente aggiunge qui compaiono in questo elenco."
@@ -1606,7 +1214,6 @@
     },
     "bookings": {
       "emptyTitle": "Nessuna prenotazione",
-      "emptyText": "Prenota un posto in aula studio o un appuntamento a uno sportello. Le prenotazioni compaiono qui e in agenda.",
       "failedTitle": "Impossibile caricare le prenotazioni",
       "noTopicsTitle": "Al momento non c'è niente da prenotare",
       "noTopicsText": "Aule studio e sportelli compaiono qui quando si aprono le prenotazioni.",
@@ -1645,7 +1252,6 @@
     },
     "lectures": {
       "emptyTitle": "Ancora nessuna lezione",
-      "emptyText": "Le registrazioni e le lezioni in diretta pubblicate dal docente compaiono qui.",
       "failedTitle": "Impossibile caricare le lezioni",
       "loading": "Caricamento delle lezioni"
     },
@@ -1658,7 +1264,6 @@
     },
     "notices": {
       "emptyTitle": "Ancora nessun avviso",
-      "emptyText": "Quando il docente pubblica un avviso, compare qui e ricevi una notifica.",
       "failedTitle": "Impossibile caricare gli avvisi",
       "failedText": "La pagina del corso non ha risposto. Riprova tra poco.",
       "failedOneTitle": "Impossibile caricare l'avviso",
@@ -1744,7 +1349,6 @@
     },
     "rowLabel": "{{kind}} da {{sender}}: {{title}}, {{when}}",
     "unreadPrefix": "Da leggere. ",
-    "urgentPrefix": "Urgente. ",
     "when": {
       "today": "oggi alle {{time}}",
       "yesterday": "ieri alle {{time}}",
@@ -1978,7 +1582,6 @@
     "failed": "Non è stato possibile allegare il file. Riprova.",
     "remove": "Rimuovi {{name}}",
     "open": "Apri {{name}}",
-    "attached": "Allegato: {{name}}",
     "downloadFailed": "Non è stato possibile scaricare l'allegato. Controlla la connessione e riprova.",
     "cannotOpen": "Nessuna app su questo telefono apre questo file."
   },
@@ -2103,7 +1706,8 @@
       "position": "{{name}}, {{index}} di {{count}}",
       "hint": "Mostra l'altra tessera",
       "smartCard": "Smart card",
-      "esc": "European Student Card"
+      "esc": "European Student Card",
+      "requestCard": "Richiedi la carta"
     },
     "logout": {
       "action": "Esci",
@@ -2133,8 +1737,6 @@
       "textNote": "Vale per i testi dell'app e si somma alla dimensione del testo del telefono.",
       "themeNote": "Di sistema segue l'aspetto chiaro o scuro impostato sul telefono.",
       "spacingOff": "Disattivate",
-      "spacingOn_one": "{{count}} attiva",
-      "spacingOn_other": "{{count}} attive",
       "languageOffline": "Serve una connessione: la lingua viene salvata anche sul tuo account del Politecnico",
       "removeFiles": "Rimuovi i file scaricati",
       "removeFilesTitle": "Rimuovere i file scaricati?",
@@ -2146,7 +1748,9 @@
       "noFiles": "Nessuno",
       "downloading": "Disponibile al termine dei download in corso",
       "storageApp": "Memoria dell'app",
-      "storageFolder": "Una cartella a tua scelta"
+      "storageFolder": "Una cartella a tua scelta",
+      "spacingOn": "{{count}} attiva",
+      "spacingOn_plural": "{{count}} attive"
     }
   },
   "messagesScreen": {

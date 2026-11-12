@@ -210,7 +210,7 @@ export const BuildingScreen = ({ navigation, route }: Props) => {
           </Col>
 
           <Section>
-            <SectionHeader title="Location" separator={false} />
+            <SectionHeader title={t('common.location')} separator={false} />
             <OverviewList translucent>
               <ListItem
                 inverted

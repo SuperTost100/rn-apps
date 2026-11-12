@@ -431,7 +431,7 @@ export const PlacesScreen = ({ navigation, route }: Props) => {
                   Number(accessibility?.fontSize) < 150 && (
                     <Icon icon={faEllipsis} />
                   )}
-                <Text weight="medium">More</Text>
+                <Text weight="medium">{t('common.more')}</Text>
               </Row>
             </ThemeContext.Provider>
           </PillButton>
@@ -534,8 +534,7 @@ export const PlacesScreen = ({ navigation, route }: Props) => {
           searchFieldLabel={[
             t('common.search'),
             categoryFilterName,
-            'in',
-            campus?.name,
+            campus?.name && t('placesScreen.searchIn', { campus: campus.name }),
           ]
             .filter(Boolean)
             .join(' ')}

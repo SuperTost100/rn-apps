@@ -98,6 +98,7 @@ const SlideItem = ({
   snapInterval,
 }: CarouselProps) => {
   const styles = useStylesheet(createStyles);
+  const { t } = useTranslation();
 
   const navigation =
     useNavigation<NativeStackNavigationProp<UserStackParamList>>();
@@ -186,7 +187,7 @@ const SlideItem = ({
             <CtaButtonContainer absolute={true} style={styles.buttonContainer}>
               <CtaButton
                 absolute={false}
-                title="Request Card"
+                title={t('profile.cards.requestCard')}
                 action={() => navigation.navigate('RequestESC')}
                 textStyle={{ color: colors.black, fontWeight: '600' }}
                 style={styles.button}

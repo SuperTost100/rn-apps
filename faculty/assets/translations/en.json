@@ -38,7 +38,7 @@
     "seatStatus": {
       "available": "Available",
       "booked": "Booked",
-      "notAvailable": "Non bookable"
+      "notAvailable": "Not bookable"
     },
     "slotBookableFrom": "This slot will be bookable starting from ",
     "title": "Select a seat",
@@ -79,7 +79,7 @@
   "common": {
     "actionPotentiallyNotUndoable": "This action may not be undoable",
     "activeStatus": {
-      "false": "Non active",
+      "false": "Not active",
       "true": "Active"
     },
     "agenda": "Agenda",
@@ -260,7 +260,10 @@
     "visualization": "Visualization",
     "year": "year",
     "yesterday": "Yesterday",
-    "warning": "Warning"
+    "warning": "Warning",
+    "allDay": "All day",
+    "live": "Live",
+    "more": "More"
   },
   "contactsScreen": {
     "cancelRecentSearch": "Remove",
@@ -680,7 +683,8 @@
     "capacity_plural": "{{count}} seats",
     "placeNotFound": "Place not found",
     "title": "Place",
-    "placeDetail": "Place details"
+    "placeDetail": "Place details",
+    "getDirections": "Get directions"
   },
   "placesScreen": {
     "changeFloor": "Change floor",
@@ -690,7 +694,8 @@
     "noPlacesFound": "No places found",
     "searchCategories": "Search categories",
     "title": "Places",
-    "viewWholeCampus": "View the whole campus"
+    "viewWholeCampus": "View the whole campus",
+    "searchIn": "in {{campus}}"
   },
   "placesSearchScreen": {
     "searchPlaceholder": "Try with \"Room 1\""
