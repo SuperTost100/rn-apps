@@ -8,5 +8,6 @@ export * from './useKeyboardVisibile';
 export * from './useOfflineDisabled';
 export * from './useOpenInAppLink';
 export * from './usePrevious';
+export * from './useQueryStates';
 export * from './useScreenReader';
 export * from './useScreenTitle';

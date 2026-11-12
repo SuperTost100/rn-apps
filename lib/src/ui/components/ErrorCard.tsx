@@ -1,18 +1,17 @@
 import { PropsWithChildren, ReactElement } from 'react';
-import { Platform, TextStyle, ViewProps, ViewStyle } from 'react-native';
+import { TextStyle, ViewProps, ViewStyle } from 'react-native';
 
-import { faCircleExclamation } from '@fortawesome/free-solid-svg-icons';
-
-import { useTheme } from '../hooks/useTheme';
 import { Card } from './Card';
-import { Icon } from './Icon';
-import { Row } from './Row';
-import { Text } from './Text';
+import { StateBlock, StateBlockAction } from './StateBlock';
 
 type Props = PropsWithChildren<
   ViewProps & {
     text?: string;
+    /** A line under the text */
+    caption?: string;
+    action?: StateBlockAction;
     style?: ViewStyle;
+    /** @deprecated StateBlock styles the text */
     testStyle?: TextStyle;
     children?: ReactElement;
     spaced?: boolean;
@@ -20,45 +19,27 @@ type Props = PropsWithChildren<
 >;
 
 /**
- * An error on a plain card: the alert icon in the danger colour, then the
- * text. No coloured border or bar: the icon and the words carry it.
+ * A failed state on a card: the alert icon in the danger colour, the text
+ * and an optional action. A thin wrapper over StateBlock; with children it
+ * is a plain card around them, as before.
  */
 export const ErrorCard = ({
   text,
+  caption,
+  action,
   style,
-  testStyle,
   children,
   spaced = true,
   ...rest
-}: Props) => {
-  const { colors, layout, spacing } = useTheme();
-  return (
-    <Card
-      accessible={Platform.select({ android: true, ios: false })}
-      rounded
-      spaced={spaced}
-      translucent={false}
-      style={style}
-      {...rest}
-    >
-      {!children ? (
-        <Row align="center" gap={3} style={{ padding: layout.cardPadding }}>
-          <Icon
-            icon={faCircleExclamation}
-            size={20}
-            color={colors.dangerText}
-            style={{ marginVertical: spacing[0.5] }}
-          />
-          <Text
-            variant="secondaryText"
-            style={[{ color: colors.prose, flexShrink: 1 }, testStyle]}
-          >
-            {text && text.charAt(0).toUpperCase() + text.slice(1).toLowerCase()}
-          </Text>
-        </Row>
-      ) : (
-        children
-      )}
-    </Card>
-  );
-};
+}: Props) => (
+  <Card rounded spaced={spaced} translucent={false} style={style} {...rest}>
+    {children ?? (
+      <StateBlock
+        variant="error"
+        title={text ?? ''}
+        text={caption}
+        action={action}
+      />
+    )}
+  </Card>
+);

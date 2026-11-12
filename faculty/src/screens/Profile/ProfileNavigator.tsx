@@ -2,7 +2,7 @@ import { Platform, TouchableOpacity } from 'react-native';
 
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { useTheme, useTitlesStyles } from '@polito/lib/ui';
+import { offlineScreenLayout, useTheme, useTitlesStyles } from '@polito/lib/ui';
 import { useNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
@@ -40,6 +40,7 @@ export const ProfileNavigator = () => {
 
   return (
     <Stack.Navigator
+      screenLayout={offlineScreenLayout}
       screenOptions={{
         headerLargeTitle: false,
         headerTransparent: Platform.select({ ios: false }),

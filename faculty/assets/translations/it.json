@@ -1119,5 +1119,23 @@
   },
   "primitives": {
     "unread": "Non letto"
+  },
+  "states": {
+    "loading": "Caricamento",
+    "tryAgain": "Riprova",
+    "failedTitle": "Impossibile caricare la pagina",
+    "failedText": "Il server non ha risposto. Controlla la connessione e riprova.",
+    "offlineTitle": "Sei offline",
+    "offlineText": "Questa pagina non è ancora salvata sul telefono. Si carica quando torni online.",
+    "notSavedTitle": "Non salvato sul telefono",
+    "notSavedText": "Questa parte si carica quando torni online.",
+    "offlineBanner": "Offline. Mostro i dati salvati alle {{time}}.",
+    "offlineBannerNoTime": "Offline. Mostro i dati salvati sul telefono.",
+    "savedOnDay": "{{time}} del {{date}}",
+    "refreshFailed": "Aggiornamento non riuscito. Mostro i dati salvati alle {{time}}.",
+    "refreshFailedNoTime": "Aggiornamento non riuscito. Mostro i dati salvati in precedenza.",
+    "loadFailed": "Impossibile caricare queste informazioni. Riprova tra poco.",
+    "close": "Chiudi",
+    "needsConnection": "Serve una connessione"
   }
 }

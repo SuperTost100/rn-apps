@@ -4,3 +4,4 @@ export * from './FeedbackContext';
 export * from './PreferencesContext';
 export * from './PolitoAppContext';
 export * from './SplashContext';
+export * from './ScreenStatesContext';

@@ -6,7 +6,12 @@ import {
   PlacesNavigator,
   type PlacesStackParamList,
 } from '@polito/lib/features/places';
-import { HeaderLogoNoProps, useTheme, useTitlesStyles } from '@polito/lib/ui';
+import {
+  HeaderLogoNoProps,
+  offlineScreenLayout,
+  useTheme,
+  useTitlesStyles,
+} from '@polito/lib/ui';
 import { ExamGrade } from '@polito/student-api-client';
 import { NavigatorScreenParams } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -64,6 +69,7 @@ export const TeachingNavigator = () => {
 
   return (
     <Stack.Navigator
+      screenLayout={offlineScreenLayout}
       id={TeachingNavigatorID}
       screenOptions={{
         headerLargeTitle: true,

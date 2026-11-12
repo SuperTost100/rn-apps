@@ -12,6 +12,7 @@ import {
 import {
   HeaderLogo,
   createHeaderCloseButton,
+  offlineScreenLayout,
   useTheme,
   useTitlesStyles,
 } from '@polito/lib/ui';
@@ -118,6 +119,7 @@ export const ServicesNavigator = () => {
 
   return (
     <Stack.Navigator
+      screenLayout={offlineScreenLayout}
       screenOptions={{
         headerLargeTitle: true,
         headerTransparent: Platform.select({ ios: true }),

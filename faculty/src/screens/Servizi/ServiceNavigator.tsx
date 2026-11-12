@@ -9,7 +9,7 @@ import {
   UsefulContactScreen,
   defaultUsefulContactsList,
 } from '@polito/lib/features/people';
-import { useTheme, useTitlesStyles } from '@polito/lib/ui';
+import { offlineScreenLayout, useTheme, useTitlesStyles } from '@polito/lib/ui';
 import { useNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
@@ -90,6 +90,7 @@ export const ServiceNavigator = () => {
 
   return (
     <Stack.Navigator
+      screenLayout={offlineScreenLayout}
       screenOptions={{
         headerLargeTitle: false,
         headerTransparent: Platform.select({ ios: false }),

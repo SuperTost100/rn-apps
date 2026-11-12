@@ -6,7 +6,12 @@ import {
   PlacesNavigator,
   type PlacesStackParamList,
 } from '@polito/lib/features/places';
-import { HeaderLogo, useTheme, useTitlesStyles } from '@polito/lib/ui';
+import {
+  HeaderLogo,
+  offlineScreenLayout,
+  useTheme,
+  useTitlesStyles,
+} from '@polito/lib/ui';
 import { NavigatorScreenParams } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
@@ -66,6 +71,7 @@ export const AgendaNavigator = () => {
 
   return (
     <Stack.Navigator
+      screenLayout={offlineScreenLayout}
       id={AgendaNavigatorID}
       screenOptions={{
         headerTransparent: Platform.select({ ios: true }),

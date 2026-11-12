@@ -14,6 +14,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import {
   HeaderLogoNoProps,
   Text,
+  offlineScreenLayout,
   useTheme,
   useTitlesStyles,
 } from '@polito/lib/ui';
@@ -111,6 +112,7 @@ export const TeachingNavigator = () => {
 
   return (
     <Stack.Navigator
+      screenLayout={offlineScreenLayout}
       id={TeachingNavigatorID}
       screenOptions={{
         headerLargeTitle: true,

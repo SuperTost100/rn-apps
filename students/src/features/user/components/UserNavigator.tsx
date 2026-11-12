@@ -3,7 +3,12 @@ import { Platform } from 'react-native';
 
 import { UserNavigatorID } from '@polito/lib/core';
 import { MfaSettings } from '@polito/lib/features/auth';
-import { HeaderLogoNoProps, useTheme, useTitlesStyles } from '@polito/lib/ui';
+import {
+  HeaderLogoNoProps,
+  offlineScreenLayout,
+  useTheme,
+  useTitlesStyles,
+} from '@polito/lib/ui';
 import {
   NativeStackScreenProps,
   createNativeStackNavigator,
@@ -70,6 +75,7 @@ export const UserNavigator = () => {
 
   return (
     <Stack.Navigator
+      screenLayout={offlineScreenLayout}
       id={UserNavigatorID}
       screenOptions={{
         headerLargeTitle: false,

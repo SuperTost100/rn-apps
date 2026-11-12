@@ -1092,5 +1092,23 @@
   },
   "primitives": {
     "unread": "Unread"
+  },
+  "states": {
+    "loading": "Loading",
+    "tryAgain": "Try again",
+    "failedTitle": "Couldn't load this page",
+    "failedText": "The server didn't answer. Check your connection and try again.",
+    "offlineTitle": "You're offline",
+    "offlineText": "Nothing from this page is saved on this phone yet. It loads when you're back online.",
+    "notSavedTitle": "Not saved on this phone",
+    "notSavedText": "This part loads when you're back online.",
+    "offlineBanner": "Offline. Showing what was saved at {{time}}.",
+    "offlineBannerNoTime": "Offline. Showing what is saved on this phone.",
+    "savedOnDay": "{{date}}, {{time}}",
+    "refreshFailed": "Couldn't refresh. Showing what was saved at {{time}}.",
+    "refreshFailedNoTime": "Couldn't refresh. Showing what was saved earlier.",
+    "loadFailed": "Couldn't load this information. Try again in a moment.",
+    "close": "Close",
+    "needsConnection": "Needs a connection"
   }
 }

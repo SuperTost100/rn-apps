@@ -8,10 +8,12 @@ import {
 import { useTranslation } from 'react-i18next';
 import { Alert, AppState } from 'react-native';
 
+import type { ResponseError } from '@polito/auth-api-client';
 import NetInfo from '@react-native-community/netinfo';
 import * as Sentry from '@sentry/react-native';
 import { experimental_createQueryPersister } from '@tanstack/query-persist-client-core';
 import {
+  Query,
   QueryCache,
   QueryClient,
   QueryClientProvider,
@@ -20,6 +22,7 @@ import {
 } from '@tanstack/react-query';
 
 import { SQLiteStorage } from 'expo-sqlite/kv-store';
+import { DateTime } from 'luxon';
 import SuperJSON from 'superjson';
 
 import { PolitoAppConfig } from '../config';
@@ -38,9 +41,11 @@ import {
   AuthIdentityValidator,
   PushTokenProvider,
 } from '../types/auth';
+import { APP_TIMEZONE } from '../utils/dates';
 import { isEnvProduction } from '../utils/env';
 import { createPolitoAppKeychainServices } from '../utils/keychain';
 import { isResponseError } from '../utils/queries';
+import { isShownWithStates } from '../utils/queryStates';
 
 const DATA_MAX_AGE = 1000 * 3600 * 24 * 7;
 
@@ -114,57 +119,121 @@ export const ApiProvider = <Prefs extends object = {}>({
     await keychainServices.mfaPrivateKey.resetPrivateKeyMFA();
   }, [keychainServices]);
 
-  const globalQueryErrorHandler = useCallback(
-    async (error: unknown, client: QueryClient) => {
-      if (isResponseError(error)) {
-        if (error.response.status === 401) {
-          await resetCredentials();
-          updatePreference('politoAuthnEnrolmentStatus', {});
-          Sentry.setUser(null);
-          updateApiConfiguration({ language });
-          setApiContext(c => ({
-            ...c,
-            isLogged: false,
-            username: '',
-            token: '',
-          }));
-          await clearPersistedQueryCache();
-          await client.invalidateQueries();
-        }
-        const { message } = (await error.response.json()) as {
-          message?: string;
-        };
-
-        // The login alert is handled in the login screen
-        if (!error.response.url?.includes('/login'))
-          Alert.alert(
-            t('common.error'),
-            message ?? t('common.somethingWentWrong'),
-          );
-
-        if (!isEnvProduction) {
-          console.error(message);
-          console.error(JSON.stringify(error));
-        }
-      }
+  /** A 401 logs the user out, whatever request got it */
+  const handleUnauthorized = useCallback(
+    async (client: QueryClient) => {
+      await resetCredentials();
+      updatePreference('politoAuthnEnrolmentStatus', {});
+      Sentry.setUser(null);
+      updateApiConfiguration({ language });
+      setApiContext(c => ({
+        ...c,
+        isLogged: false,
+        username: '',
+        token: '',
+      }));
+      await clearPersistedQueryCache();
+      await client.invalidateQueries();
     },
-    [language, resetCredentials, t, updateApiConfiguration, updatePreference],
+    [language, resetCredentials, updateApiConfiguration, updatePreference],
+  );
+
+  const readServerMessage = useCallback(async (error: ResponseError) => {
+    try {
+      const { message } = (await error.response.clone().json()) as {
+        message?: string;
+      };
+      if (!isEnvProduction) {
+        console.error(message);
+        console.error(JSON.stringify(error));
+      }
+      return message;
+    } catch {
+      return undefined;
+    }
+  }, []);
+
+  /**
+   * Mutations are actions the user took: the alert stays, with the server's
+   * explanation when it gives one
+   */
+  const mutationErrorHandler = useCallback(
+    async (error: unknown, client: QueryClient) => {
+      if (!isResponseError(error)) return;
+      if (error.response.status === 401) await handleUnauthorized(client);
+      const message = await readServerMessage(error);
+      // The login alert is handled in the login screen
+      if (!error.response.url?.includes('/login'))
+        Alert.alert(
+          t('common.error'),
+          message ?? t('common.somethingWentWrong'),
+        );
+    },
+    [handleUnauthorized, readServerMessage, t],
+  );
+
+  /**
+   * Queries: a region that renders states (useQueryStates) shows its own
+   * failure, so it gets no alert. When older data stays on screen a short
+   * snackbar says the refresh failed. Screens not converted yet keep an
+   * alert, with a translated message and Try again, never the server's text.
+   */
+  const queryErrorHandler = useCallback(
+    async (
+      error: unknown,
+      query: Query<unknown, unknown, unknown>,
+      client: QueryClient,
+    ) => {
+      if (!isResponseError(error)) return;
+      if (error.response.status === 401) {
+        // Unchanged: log out and show what the server said
+        await mutationErrorHandler(error, client);
+        return;
+      }
+      await readServerMessage(error);
+      if (error.response.url?.includes('/login')) return;
+      const retry = () => {
+        query.fetch().catch(() => {});
+      };
+      if (isShownWithStates(query)) {
+        if (query.state.data === undefined) return;
+        const { dataUpdatedAt } = query.state;
+        setFeedback({
+          id: 'refresh-failed',
+          text: dataUpdatedAt
+            ? t('states.refreshFailed', {
+                time: DateTime.fromMillis(dataUpdatedAt, {
+                  zone: APP_TIMEZONE,
+                }).toFormat('HH:mm'),
+              })
+            : t('states.refreshFailedNoTime'),
+          action: { label: t('states.tryAgain'), onPress: retry },
+        });
+        return;
+      }
+      Alert.alert(t('common.error'), t('states.loadFailed'), [
+        { text: t('states.close'), style: 'cancel' },
+        { text: t('states.tryAgain'), onPress: retry },
+      ]);
+    },
+    [mutationErrorHandler, readServerMessage, setFeedback, t],
   );
 
   const queryClient = useMemo(() => {
     const client = new QueryClient({
       queryCache: new QueryCache({
-        onError: error => {
-          if (isResponseError(error)) {
-            globalQueryErrorHandler(error, client);
-          }
+        onError: (error, query) => {
+          queryErrorHandler(error, query, client);
         },
       }),
       defaultOptions: {
         queries: {
           gcTime: DATA_MAX_AGE,
           staleTime: 300000, // 5 minutes
-          networkMode: 'online',
+          // Runs the query function once even offline, so the persister can
+          // restore saved data after a cold start; network retries then wait
+          // for the connection
+          networkMode: 'offlineFirst',
           retry: isEnvProduction ? 2 : 1,
           refetchOnWindowFocus: isEnvProduction,
           persister: queryPersister.persisterFn,
@@ -172,15 +241,13 @@ export const ApiProvider = <Prefs extends object = {}>({
         mutations: {
           retry: 0,
           onError(error) {
-            if (isResponseError(error)) {
-              globalQueryErrorHandler(error, client);
-            }
+            mutationErrorHandler(error, client);
           },
         },
       },
     });
     return client;
-  }, [globalQueryErrorHandler]);
+  }, [mutationErrorHandler, queryErrorHandler]);
 
   useEffect(() => {
     // Update ApiContext based on the provided token and selected language
@@ -227,28 +294,16 @@ export const ApiProvider = <Prefs extends object = {}>({
   }, [keychainServices, language, username, updateApiConfiguration]);
 
   useEffect(() => {
-    // Track connectivity and surface a persistent feedback when offline
+    // Track connectivity. Screens show it with the offline banner
+    // (OfflineScreenLayout), not with a snackbar
     onlineManager.setEventListener(setOnline => {
       return NetInfo.addEventListener(state => {
         const isConnected =
           state.isConnected && state.isInternetReachable !== false;
-        const wasOnline = onlineManager.isOnline();
-        if (wasOnline && !isConnected) {
-          // Phone just went offline
-          setOnline(false);
-          setFeedback({
-            text: t('common.noInternet'),
-            isError: true,
-            isPersistent: true,
-          });
-        } else if (!wasOnline && isConnected) {
-          // Phone is back online
-          setOnline(true);
-          setFeedback(null);
-        }
+        setOnline(!!isConnected);
       });
     });
-  }, [setFeedback, t]);
+  }, []);
 
   useEffect(() => {
     // Tell react-query when the app comes back to the foreground
