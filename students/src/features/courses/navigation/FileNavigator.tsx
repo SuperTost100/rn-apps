@@ -1,22 +1,16 @@
-import { FileNavigatorID, usePreferencesContext } from '@polito/lib/core';
-import { useTheme, useTitlesStyles } from '@polito/lib/ui';
+import { FileNavigatorID } from '@polito/lib/core';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-import { AppPreferences } from '~/core/types/preferences';
-
 import { useCourseContext } from '../contexts/CourseContext';
-import { CourseDirectoryScreen } from '../screens/CourseDirectoryScreen';
 import { CourseFilesScreen } from '../screens/CourseFilesScreen';
 
 export type FileStackParamList = {
-  RecentFiles: {
+  CourseFiles: {
     courseId: number;
   };
-  DirectoryFiles: {
+  CourseFolder: {
     courseId: number;
-    directoryId?: string;
-    directoryName?: string;
-    skipInitialDownloadCheck?: boolean;
+    folderId: string;
   };
 };
 
@@ -24,33 +18,30 @@ const Stack = createNativeStackNavigator<
   FileStackParamList,
   typeof FileNavigatorID
 >();
-export const FileNavigator = () => {
-  const theme = useTheme();
-  const courseId = useCourseContext();
-  const { filesScreen } = usePreferencesContext<AppPreferences>();
 
-  const initialRouteName =
-    filesScreen === 'filesView' ? 'RecentFiles' : 'DirectoryFiles';
+/**
+ * The Files tab: the course's files, and a screen per folder pushed on top,
+ * under the course header and tabs
+ */
+export const FileNavigator = () => {
+  const courseId = useCourseContext();
 
   return (
     <Stack.Navigator
       id={FileNavigatorID}
-      screenOptions={{
-        animation: 'none',
-        headerShown: false,
-        ...useTitlesStyles(theme),
-      }}
-      initialRouteName={initialRouteName}
+      screenOptions={{ headerShown: false }}
+      initialRouteName="CourseFiles"
     >
       <Stack.Screen
-        name="RecentFiles"
+        name="CourseFiles"
         component={CourseFilesScreen}
-        initialParams={{ courseId: courseId }}
+        initialParams={{ courseId }}
+        options={{ animation: 'none' }}
       />
       <Stack.Screen
-        name="DirectoryFiles"
-        component={CourseDirectoryScreen}
-        initialParams={{ courseId: courseId }}
+        name="CourseFolder"
+        component={CourseFilesScreen}
+        getId={({ params }) => params.folderId}
       />
     </Stack.Navigator>
   );

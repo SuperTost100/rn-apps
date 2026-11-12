@@ -1,11 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import { Platform } from 'react-native';
 
-import {
-  AppHeader,
-  createHeaderCloseButton,
-  withoutHeaderHairline,
-} from '@polito/lib/ui';
+import { AppHeader, withoutHeaderHairline } from '@polito/lib/ui';
 import { ParamListBase } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
@@ -13,8 +8,6 @@ import { CourseAssignmentPdfCreationScreen } from '../screens/CourseAssignmentPd
 import { CourseAssignmentUploadConfirmationScreen } from '../screens/CourseAssignmentUploadConfirmationScreen';
 import { CourseAssignmentUploadScreen } from '../screens/CourseAssignmentUploadScreen';
 import { CourseColorPickerScreen } from '../screens/CourseColorPickerScreen';
-import { CourseDirectoryScreen } from '../screens/CourseDirectoryScreen';
-import { CourseFileMultiSelectScreen } from '../screens/CourseFileMultiSelectScreen';
 import { CourseGuideScreen } from '../screens/CourseGuideScreen';
 import { CourseHideEventScreen } from '../screens/CourseHideEventScreen';
 import { CourseIconPickerScreen } from '../screens/CourseIconPickerScreen';
@@ -50,12 +43,6 @@ export interface CourseSharedScreensParamList extends ParamListBase {
   Notice: { noticeId: number; courseId: number };
   CoursePreferences: { courseId: number; uniqueShortcode: string };
   CourseGuide: { courseId: number };
-  CourseDirectory: {
-    courseId: number;
-    directoryId?: string;
-    directoryName?: string;
-    skipInitialDownloadCheck?: boolean;
-  };
   CourseVideolecture: {
     courseId: number;
     lectureId: number;
@@ -72,13 +59,6 @@ export interface CourseSharedScreensParamList extends ParamListBase {
   CourseIconPicker: { courseId: number; uniqueShortcode: string };
   CourseColorPicker: { courseId: number; uniqueShortcode: string };
   CourseHideEvent: { courseId: number; uniqueShortcode: string };
-  CourseFileMultiSelect: {
-    courseId: number;
-    mode: 'directory' | 'recent';
-    directoryId?: string;
-    directoryName?: string;
-    initialSelectedIds?: string[];
-  };
 }
 
 const Stack = createNativeStackNavigator<CourseSharedScreensParamList>();
@@ -142,12 +122,6 @@ export const CourseSharedScreens = () => {
           title: t('courseIconPickerScreen.title'),
           headerSearchBarOptions: {},
         }}
-      />
-      <Stack.Screen
-        name="CourseDirectory"
-        component={CourseDirectoryScreen}
-        getId={({ params }: { params: any }) => `${params?.directoryId}`}
-        options={{}}
       />
       <Stack.Screen
         name="CourseHideEvent"
@@ -222,20 +196,6 @@ export const CourseSharedScreens = () => {
         options={{
           title: t('courseColorPickerScreen.title'),
         }}
-      />
-      <Stack.Screen
-        name="CourseFileMultiSelect"
-        component={CourseFileMultiSelectScreen}
-        options={({ navigation }) => ({
-          presentation: 'modal',
-          headerShown: Platform.OS === 'android' ? true : false,
-          title: t('courseDirectoryScreen.selectFiles'),
-          headerLeft: () => null,
-          headerRight:
-            Platform.OS === 'android'
-              ? () => null
-              : createHeaderCloseButton(navigation),
-        })}
       />
     </>
   );
