@@ -1,35 +1,22 @@
-import {
-  Gesture,
-  GestureDetector,
-  GestureHandlerRootView,
-} from 'react-native-gesture-handler';
-
-import { Fragment, PropsWithChildren, useCallback, useMemo } from 'react';
+import { Fragment, useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Platform, View } from 'react-native';
-import ContextMenu from 'react-native-context-menu-view';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
+import { StyleSheet, View } from 'react-native';
 
 import {
   faChevronDown,
-  faEllipsisVertical,
+  faChevronUp,
+  faLayerGroup,
 } from '@fortawesome/free-solid-svg-icons';
-import { IS_ANDROID, usePreferencesContext } from '@polito/lib/core';
-import { courseColors } from '@polito/lib/features/courses';
+import { usePreferencesContext } from '@polito/lib/core';
 import { useGetPersons } from '@polito/lib/features/people';
 import {
-  DisclosureIndicator,
-  IconButton,
+  Icon,
   IndentedDivider,
   ListItem,
   Theme,
   UnreadBadge,
-  auto,
   useStylesheet,
+  useTextScale,
   useTheme,
 } from '@polito/lib/ui';
 import { CourseModuleOverview } from '@polito/student-api-client';
@@ -43,63 +30,19 @@ import { CourseIndicator } from './CourseIndicator';
 interface Props {
   course: CourseOverview;
   accessible?: boolean;
+  /** Read before the row, e.g. its position in the list */
   accessibilityLabel?: string;
   badge?: number;
   showAllModules?: boolean;
 }
 
-const Menu = ({
-  course,
-  children,
-}: PropsWithChildren<{
-  course: CourseOverview;
-}>) => {
-  const { t } = useTranslation();
-  const preferences = usePreferencesContext<AppPreferences>();
-  const { dark, colors } = useTheme();
-  const isHidden = course.uniqueShortcode
-    ? (preferences.courses[course.uniqueShortcode]?.isHidden ?? false)
-    : false;
-
-  const handleMenuAction = useCallback(() => {
-    if (!course.uniqueShortcode) return;
-
-    const currentPrefs = preferences.courses[course.uniqueShortcode];
-    const defaultPrefs = {
-      color: courseColors[0].color,
-      isHidden: false,
-      isHiddenInAgenda: false,
-    };
-
-    preferences.updatePreference('courses', {
-      ...preferences.courses,
-      [course.uniqueShortcode]: {
-        ...defaultPrefs,
-        ...currentPrefs,
-        isHidden: !isHidden,
-      },
-    });
-  }, [preferences, course.uniqueShortcode, isHidden]);
-
-  return (
-    <ContextMenu
-      dropdownMenuMode={IS_ANDROID}
-      title={`${t('common.course')} ${t('common.preferences').toLowerCase()}`}
-      actions={[
-        {
-          title: isHidden ? t('common.follow') : t('common.stopFollowing'),
-          subtitle: t('coursePreferencesScreen.showInExtractsSubtitle'),
-          systemIcon: isHidden ? 'eye' : 'eye.slash',
-          titleColor: dark ? colors.white : colors.black,
-        },
-      ]}
-      onPress={handleMenuAction}
-    >
-      {children}
-    </ContextMenu>
-  );
-};
-
+/**
+ * A course row: its tile, the name on up to two lines, the credits, the
+ * unread count and a chevron. At large text the count moves under the
+ * text and the chevron goes, so the name keeps the full width.
+ * A course split into modules is a row that shows or hides its modules.
+ * Following a course or not is set on its settings screen.
+ */
 export const CourseListItem = ({
   course,
   accessibilityLabel,
@@ -107,448 +50,225 @@ export const CourseListItem = ({
   badge,
   showAllModules = false,
 }: Props) => {
-  const { colors, spacing, palettes, fontSizes, dark } = useTheme();
   const { t } = useTranslation();
   const preferences = usePreferencesContext<AppPreferences>();
   const styles = useStylesheet(createStyles);
+  const { colors, controls, layout } = useTheme();
+  const { isLarge } = useTextScale();
   const { getUnreadsCountPerCourse } = useNotifications();
+  const [expanded, setExpanded] = useState(true);
 
-  const getModuleItemStyle = useCallback(
-    (isFirst: boolean, isLast: boolean) => {
-      return [
-        styles.moduleItem,
-        isFirst && styles.moduleItemFirst,
-        isLast && styles.moduleItemLast,
-        !isFirst && !isLast && styles.moduleItemMiddle,
-      ];
-    },
-    [styles],
-  );
-
-  const getModuleContainerStyle = useCallback(
-    (isFirst: boolean, isLast: boolean) => {
-      return [
-        styles.moduleContainer,
-        isFirst && styles.moduleItemFirst,
-        isLast && styles.moduleItemLast,
-        !isFirst && !isLast && styles.moduleItemMiddle,
-      ];
-    },
-    [styles],
-  );
-
-  const pressed = useSharedValue<boolean>(true);
-
-  const animatedHeight = useAnimatedStyle(() => ({
-    transform: [
-      { scaleY: withTiming(pressed.value ? 1 : 0, { duration: 100 }) },
-    ],
-    height: withTiming(pressed.value ? auto : 0, { duration: 50 }),
-  }));
-
-  const animatedChevron = useAnimatedStyle(() => ({
-    transform: [{ rotateX: withTiming(pressed.value ? '180deg' : '0deg') }],
-  }));
-
-  const subtitle = useMemo(() => {
-    return (
-      (course.cfu !== null && course.cfu !== undefined
-        ? `${course.cfu} ${t('common.credits').toLowerCase()}`
-        : '') +
+  const hasModules = !!course.modules?.length;
+  const credits =
+    course.cfu !== null && course.cfu !== undefined
+      ? `${course.cfu} ${t('common.credits').toLowerCase()}`
+      : '';
+  const subtitle = hasModules
+    ? t('teachingScreen.modulesSubtitle', {
+        credits: course.cfu,
+        count: course.modules!.length,
+      })
+    : credits +
       (course.enrollmentRole === 'viewer'
         ? ` • ${t('courseListItem.extra')} • ${course.year}`
         : '') +
-      (course.isOverBooking ? ` • ${t('courseListItem.overbooking')}` : '')
-    );
-  }, [course.cfu, course.enrollmentRole, course.isOverBooking, course.year, t]);
-
-  const tap = Gesture.Tap().onTouchesUp(() => {
-    pressed.value = !pressed.value;
-  });
-
-  const hasModules = course.modules && course.modules.length > 0;
+      (course.isOverBooking ? ` • ${t('courseListItem.overbooking')}` : '');
 
   const getModuleUniqueShortcode = useCallback(
-    (moduleIndex: number) => {
-      return `${course.shortcode}${moduleIndex + 1}`;
-    },
+    (moduleIndex: number) => `${course.shortcode}${moduleIndex + 1}`,
     [course.shortcode],
   );
 
-  const getModuleLink = useCallback(
-    (module: CourseModuleOverview, moduleIndex: number) =>
-      module.id
-        ? {
-            screen: 'Course',
-            params: {
-              id: module.id,
-              title: course.name,
-              uniqueShortcode: getModuleUniqueShortcode(moduleIndex),
-            },
-          }
-        : {
-            screen: 'CourseNoAssignment',
-            params: {
-              uniqueShortcode: getModuleUniqueShortcode(moduleIndex),
-              courseName: module.name,
-              shortcode: module.shortcode,
-              year: module.year,
-              parentCourseName: course.name,
-            },
+  const getModuleLink = (module: CourseModuleOverview, moduleIndex: number) =>
+    module.id
+      ? {
+          screen: 'Course',
+          params: {
+            id: module.id,
+            title: course.name,
+            uniqueShortcode: getModuleUniqueShortcode(moduleIndex),
           },
-    [course.name, getModuleUniqueShortcode],
-  );
-
-  const getModuleBadge = useCallback(
-    (moduleId: number, previousEditions?: any[]) => {
-      return getUnreadsCountPerCourse(moduleId, previousEditions) ?? 0;
-    },
-    [getUnreadsCountPerCourse],
-  );
-
-  const getTotalModuleBadges = useCallback(() => {
-    if (!hasModules) return 0;
-    return course.modules!.reduce((total, module) => {
-      if (module.id) {
-        return (
-          total +
-          (getUnreadsCountPerCourse(module.id, module.previousEditions) ?? 0)
-        );
-      }
-      return total;
-    }, 0);
-  }, [hasModules, course.modules, getUnreadsCountPerCourse]);
-
-  const allModulesHidden = useMemo(() => {
-    if (!hasModules || showAllModules) return false;
-    return course.modules!.every(
-      (_, index) =>
-        preferences.courses[getModuleUniqueShortcode(index)]?.isHidden === true,
-    );
-  }, [
-    hasModules,
-    showAllModules,
-    course.modules,
-    getModuleUniqueShortcode,
-    preferences.courses,
-  ]);
-
-  const moduleTeacherIds = useMemo(() => {
-    if (!hasModules) return [];
-    return course
-      .modules!.map(module => module.teacherId)
-      .filter((teacherId): teacherId is number => teacherId !== null);
-  }, [hasModules, course.modules]);
-
-  const { queries: teacherQueries } = useGetPersons(moduleTeacherIds);
-
-  const getTeacherName = useCallback(
-    (teacherId: number | null) => {
-      if (!teacherId) return null;
-      const teacherIndex = moduleTeacherIds.indexOf(teacherId);
-      const teacherQuery = teacherQueries[teacherIndex];
-      if (teacherQuery?.data) {
-        return `${teacherQuery.data.firstName} ${teacherQuery.data.lastName}`.trim();
-      }
-      return null;
-    },
-    [moduleTeacherIds, teacherQueries],
-  );
-
-  const courseListItem = (
-    <ListItem
-      accessible={accessible}
-      disabled={course.isOverBooking}
-      linkTo={
-        hasModules
-          ? undefined
-          : course.id !== null
-            ? {
-                screen: 'Course',
-                params: {
-                  id: course.id,
-                },
-              }
-            : {
-                screen: 'CourseNoAssignment',
-                params: {
-                  uniqueShortcode: course.uniqueShortcode,
-                  courseName: course.name,
-                  shortcode: course.shortcode,
-                  cfu: course.cfu,
-                  year: course.year,
-                },
-              }
-      }
-      onPress={() => {
-        if (hasModules) {
-          pressed.value = !pressed.value;
         }
-      }}
-      accessibilityLabel={`${accessibilityLabel} ${course.name}, ${
-        course.cfu
-      } ${t('common.credits')}`}
-      title={course.name}
-      subtitle={subtitle}
-      leadingItem={
-        hasModules ? undefined : (
-          <CourseIndicator uniqueShortcode={course.uniqueShortcode} />
-        )
-      }
-      trailingItem={
-        <>
-          {(() => {
-            if (hasModules) {
-              const totalModuleBadges = getTotalModuleBadges();
-              return totalModuleBadges > 0 ? (
-                <UnreadBadge
-                  text={totalModuleBadges}
-                  style={Platform.OS === 'android' ? styles.badge : undefined}
-                />
-              ) : null;
-            }
-            return badge ? <UnreadBadge text={badge} /> : null;
-          })()}
-          {hasModules ? (
-            <GestureDetector gesture={tap}>
-              <Animated.View style={animatedChevron}>
-                <IconButton
-                  icon={faChevronDown}
-                  color={dark ? palettes.gray[400] : colors.secondaryText}
-                  style={styles.chevronButton}
-                />
-              </Animated.View>
-            </GestureDetector>
-          ) : course.uniqueShortcode ? (
-            Platform.select({
-              android: (
-                <Menu course={course}>
-                  <IconButton
-                    noPadding
-                    icon={faEllipsisVertical}
-                    color={colors.secondaryText}
-                    size={fontSizes.xl}
-                  />
-                </Menu>
-              ),
-              ios: <DisclosureIndicator />,
-            })
-          ) : (
-            <View style={styles.spacer} />
-          )}
-        </>
-      }
-      titleStyle={hasModules ? styles.title : undefined}
-    />
+      : {
+          screen: 'CourseNoAssignment',
+          params: {
+            uniqueShortcode: getModuleUniqueShortcode(moduleIndex),
+            courseName: module.name,
+            shortcode: module.shortcode,
+            year: module.year,
+            parentCourseName: course.name,
+          },
+        };
+
+  const visibleModules = useMemo(
+    () =>
+      (course.modules ?? [])
+        .map((module, originalIndex) => ({ module, originalIndex }))
+        .filter(
+          ({ originalIndex }) =>
+            showAllModules ||
+            !preferences.courses[getModuleUniqueShortcode(originalIndex)]
+              ?.isHidden,
+        ),
+    [
+      course.modules,
+      showAllModules,
+      preferences.courses,
+      getModuleUniqueShortcode,
+    ],
   );
 
-  const listItem = (
-    <GestureHandlerRootView>
-      <View>
-        {Platform.OS === 'ios' && !hasModules ? (
-          <Menu course={course}>{courseListItem}</Menu>
-        ) : (
-          courseListItem
-        )}
-      </View>
-
-      {hasModules && (
-        <Animated.View style={[animatedHeight, { overflow: 'hidden' }]}>
-          {course.modules
-            ?.map((module, originalIndex) => ({ module, originalIndex }))
-            .filter(({ originalIndex }) => {
-              if (showAllModules) return true;
-              const moduleUniqueShortcode =
-                getModuleUniqueShortcode(originalIndex);
-              return !preferences.courses[moduleUniqueShortcode]?.isHidden;
-            })
-            .map(({ module, originalIndex }, index, filteredModules) => {
-              const isFirst = index === 0;
-              const isLast = index === filteredModules.length - 1;
-              const indent = spacing[4];
-              return (
-                <Fragment key={module.id || `module-${originalIndex}`}>
-                  {Platform.OS === 'ios' ? (
-                    <Menu
-                      course={{
-                        ...course,
-                        uniqueShortcode:
-                          getModuleUniqueShortcode(originalIndex),
-                      }}
-                    >
-                      <ListItem
-                        key={module.id}
-                        accessible={accessible}
-                        disabled={module.isOverBooking}
-                        linkTo={getModuleLink(module, originalIndex)}
-                        accessibilityLabel={`${accessibilityLabel} ${module.name}`}
-                        title={module.name}
-                        subtitle={getTeacherName(module.teacherId) ?? undefined}
-                        leadingItem={
-                          <CourseIndicator
-                            uniqueShortcode={getModuleUniqueShortcode(
-                              originalIndex,
-                            )}
-                          />
-                        }
-                        trailingItem={
-                          <>
-                            {module.id &&
-                              getModuleBadge(
-                                module.id,
-                                module.previousEditions,
-                              ) > 0 && (
-                                <UnreadBadge
-                                  text={getModuleBadge(
-                                    module.id,
-                                    module.previousEditions,
-                                  )}
-                                  style={styles.badge}
-                                />
-                              )}
-                            <DisclosureIndicator />
-                          </>
-                        }
-                        style={getModuleItemStyle(isFirst, isLast)}
-                        containerStyle={getModuleContainerStyle(
-                          isFirst,
-                          isLast,
-                        )}
-                      />
-                    </Menu>
-                  ) : (
-                    <ListItem
-                      key={module.id}
-                      accessible={accessible}
-                      disabled={module.isOverBooking}
-                      linkTo={getModuleLink(module, originalIndex)}
-                      accessibilityLabel={`${accessibilityLabel} ${module.name}`}
-                      title={module.name}
-                      subtitle={getTeacherName(module.teacherId) ?? undefined}
-                      leadingItem={
-                        <CourseIndicator
-                          uniqueShortcode={getModuleUniqueShortcode(
-                            originalIndex,
-                          )}
-                        />
-                      }
-                      trailingItem={
-                        <>
-                          {module.id &&
-                            getModuleBadge(module.id, module.previousEditions) >
-                              0 && (
-                              <UnreadBadge
-                                text={getModuleBadge(
-                                  module.id,
-                                  module.previousEditions,
-                                )}
-                              />
-                            )}
-                          <Menu
-                            course={{
-                              ...course,
-                              uniqueShortcode:
-                                getModuleUniqueShortcode(originalIndex),
-                            }}
-                          >
-                            <IconButton
-                              noPadding
-                              icon={faEllipsisVertical}
-                              color={colors.secondaryText}
-                              size={fontSizes.xl}
-                            />
-                          </Menu>
-                        </>
-                      }
-                      style={getModuleItemStyle(isFirst, isLast)}
-                      titleStyle={styles.title}
-                      containerStyle={getModuleContainerStyle(isFirst, isLast)}
-                    />
-                  )}
-                  {!isLast && (
-                    <IndentedDivider
-                      key={`divider-${module.id}`}
-                      indent={indent}
-                      style={styles.divider}
-                    />
-                  )}
-                </Fragment>
-              );
-            })}
-        </Animated.View>
-      )}
-    </GestureHandlerRootView>
+  const moduleTeacherIds = useMemo(
+    () =>
+      (course.modules ?? [])
+        .map(module => module.teacherId)
+        .filter((teacherId): teacherId is number => teacherId !== null),
+    [course.modules],
   );
+  const { queries: teacherQueries } = useGetPersons(moduleTeacherIds);
+  const getTeacherName = (teacherId: number | null) => {
+    if (!teacherId) return undefined;
+    const person = teacherQueries[moduleTeacherIds.indexOf(teacherId)]?.data;
+    return person ? `${person.firstName} ${person.lastName}`.trim() : undefined;
+  };
 
-  if (allModulesHidden) {
-    return null;
+  /** The row of one course or module, with its unread count */
+  const row = (props: {
+    key?: string;
+    title: string;
+    subtitle?: string;
+    count?: number;
+    linkTo: any;
+    disabled?: boolean;
+    uniqueShortcode: string;
+  }) => {
+    const unread = props.count
+      ? t('navigation.unreadCount', { count: props.count })
+      : undefined;
+    return (
+      <ListItem
+        key={props.key}
+        accessible={accessible}
+        disabled={props.disabled}
+        linkTo={props.linkTo}
+        title={props.title}
+        subtitle={props.subtitle}
+        leadingItem={
+          <CourseIndicator uniqueShortcode={props.uniqueShortcode} />
+        }
+        // The count is a chip: it moves under the text at large text
+        chip={props.count ? <UnreadBadge text={props.count} /> : undefined}
+        showChevron={!isLarge}
+        accessibilityLabel={[
+          accessibilityLabel,
+          props.title,
+          props.subtitle,
+          unread,
+        ]
+          .filter(Boolean)
+          .join(', ')}
+      />
+    );
+  };
+
+  if (!hasModules) {
+    return row({
+      title: course.name,
+      subtitle,
+      count: badge,
+      disabled: course.isOverBooking,
+      uniqueShortcode: course.uniqueShortcode,
+      linkTo:
+        course.id !== null
+          ? { screen: 'Course', params: { id: course.id } }
+          : {
+              screen: 'CourseNoAssignment',
+              params: {
+                uniqueShortcode: course.uniqueShortcode,
+                courseName: course.name,
+                shortcode: course.shortcode,
+                cfu: course.cfu,
+                year: course.year,
+              },
+            },
+    });
   }
 
-  return listItem;
+  if (!visibleModules.length) return null;
+
+  const moduleCount = (module: CourseModuleOverview) =>
+    module.id
+      ? (getUnreadsCountPerCourse(module.id, module.previousEditions) ?? 0)
+      : 0;
+  const totalCount = visibleModules.reduce(
+    (sum, { module }) => sum + moduleCount(module),
+    0,
+  );
+  const textIndent =
+    layout.cardPadding + controls.leadingSize + layout.leadingGap;
+
+  return (
+    <View>
+      <ListItem
+        accessible={accessible}
+        title={course.name}
+        subtitle={subtitle}
+        onPress={() => setExpanded(value => !value)}
+        accessibilityRole="button"
+        accessibilityState={{ expanded }}
+        accessibilityLabel={[accessibilityLabel, course.name, subtitle]
+          .filter(Boolean)
+          .join(', ')}
+        leadingItem={
+          <View style={styles.groupTile}>
+            <Icon
+              icon={faLayerGroup}
+              size={20}
+              color={colors.neutralChipText}
+            />
+          </View>
+        }
+        // Collapsed, the modules' unread count stays visible on the course
+        chip={
+          !expanded && totalCount ? (
+            <UnreadBadge text={totalCount} />
+          ) : undefined
+        }
+        trailingItem={
+          <Icon
+            icon={expanded ? faChevronUp : faChevronDown}
+            size={16}
+            color={colors.secondaryText}
+          />
+        }
+        titleProps={{ numberOfLines: isLarge ? 3 : 2 }}
+      />
+      {expanded &&
+        visibleModules.map(({ module, originalIndex }) => (
+          <Fragment key={module.id || `module-${originalIndex}`}>
+            <IndentedDivider indent={textIndent} />
+            {row({
+              title: module.name,
+              subtitle: getTeacherName(module.teacherId),
+              count: moduleCount(module),
+              disabled: module.isOverBooking,
+              uniqueShortcode: getModuleUniqueShortcode(originalIndex),
+              linkTo: getModuleLink(module, originalIndex),
+            })}
+          </Fragment>
+        ))}
+    </View>
+  );
 };
 
-const createStyles = (theme: Theme) => {
-  const { spacing, colors, palettes, dark } = theme;
-
-  return {
-    courseContainer: {
-      marginHorizontal: spacing[1],
+const createStyles = ({ colors, controls, shapes }: Theme) =>
+  StyleSheet.create({
+    groupTile: {
+      width: controls.courseTileSize,
+      height: controls.courseTileSize,
+      borderRadius: shapes.md,
+      backgroundColor: colors.neutralChipBg,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
-    title: {
-      display: 'flex' as const,
-      alignItems: 'center' as const,
-      marginRight: spacing[3],
-    },
-    chevronButton: {
-      display: 'flex' as const,
-      alignItems: 'center' as const,
-      marginTop: 0,
-    },
-    spacer: {
-      width: 20,
-    },
-    moduleItem: {
-      overflow: 'hidden' as const,
-      marginHorizontal: spacing[5],
-    },
-    moduleItemFirst: {
-      borderRadius: spacing[2],
-      borderTopLeftRadius: spacing[2],
-      borderTopRightRadius: spacing[2],
-      borderBottomLeftRadius: 0,
-      borderBottomRightRadius: 0,
-    },
-    moduleItemLast: {
-      borderRadius: spacing[2],
-      borderBottomLeftRadius: spacing[2],
-      borderBottomRightRadius: spacing[2],
-      borderTopLeftRadius: 0,
-      borderTopRightRadius: 0,
-      marginBottom: spacing[1],
-    },
-    moduleItemMiddle: {
-      borderRadius: 0,
-    },
-    moduleContainer: {
-      display: 'flex' as const,
-      alignItems: 'center' as const,
-      marginTop: 0,
-      backgroundColor: dark ? colors.background : palettes.gray[100],
-      borderTopLeftRadius: spacing[2],
-      borderTopRightRadius: spacing[2],
-      borderBottomLeftRadius: spacing[2],
-      borderBottomRightRadius: spacing[2],
-      overflow: 'hidden' as const,
-    },
-    divider: {
-      marginEnd: spacing[4],
-      marginStart: spacing[4],
-    },
-    badge: {
-      marginRight: spacing[1],
-    },
-    badgeCourseIos: {
-      marginRight: -spacing[3],
-    },
-  };
-};
+  });

@@ -11,7 +11,8 @@ import {
   faChevronDown,
   faCircleExclamation,
 } from '@fortawesome/free-solid-svg-icons';
-import { useOfflineDisabled } from '@polito/lib/core';
+import { useOfflineDisabled, usePreferencesContext } from '@polito/lib/core';
+import { courseColors } from '@polito/lib/features/courses';
 import {
   BottomBarSpacer,
   Card,
@@ -21,6 +22,7 @@ import {
   OverviewList,
   Section,
   SectionHeader,
+  SwitchListItem,
   Text,
   Theme,
   auto,
@@ -30,6 +32,7 @@ import {
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { useGetCourses } from '~/core/queries/courseHooks';
+import { AppPreferences } from '~/core/types/preferences';
 
 import { TeachingStackParamList } from '../../teaching/components/TeachingNavigator';
 import { CourseHeading } from '../components/CourseHeading';
@@ -89,6 +92,22 @@ export const CourseNoAssignmentScreen = ({ route }: Props) => {
   const hasPreviousEditions = editions.length > 0;
   const latestEditionId = editions[0]?.id;
   const isOffline = useOfflineDisabled();
+
+  // Following the course: the switch its settings screen has, since a
+  // course without a page has no settings screen
+  const { courses: coursesPrefs, updatePreference } =
+    usePreferencesContext<AppPreferences>();
+  const coursePrefs = coursesPrefs[uniqueShortcode];
+  const defaultPrefs = {
+    color: courseColors[0].color,
+    isHidden: false,
+    isHiddenInAgenda: false,
+  };
+  const setFollowed = (value: boolean) =>
+    updatePreference('courses', {
+      ...coursesPrefs,
+      [uniqueShortcode]: { ...defaultPrefs, ...coursePrefs, isHidden: !value },
+    });
 
   const toggleEditions = () => {
     expanded.value = !expanded.value;
@@ -199,6 +218,18 @@ export const CourseNoAssignmentScreen = ({ route }: Props) => {
                   }
             }
             disabled={isOffline}
+          />
+        </OverviewList>
+      </Section>
+      <Section>
+        <SectionHeader title={t('common.preferences')} />
+        <OverviewList>
+          <SwitchListItem
+            title={t('coursePreferencesScreen.showInExtracts')}
+            subtitle={t('coursePreferencesScreen.showInExtractsSubtitle')}
+            disabled={!coursePrefs}
+            value={!coursePrefs?.isHidden}
+            onChange={setFollowed}
           />
         </OverviewList>
       </Section>
