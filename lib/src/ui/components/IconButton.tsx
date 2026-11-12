@@ -23,7 +23,7 @@ export const IconButton = ({
   noPadding = false,
   ...rest
 }: Props) => {
-  const { spacing } = useTheme();
+  const { spacing, controls, colors } = useTheme();
   const {
     icon,
     height,
@@ -53,17 +53,43 @@ export const IconButton = ({
     testID,
   };
   const padding = iconPadding || (spacing[3] as number);
+  const disabled = !!otherButtonProps.disabled || !!loading;
+  const iconSize = typeof size === 'number' ? size : controls.iconSize - 8;
+  // Without padding the target still reaches 48 px through the hit slop
+  const slop = noPadding
+    ? Math.max(0, (controls.touchTarget - iconSize) / 2)
+    : 0;
   return (
     <TouchableOpacity
+      accessibilityRole="button"
       hitSlop={{
-        left: adjustSpacing === 'left' ? padding : undefined,
-        right: adjustSpacing === 'right' ? padding : undefined,
+        top: slop || undefined,
+        bottom: slop || undefined,
+        left: adjustSpacing === 'left' ? padding : slop || undefined,
+        right: adjustSpacing === 'right' ? padding : slop || undefined,
       }}
       {...otherButtonProps}
-      style={[!noPadding && { padding }, style]}
+      disabled={disabled}
+      accessibilityState={{
+        disabled,
+        busy: !!loading,
+        ...otherButtonProps.accessibilityState,
+      }}
+      style={[
+        !noPadding && {
+          padding,
+          minHeight: controls.touchTarget,
+          // With adjustSpacing the icon is pulled to the edge and the
+          // padding becomes hit slop, so the width must not grow back
+          minWidth: adjustSpacing ? undefined : controls.touchTarget,
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
+        style,
+      ]}
     >
       {loading ? (
-        <ActivityIndicator />
+        <ActivityIndicator color={color as string | undefined} />
       ) : (
         <Icon
           style={[
@@ -75,6 +101,7 @@ export const IconButton = ({
             iconStyle,
           ]}
           {...iconProps}
+          color={color ?? colors.heading}
         />
       )}
     </TouchableOpacity>

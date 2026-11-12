@@ -1,4 +1,4 @@
-import { ReactElement, useMemo } from 'react';
+import { ReactElement } from 'react';
 import {
   Platform,
   StyleSheet,
@@ -31,6 +31,7 @@ interface Props extends TouchableHighlightProps {
   rightExtra?: ReactElement;
   loading?: boolean;
   action: () => unknown | Promise<unknown>;
+  /** filled: primary. outlined: secondary, on the surface with a border */
   variant?: 'filled' | 'outlined';
   destructive?: boolean;
   success?: boolean;
@@ -39,14 +40,21 @@ interface Props extends TouchableHighlightProps {
   progress?: number;
 }
 
+const HAS_URL = /https?:\/\//;
+
 /**
- * A call-to-action button with in-place loading indicator.
+ * A call-to-action button with in-place loading indicator: 48 px tall, the
+ * card radius on both platforms. While loading it keeps its width, hides the
+ * label under the spinner and ignores presses.
+ *
+ * By default it floats above the tab bar (absolute); pass absolute={false}
+ * to place it in the flow.
  */
 export const CtaButton = ({
   style,
   absolute = true,
   title,
-  loading,
+  loading = false,
   disabled,
   destructive = false,
   success = false,
@@ -58,10 +66,10 @@ export const CtaButton = ({
   variant = 'filled',
   textStyle,
   progress,
+  accessibilityState,
   ...rest
 }: Props) => {
-  const { palettes, colors, fontSizes, spacing, dark, fontWeights } =
-    useTheme();
+  const { colors, spacing, controls, elevation } = useTheme();
   const styles = useStylesheet(createStyles);
   const { left, right } = useSafeAreaInsets();
   const bottomBarHeight = useSafeBottomBarHeight();
@@ -69,40 +77,54 @@ export const CtaButton = ({
   const { isLarge } = useTextScale();
 
   const outlined = variant === 'outlined';
+  const inactive = !!disabled || loading;
 
-  const underlayColor = useMemo(() => {
-    if (variant === 'outlined') {
-      if (dark) return shadeColor(colors.background, 20);
-      else return shadeColor(colors.background, -10);
-    } else {
-      if (destructive) return palettes.danger[dark ? 200 : 800];
-      return colors.primaryPressed;
-    }
-  }, [
-    colors.background,
-    colors.primaryPressed,
-    dark,
-    destructive,
-    palettes.danger,
-    variant,
-  ]);
+  let background: string;
+  let foreground: string;
+  let border: string | undefined;
+  let underlay: string;
+  if (success) {
+    // A done state, usually disabled too: it stays green
+    background = colors.successBg;
+    foreground = colors.successText;
+    underlay = background;
+  } else if (disabled) {
+    background = colors.disabledBg;
+    foreground = colors.onDisabled;
+    underlay = background;
+  } else if (outlined) {
+    background = colors.surface;
+    foreground = destructive ? colors.dangerText : colors.link;
+    border = destructive ? colors.dangerText : colors.controlBorder;
+    underlay = colors.selectedRow;
+  } else if (destructive) {
+    background = colors.dangerSolid;
+    foreground = colors.onDangerSolid;
+    underlay = shadeColor(colors.dangerSolid, -12);
+  } else {
+    background = colors.primary;
+    foreground = colors.onPrimary;
+    underlay = colors.primaryPressed;
+  }
 
-  const color = useMemo(() => {
-    if (success) {
-      return dark ? palettes.success[400] : palettes.success[700];
-    }
-    if (destructive) return colors.dangerSolid;
-    return colors.primary;
-  }, [
-    colors.dangerSolid,
-    colors.primary,
-    dark,
-    destructive,
-    palettes.success,
-    success,
-  ]);
-
-  const onFilledColor = destructive ? colors.onDangerSolid : colors.onPrimary;
+  const label = title ? (
+    HAS_URL.test(title) ? (
+      <TextWithLinks
+        style={[styles.title, { color: foreground }, textStyle]}
+        baseStyle={{ color: foreground }}
+        isCta={true}
+      >
+        {title}
+      </TextWithLinks>
+    ) : (
+      <Text
+        variant="button"
+        style={[styles.title, { color: foreground }, textStyle]}
+      >
+        {title}
+      </Text>
+    )
+  ) : null;
 
   return (
     <View
@@ -124,107 +146,59 @@ export const CtaButton = ({
           importantForAccessibility="no-hide-descendants"
           accessibilityElementsHidden={true}
         >
-          <Text style={styles.hint}>{hint}</Text>
+          <Text variant="secondaryText" style={styles.hint}>
+            {hint}
+          </Text>
         </View>
       )}
       <TouchableHighlight
         accessibilityRole="button"
-        underlayColor={underlayColor}
-        disabled={disabled || loading}
+        underlayColor={underlay}
+        disabled={inactive}
         style={[
           styles.button,
-          variant === 'outlined' && {
-            borderColor: color,
-            borderWidth: 1,
-            backgroundColor: colors.background,
-          },
-          variant === 'filled' && {
-            borderColor: color,
-            borderWidth: 1,
-            backgroundColor: color,
-          },
-          disabled && variant === 'filled' && styles.disabledButton,
+          { backgroundColor: background, minHeight: controls.buttonHeight },
+          border && { borderColor: border, borderWidth: 1.5 },
+          // Floating above the content, a filled button keeps a shadow
+          absolute && !outlined && !inactive && elevation.card,
           style,
         ]}
         accessibilityLabel={title}
+        accessibilityState={{
+          disabled: inactive,
+          busy: loading,
+          ...accessibilityState,
+        }}
         onPress={action}
         {...rest}
       >
         <View>
-          <View style={styles.stack}>
-            {loading && (
-              <ActivityIndicator color={outlined ? color : onFilledColor} />
-            )}
-          </View>
-          {/* {!loading && ( */}
-          {/*   <View style={{ marginHorizontal: spacing[1] }}>{icon}</View> */}
-          {/* )} */}
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: title ? undefined : 'center',
-            }}
-          >
+          <View style={[styles.content, loading && styles.hidden]}>
             {icon &&
               !isLarge &&
               (progress !== undefined ? (
-                <View
-                  style={{
-                    marginRight: title ? spacing[2] : 0,
-                    paddingHorizontal: spacing[1],
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <IconWithProgress
-                    icon={icon}
-                    size={fontSizes.xl}
-                    color={variant === 'filled' ? onFilledColor : color}
-                    progress={progress}
-                    progressColor={variant === 'filled' ? onFilledColor : color}
-                  />
-                </View>
+                <IconWithProgress
+                  icon={icon}
+                  size={controls.iconSize - 4}
+                  color={foreground}
+                  progress={progress}
+                  progressColor={foreground}
+                />
               ) : (
                 <Icon
                   icon={icon}
-                  size={fontSizes.xl}
-                  color={variant === 'filled' ? onFilledColor : color}
-                  style={{
-                    marginRight: title ? spacing[2] : 0,
-                    paddingHorizontal: spacing[1],
-                  }}
+                  size={controls.iconSize - 4}
+                  color={foreground}
                 />
               ))}
-            {title ? (
-              <TextWithLinks
-                style={[
-                  styles.textStyle,
-                  variant === 'outlined' && {
-                    borderColor: palettes.primary[400],
-                  },
-                  {
-                    color: variant === 'filled' ? onFilledColor : color,
-                  },
-                  disabled
-                    ? { color: success ? color : colors.disableTitle }
-                    : undefined,
-                  textStyle,
-                ]}
-                baseStyle={{
-                  fontWeight: fontWeights.medium,
-                  color: variant === 'filled' ? onFilledColor : color,
-                  ...(disabled && {
-                    color: success ? color : colors.disableTitle,
-                  }),
-                }}
-                isCta={true}
-              >
-                {title}
-              </TextWithLinks>
-            ) : null}
+            {label}
             {rightExtra && rightExtra}
           </View>
+          {loading && (
+            <View style={styles.spinner}>
+              <ActivityIndicator color={foreground} />
+            </View>
+          )}
         </View>
       </TouchableHighlight>
     </View>
@@ -240,45 +214,37 @@ export const CtaButtonSpacer = () => {
   return <View style={{ height: spacing[20] }} />;
 };
 
-const createStyles = ({ colors, shapes, spacing, fontSizes }: Theme) =>
+const createStyles = ({ shapes, spacing, layout }: Theme) =>
   StyleSheet.create({
     container: {
-      padding: spacing[4],
+      padding: layout.gutter,
     },
     button: {
+      justifyContent: 'center',
       paddingHorizontal: spacing[5],
-      paddingVertical: spacing[4],
-      borderRadius: Platform.select({
-        ios: shapes.lg,
-        android: 60,
-      }),
+      paddingVertical: spacing[3],
+      borderRadius: shapes.lg,
+    },
+    content: {
+      flexDirection: 'row',
       alignItems: 'center',
-      elevation: 9,
+      justifyContent: 'center',
+      gap: spacing[2],
     },
-    disabledButton: {
-      backgroundColor: colors.secondaryText,
-      borderColor: colors.secondaryText,
+    // Keeps the width of the label while the spinner shows
+    hidden: {
+      opacity: 0,
     },
-    stack: {
+    spinner: {
       ...StyleSheet.absoluteFillObject,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    textStyle: {
-      fontSize: fontSizes.md,
+    title: {
       textAlign: 'center',
-      color: colors.white,
-    },
-    icon: {
-      marginVertical: -2,
-      marginRight: spacing[2],
-    },
-    subtitle: {
-      marginTop: spacing[2],
+      flexShrink: 1,
     },
     hint: {
-      color: colors.caption,
-      fontSize: fontSizes.xs,
       textAlign: 'center',
       paddingBottom: spacing[2],
     },
