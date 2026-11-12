@@ -1,3 +1,5 @@
+import { View } from 'react-native';
+
 import { ListItem, ListItemProps } from './ListItem';
 import { Switch } from './Switch';
 
@@ -35,14 +37,18 @@ export const SwitchListItem = ({
           .join(', ')
       }
       trailingItem={
-        <Switch
-          value={value ?? false}
-          disabled={disabled}
-          onValueChange={toggle}
-          accessible={false}
+        // The wrapper hides the switch from screen readers on both platforms:
+        // the row is the switch
+        <View
           accessibilityElementsHidden
-          importantForAccessibility="no"
-        />
+          importantForAccessibility="no-hide-descendants"
+        >
+          <Switch
+            value={value ?? false}
+            disabled={disabled}
+            onValueChange={toggle}
+          />
+        </View>
       }
       disabled={disabled}
       {...rest}
