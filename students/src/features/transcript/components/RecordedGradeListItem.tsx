@@ -1,8 +1,14 @@
 import { useTranslation } from 'react-i18next';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { APP_TIMEZONE, usePreferencesContext } from '@polito/lib/core';
-import { ListItem, Text, type Theme, useStylesheet } from '@polito/lib/ui';
+import {
+  ListItem,
+  Text,
+  type Theme,
+  useStylesheet,
+  useTextScale,
+} from '@polito/lib/ui';
 import { ExamGrade } from '@polito/student-api-client';
 
 import { DateTime } from 'luxon';
@@ -29,6 +35,8 @@ export const RecordedGradeListItem = ({ grade }: RecordedGradeProps) => {
   const { t } = useTranslation();
   const styles = useStylesheet(createStyles);
   const { hidden, mask } = useGradeMask();
+  // At large text the grade goes under the text, so no word breaks
+  const { isLarge } = useTextScale();
   const recordedDay = useRecordedDay();
   const gradeText = mask(t(formatGrade(grade.grade)));
   const subtitle = [
@@ -44,11 +52,24 @@ export const RecordedGradeListItem = ({ grade }: RecordedGradeProps) => {
   return (
     <ListItem
       title={grade.courseName}
-      subtitle={subtitle}
+      subtitle={
+        isLarge ? (
+          <View>
+            <Text variant="secondaryText">{subtitle}</Text>
+            <Text variant="cardTitle" style={styles.grade}>
+              {gradeText}
+            </Text>
+          </View>
+        ) : (
+          subtitle
+        )
+      }
       trailingItem={
-        <Text variant="cardTitle" style={styles.grade}>
-          {gradeText}
-        </Text>
+        isLarge ? undefined : (
+          <Text variant="cardTitle" style={styles.grade}>
+            {gradeText}
+          </Text>
+        )
       }
       showChevron
       accessibilityLabel={[

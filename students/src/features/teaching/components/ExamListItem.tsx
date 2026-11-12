@@ -47,7 +47,7 @@ export const useExamWhen = () => {
     }).setLocale(language);
     return `${start.toFormat('ccc d LLL')}, ${
       exam.isTimeToBeDefined
-        ? t('common.timeToBeDefined')
+        ? t('examScreen.timeToBeDefinedInline')
         : start.toFormat('HH:mm')
     }`;
   };
@@ -92,7 +92,8 @@ export const ExamListItem = ({ exam, accessibilityLabel, ...rest }: Props) => {
       chipLabel={status}
       showChevron={false}
       accessibilityLabel={[
-        accessibilityLabel,
+        // "Element 1 of 5." without its full stop, before the commas
+        accessibilityLabel?.trim().replace(/\.$/, ''),
         exam.courseName,
         subtitle,
         status,

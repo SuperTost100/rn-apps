@@ -146,9 +146,11 @@ const createStyles = ({ spacing, colors, layout }: Theme) =>
       color: colors.heading,
       flexShrink: 1,
     },
+    // A third keeps a short title and a long link ("How they are
+    // computed") on one line; a longer link wraps under the title
     titleContainer: {
       flex: 1,
-      minWidth: '50%',
+      minWidth: '33%',
     },
     // The 48 px target reaches past the title line, so the label sits on it
     link: {

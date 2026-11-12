@@ -756,7 +756,6 @@
     "reasonLabel": "Why do you need a place?",
     "reasonError": "Write the reason, so the teacher can decide.",
     "send": "Send request",
-    "sentFeedback": "Request sent.",
     "failedTitle": "Couldn't send the request",
     "lostAnswer": "The server didn't answer and the request doesn't show as sent. Try again."
   },
@@ -780,7 +779,6 @@
     "datesError": "Write at least one date that works for you.",
     "declaration": "I take responsibility for what I write in this request.",
     "declarationError": "Confirm this to send the request.",
-    "sentFeedback": "Date change request sent.",
     "failedTitle": "Couldn't send the request",
     "lostAnswer": "The server didn't answer, so the request may not have arrived. Try again; if the teacher gets it twice, they will see the same text."
   },
@@ -820,7 +818,7 @@
     "keepBooking": "Keep booking",
     "cancelTitle": "Cancel your booking for {{course}}?",
     "cancelText": "{{when}}. You can book again until {{closes}}, while places are left.",
-    "bookedFeedback": "Exam booked: {{course}}, {{day}}.",
+    "bookedFeedback": "Exam booked for {{day}}.",
     "cancelledFeedback": "Booking cancelled.",
     "closedText": "Booking closed on {{date}}. You did not book this exam.",
     "opensText": "Booking opens on {{date}}.",
@@ -841,7 +839,8 @@
     "bookedStudentsValue": "{{booked}} of {{total}}",
     "timeRange": "{{start}} - {{end}}",
     "yourRequest": "Your request",
-    "statusLabel": "Status: {{status}}"
+    "statusLabel": "Status: {{status}}",
+    "timeToBeDefinedInline": "time to be defined"
   },
   "examsScreen": {
     "emptyState": "There are no open exam calls",

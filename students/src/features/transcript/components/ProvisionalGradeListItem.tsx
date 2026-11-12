@@ -14,6 +14,7 @@ import {
   Text,
   type Theme,
   useStylesheet,
+  useTextScale,
   useTheme,
 } from '@polito/lib/ui';
 import {
@@ -75,6 +76,9 @@ export const ProvisionalGradeListItem = ({ grade }: Props) => {
   const { colors } = useTheme();
   const styles = useStylesheet(createStyles);
   const { hidden, mask } = useGradeMask();
+  // At large text the grade goes under the text, so the course name keeps
+  // the row's width and no word breaks
+  const { isLarge } = useTextScale();
   const shortDay = useShortDay();
   const formatHHmm = dateFormatter('HH:mm');
   const status = provisionalStatus(grade);
@@ -117,12 +121,19 @@ export const ProvisionalGradeListItem = ({ grade }: Props) => {
           <View style={styles.chip}>
             <StatusChip label={chip} tone={PROVISIONAL_TONE[status]} />
           </View>
+          {isLarge && (
+            <Text variant="cardTitle" style={styles.grade}>
+              {gradeText}
+            </Text>
+          )}
         </View>
       }
       trailingItem={
-        <Text variant="cardTitle" style={styles.grade}>
-          {gradeText}
-        </Text>
+        isLarge ? undefined : (
+          <Text variant="cardTitle" style={styles.grade}>
+            {gradeText}
+          </Text>
+        )
       }
       showChevron
       accessibilityLabel={[

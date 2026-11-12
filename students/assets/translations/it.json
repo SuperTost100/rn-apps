@@ -771,7 +771,6 @@
     "reasonLabel": "Perché ti serve un posto?",
     "reasonError": "Scrivi il motivo, così il docente può decidere.",
     "send": "Invia richiesta",
-    "sentFeedback": "Richiesta inviata.",
     "failedTitle": "Richiesta non inviata",
     "lostAnswer": "Il server non ha risposto e la richiesta non risulta inviata. Riprova."
   },
@@ -795,7 +794,6 @@
     "datesError": "Scrivi almeno una data in cui puoi.",
     "declaration": "Mi assumo la responsabilità di quanto scrivo in questa richiesta.",
     "declarationError": "Conferma per inviare la richiesta.",
-    "sentFeedback": "Richiesta di cambio data inviata.",
     "failedTitle": "Richiesta non inviata",
     "lostAnswer": "Il server non ha risposto, quindi la richiesta potrebbe non essere arrivata. Riprova: se il docente la riceve due volte, vedrà lo stesso testo."
   },
@@ -835,7 +833,7 @@
     "keepBooking": "Mantieni",
     "cancelTitle": "Annullare la prenotazione per {{course}}?",
     "cancelText": "{{when}}. Puoi prenotarti di nuovo fino a {{closes}}, finché ci sono posti.",
-    "bookedFeedback": "Appello prenotato: {{course}}, {{day}}.",
+    "bookedFeedback": "Appello prenotato per {{day}}.",
     "cancelledFeedback": "Prenotazione annullata.",
     "closedText": "Prenotazioni chiuse il {{date}}. Non ti sei prenotato a questo appello.",
     "opensText": "Prenotazioni dal {{date}}.",
@@ -856,7 +854,8 @@
     "bookedStudentsValue": "{{booked}} su {{total}}",
     "timeRange": "{{start}} - {{end}}",
     "yourRequest": "La tua richiesta",
-    "statusLabel": "Stato: {{status}}"
+    "statusLabel": "Stato: {{status}}",
+    "timeToBeDefinedInline": "orario da definire"
   },
   "examsScreen": {
     "emptyState": "Non ci sono appelli disponibili",

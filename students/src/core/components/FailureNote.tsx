@@ -25,7 +25,10 @@ export const FailureNote = ({ title, failure, lostText, whatToDo }: Props) => {
   const body = failure.lost
     ? lostText
     : [
-        failure.message ?? t('examScreen.noServerReason'),
+        failure.message
+          ? // Server messages often end without a full stop
+            failure.message.replace(/([^.!?])\s*$/, '$1.')
+          : t('examScreen.noServerReason'),
         whatToDo ?? t('examScreen.failedWhatToDo'),
       ].join(' ');
 

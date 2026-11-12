@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, TouchableHighlight, View } from 'react-native';
 
 import { faSquare, faSquareCheck } from '@fortawesome/free-regular-svg-icons';
-import { useFeedbackContext, useIsOnline } from '@polito/lib/core';
+import { useIsOnline } from '@polito/lib/core';
 import { useGetPerson } from '@polito/lib/features/people';
 import {
   BottomBarSpacer,
@@ -13,6 +13,7 @@ import {
   TextField,
   type Theme,
   useStylesheet,
+  useTextScale,
   useTheme,
 } from '@polito/lib/ui';
 import { ExamStatusEnum } from '@polito/student-api-client';
@@ -42,8 +43,10 @@ export const ExamRescheduleScreen = ({ navigation, route }: Props) => {
   const { t } = useTranslation();
   const styles = useStylesheet(createStyles);
   const { colors } = useTheme();
-  const { setFeedback } = useFeedbackContext();
   const isOnline = useIsOnline();
+  const { scale } = useTextScale();
+  // A box that shows the given number of lines before it scrolls
+  const fieldHeight = (lines: number) => 24 * scale * lines + 24;
   const examsQuery = useGetExams();
   const exam = examsQuery.data?.find(e => e.id === id);
   const teacher = useGetPerson(exam?.teacherId).data;
@@ -80,10 +83,8 @@ export const ExamRescheduleScreen = ({ navigation, route }: Props) => {
       requestReason: reason.trim(),
       requestDetails: dates.trim(),
     }).then(
-      () => {
-        setFeedback({ text: t('examRescheduleScreen.sentFeedback') });
-        navigation.popTo('Exam', { id, dateChangeSent: true });
-      },
+      // The exam page confirms the request in place
+      () => navigation.popTo('Exam', { id, dateChangeSent: true }),
       async error => {
         setFailure(await describeMutationFailure(error));
         examsQuery.refetch();
@@ -117,6 +118,7 @@ export const ExamRescheduleScreen = ({ navigation, route }: Props) => {
           label={t('examRescheduleScreen.reasonLabel')}
           multiline
           numberOfLines={4}
+          inputStyle={{ minHeight: fieldHeight(4) }}
           autoCapitalize="sentences"
           value={reason}
           onChangeText={setReason}
@@ -127,6 +129,7 @@ export const ExamRescheduleScreen = ({ navigation, route }: Props) => {
           label={t('examRescheduleScreen.datesLabel')}
           multiline
           numberOfLines={3}
+          inputStyle={{ minHeight: fieldHeight(3) }}
           autoCapitalize="sentences"
           value={dates}
           onChangeText={setDates}

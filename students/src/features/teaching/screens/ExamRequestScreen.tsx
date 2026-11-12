@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
-import { useFeedbackContext, useIsOnline } from '@polito/lib/core';
+import { useIsOnline } from '@polito/lib/core';
 import { useGetPerson } from '@polito/lib/features/people';
 import {
   BottomBarSpacer,
@@ -11,6 +11,7 @@ import {
   TextField,
   type Theme,
   useStylesheet,
+  useTextScale,
 } from '@polito/lib/ui';
 import { ExamStatusEnum } from '@polito/student-api-client';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -32,8 +33,10 @@ type Props = NativeStackScreenProps<TeachingStackParamList, 'ExamRequest'>;
 export const ExamRequestScreen = ({ route, navigation }: Props) => {
   const styles = useStylesheet(createStyles);
   const { t } = useTranslation();
-  const { setFeedback } = useFeedbackContext();
   const isOnline = useIsOnline();
+  const { scale } = useTextScale();
+  // A box that shows the given number of lines before it scrolls
+  const fieldHeight = (lines: number) => 24 * scale * lines + 24;
 
   const { id } = route.params;
   const examsQuery = useGetExams();
@@ -45,10 +48,8 @@ export const ExamRequestScreen = ({ route, navigation }: Props) => {
   const [showError, setShowError] = useState(false);
   const [failure, setFailure] = useState<MutationFailure>();
 
-  const done = () => {
-    setFeedback({ text: t('examRequestScreen.sentFeedback') });
-    navigation.popTo('Exam', { id });
-  };
+  // The exam page confirms the request in place
+  const done = () => navigation.popTo('Exam', { id });
 
   const onSubmit = () => {
     if (!exam) return;
@@ -89,6 +90,7 @@ export const ExamRequestScreen = ({ route, navigation }: Props) => {
           label={t('examRequestScreen.reasonLabel')}
           multiline
           numberOfLines={5}
+          inputStyle={{ minHeight: fieldHeight(5) }}
           autoCapitalize="sentences"
           value={reason}
           onChangeText={value => {
