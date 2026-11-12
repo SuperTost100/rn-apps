@@ -10,6 +10,7 @@ import {
   UserLocation,
 } from '@rnmapbox/maps';
 
+import { IS_IOS } from '../../../core/constants';
 import { notNullish } from '../../../core/utils/predicates';
 import { Divider, TranslucentView } from '../../../ui/components';
 import { createHeaderCloseButton } from '../../../ui/components/HeaderCloseButton';
@@ -18,6 +19,7 @@ import { useTheme } from '../../../ui/hooks/useTheme';
 import { useTitlesStyles } from '../../../ui/hooks/useTitlesStyles';
 import { INTERIORS_MIN_ZOOM, MAX_ZOOM, RASTER_TILE_SIZE } from '../constants';
 import { PlacesContext } from '../contexts/PlacesContext';
+import { useLocationGranted } from '../hooks/useLocationGranted';
 import { usePlaceCategoriesMap } from '../hooks/usePlaceCategoriesMap';
 import { BuildingScreen } from '../screens/BuildingScreen';
 import { EventPlacesScreen } from '../screens/EventPlacesScreen';
@@ -60,6 +62,7 @@ const MapDefaultContent = () => {
   const colorScheme = useMemo(() => (theme.dark ? 'dark' : 'light'), [theme]);
   const { floorId } = useContext(PlacesContext);
   const categories = usePlaceCategoriesMap();
+  const locationGranted = useLocationGranted();
   const images = useMemo<Record<string, ImageURISource>>(
     () =>
       categories
@@ -78,7 +81,9 @@ const MapDefaultContent = () => {
 
   return (
     <>
-      <UserLocation />
+      {/* On iOS the location puck asks for the permission as soon as the
+          map opens: it waits until "Go to my position" has asked for it */}
+      {(!IS_IOS || locationGranted) && <UserLocation />}
 
       {/* Marker images */}
       <Images images={images} />

@@ -18,6 +18,7 @@ import {
 import {
   PERMISSIONS,
   RESULTS,
+  check,
   openSettings,
   request,
 } from 'react-native-permissions';
@@ -46,6 +47,7 @@ import Mapbox from '@rnmapbox/maps';
 
 import { debounce } from 'lodash';
 
+import { IS_IOS } from '../../../core/constants';
 import { usePreferencesContext } from '../../../core/contexts/PreferencesContext';
 import { useScreenTitle } from '../../../core/hooks/useScreenTitle';
 import {
@@ -142,10 +144,16 @@ export const PlacesScreen = ({ navigation, route }: Props) => {
       android: PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION,
     });
     if (permission) {
+      // iOS answers "blocked" right after the student denies the prompt:
+      // the alert below is only for a tap that the phone no longer asks about
+      const blockedBefore =
+        IS_IOS &&
+        (await check(permission).catch(() => RESULTS.DENIED)) ===
+          RESULTS.BLOCKED;
       const status = await request(permission).catch(() => RESULTS.DENIED);
       // Blocked: the phone no longer asks, so the tap would do nothing.
       // Say why and offer the way to the phone's settings
-      if (status === RESULTS.BLOCKED) {
+      if (status === RESULTS.BLOCKED && (!IS_IOS || blockedBefore)) {
         Alert.alert(
           t('placesScreen.locationBlockedTitle'),
           t('placesScreen.locationBlockedText'),
