@@ -1,179 +1,105 @@
-import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { View } from 'react-native';
 
-import { faCalendar } from '@fortawesome/free-regular-svg-icons';
-import { faLocationDot } from '@fortawesome/free-solid-svg-icons';
+import { faCheck } from '@fortawesome/free-solid-svg-icons';
 import {
-  IS_IOS,
-  dateFormatter,
-  formatDate,
-  formatReadableDate,
+  APP_TIMEZONE,
   isValidDate,
   usePreferencesContext,
 } from '@polito/lib/core';
-import {
-  DisclosureIndicator,
-  Icon,
-  ListItem,
-  Row,
-  Text,
-  useTheme,
-} from '@polito/lib/ui';
+import { ListItem, StatusChip, StatusChipTone } from '@polito/lib/ui';
+import { ExamStatusEnum } from '@polito/student-api-client';
 
 import { AppPreferences } from '~/core/types/preferences';
 
+import { DateTime } from 'luxon';
+
 import { Exam } from '../../../core/types/api';
 import { CourseIcon } from '../../courses/components/CourseIcon';
-import { ExamStatusBadge } from './ExamStatusBadge';
 
 interface Props {
   exam: Exam;
   accessible?: boolean;
+  /** Read before the row, e.g. its position in the list */
   accessibilityLabel?: string;
-  bottomBorder?: boolean;
 }
 
-export const ExamListItem = ({
-  exam,
-  accessibilityLabel = '',
-  bottomBorder = true,
-  ...rest
-}: Props) => {
+/** The tone of each exam state: the chip's word says the state, the tone repeats it */
+const STATUS_TONE: Record<ExamStatusEnum, StatusChipTone> = {
+  [ExamStatusEnum.Booked]: 'success',
+  [ExamStatusEnum.RequestAccepted]: 'success',
+  [ExamStatusEnum.Available]: 'info',
+  [ExamStatusEnum.Requestable]: 'warning',
+  [ExamStatusEnum.Requested]: 'warning',
+  [ExamStatusEnum.RequestRejected]: 'danger',
+  [ExamStatusEnum.Unavailable]: 'neutral',
+};
+
+/** "Mon 18 Jan, 09:00", in the app time zone and language */
+export const useExamWhen = () => {
   const { t } = useTranslation();
-
-  const { courses: coursesPreferences, accessibility } =
-    usePreferencesContext<AppPreferences>();
-  const { colors, spacing } = useTheme();
-  const formatHHmm = dateFormatter('HH:mm');
-  const listItemProps = useMemo(() => {
-    let dateTime,
-      accessibleDateTime = '';
-
-    const status = t(`common.examStatus.${exam.status}`);
-
-    if (!exam.examStartsAt || !isValidDate(exam?.examStartsAt)) {
-      dateTime = t('common.dateToBeDefined');
-    } else {
-      dateTime = formatDate(exam.examStartsAt);
-
-      if (exam.isTimeToBeDefined) {
-        dateTime += `, ${t('common.timeToBeDefined')}`;
-        accessibleDateTime = `${dateTime}.`;
-      } else {
-        const time = formatHHmm(exam.examStartsAt);
-        accessibleDateTime += `${dateTime}. ${t('common.time')} ${time}.`;
-        dateTime += `, ${time}`;
-      }
+  const { language } = usePreferencesContext<AppPreferences>();
+  return (exam: Exam) => {
+    if (!exam.examStartsAt || !isValidDate(exam.examStartsAt)) {
+      return t('common.dateToBeDefined');
     }
+    const start = DateTime.fromJSDate(exam.examStartsAt, {
+      zone: APP_TIMEZONE,
+    }).setLocale(language);
+    return `${start.toFormat('ccc d LLL')}, ${
+      exam.isTimeToBeDefined
+        ? t('common.timeToBeDefined')
+        : start.toFormat('HH:mm')
+    }`;
+  };
+};
 
-    return {
-      accessibilityLabel: `${accessibilityLabel} ${exam.courseName} ${accessibleDateTime} ${status}`,
-    };
-  }, [accessibilityLabel, exam, t, formatHHmm]);
+/**
+ * An exam call: the course tile, the course, when and where, and its state
+ * as a chip, which moves under the text at large text
+ */
+export const ExamListItem = ({ exam, accessibilityLabel, ...rest }: Props) => {
+  const { t } = useTranslation();
+  const { courses: coursesPreferences } =
+    usePreferencesContext<AppPreferences>();
+  const examWhen = useExamWhen();
+  const coursePreferences = coursesPreferences[exam.uniqueShortcode];
+  const rooms = exam.places?.map(place => place.name).join(', ');
+  const subtitle = [examWhen(exam), rooms].filter(Boolean).join(' · ');
+  const status = t(`teachingScreen.examChip.${exam.status}`);
+  const isBooked =
+    exam.status === ExamStatusEnum.Booked ||
+    exam.status === ExamStatusEnum.RequestAccepted;
 
   return (
-    <View style={{ rowGap: spacing[3] }}>
-      <ListItem
-        linkTo={{
-          screen: 'Exam',
-          params: { id: exam.id },
-        }}
-        title={exam.courseName}
-        accessibilityRole="button"
-        leadingItem={
-          <CourseIcon
-            icon={coursesPreferences[exam.uniqueShortcode]?.icon}
-            color={coursesPreferences[exam.uniqueShortcode]?.color}
-            isHidden={coursesPreferences[exam.uniqueShortcode]?.isHidden}
-          />
-        }
-        trailingItem={
-          accessibility?.fontSize && accessibility.fontSize < 175 ? (
-            <Row align="center" pl={2}>
-              <ExamStatusBadge exam={exam} textOnly />
-              {IS_IOS ? <DisclosureIndicator /> : undefined}
-            </Row>
-          ) : undefined
-        }
-        subtitle={
-          accessibility?.fontSize && accessibility.fontSize < 175 ? (
-            <Row gap={2.5} pt={1}>
-              <Row gap={1}>
-                <Icon icon={faCalendar} color={colors.secondaryText} />
-                <Text variant="secondaryText">
-                  {exam.examStartsAt && isValidDate(exam?.examStartsAt)
-                    ? formatReadableDate(exam.examStartsAt, true)
-                    : t('common.dateToBeDefinedShort')}
-                </Text>
-              </Row>
-              {(exam.places?.length ?? 0) > 0 && (
-                <Row gap={1} flexShrink={1}>
-                  <Icon icon={faLocationDot} color={colors.secondaryText} />
-                  <Text
-                    variant="secondaryText"
-                    numberOfLines={1}
-                    ellipsizeMode="tail"
-                    style={{ flexShrink: 1 }}
-                  >
-                    {exam.places?.map(place => place.name).join(', ')}
-                  </Text>
-                </Row>
-              )}
-            </Row>
-          ) : (
-            <>
-              <Row gap={1}>
-                <Icon
-                  icon={faCalendar}
-                  style={{ paddingVertical: spacing[8] }}
-                  color={colors.secondaryText}
-                />
-                <Text variant="secondaryText">
-                  {exam.examStartsAt && isValidDate(exam?.examStartsAt)
-                    ? formatReadableDate(exam.examStartsAt, true)
-                    : t('common.dateToBeDefinedShort')}
-                </Text>
-              </Row>
-              {(exam.places?.length ?? 0) > 0 && (
-                <Row gap={1} flexShrink={1}>
-                  <Icon
-                    icon={faLocationDot}
-                    style={{ paddingVertical: spacing[8] }}
-                    color={colors.secondaryText}
-                  />
-                  <Text
-                    variant="secondaryText"
-                    numberOfLines={1}
-                    ellipsizeMode="tail"
-                    style={{ flexShrink: 1 }}
-                  >
-                    {exam.places?.map(place => place.name).join(', ')}
-                  </Text>
-                </Row>
-              )}
-              <Row align="center" pl={2}>
-                <ExamStatusBadge exam={exam} textOnly />
-                {IS_IOS ? <DisclosureIndicator /> : undefined}
-              </Row>
-            </>
-          )
-        }
-        {...listItemProps}
-        {...rest}
-      />
-
-      {bottomBorder &&
-        accessibility?.fontSize &&
-        accessibility.fontSize > 150 && (
-          <View
-            style={{
-              height: 1,
-              backgroundColor: colors.divider,
-              marginHorizontal: spacing[4],
-            }}
-          />
-        )}
-    </View>
+    <ListItem
+      linkTo={{ screen: 'Exam', params: { id: exam.id } }}
+      title={exam.courseName}
+      subtitle={subtitle}
+      leadingItem={
+        <CourseIcon
+          icon={coursePreferences?.icon}
+          color={coursePreferences?.color}
+          isHidden={coursePreferences?.isHidden}
+        />
+      }
+      chip={
+        <StatusChip
+          label={status}
+          tone={STATUS_TONE[exam.status] ?? 'neutral'}
+          icon={isBooked ? faCheck : undefined}
+        />
+      }
+      chipLabel={status}
+      showChevron={false}
+      accessibilityLabel={[
+        accessibilityLabel,
+        exam.courseName,
+        subtitle,
+        status,
+      ]
+        .filter(Boolean)
+        .join(', ')}
+      {...rest}
+    />
   );
 };

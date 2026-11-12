@@ -22,6 +22,11 @@ import {
   SharedScreens,
   SharedScreensParamList,
 } from '../../../shared/navigation/SharedScreens';
+import { BookingScreen } from '../../agenda/screens/BookingScreen';
+import { DeadlineScreen } from '../../agenda/screens/DeadlineScreen';
+import { LectureScreen } from '../../agenda/screens/LectureScreen';
+import { DeadlineItem, LectureItem } from '../../agenda/types/AgendaItem';
+import { BookingSeatScreen } from '../../bookings/screens/BookingSeatScreen';
 import {
   CourseSharedScreens,
   CourseSharedScreensParamList,
@@ -31,6 +36,7 @@ import { CpdSurveysScreen } from '../../surveys/screens/CpdSurveysScreen';
 import { TranscriptTopTabsNavigator } from '../../transcript/navigation/TranscriptTopTabsNavigator';
 import { ProvisionalGradeScreen } from '../../transcript/screens/ProvisionalGradeScreen';
 import { RecordedGradeScreen } from '../../transcript/screens/RecordedGradeScreen';
+import { MessagesScreen } from '../../user/screens/MessagesScreen';
 import { ExamQuestionScreen } from '../screens/ExamQuestionScreen';
 import { ExamRequestScreen } from '../screens/ExamRequestScreen';
 import { ExamRescheduleScreen } from '../screens/ExamRescheduleScreen';
@@ -38,6 +44,7 @@ import { ExamScreen } from '../screens/ExamScreen';
 import { ExamsScreen } from '../screens/ExamsScreen';
 import { GraduationCodeScreen } from '../screens/GraduationCodeScreen';
 import { TeachingScreen } from '../screens/TeachingScreen';
+import { MessagesBell } from './MessagesBell';
 
 export type TeachingStackParamList = CourseSharedScreensParamList &
   SharedScreensParamList & {
@@ -55,6 +62,18 @@ export type TeachingStackParamList = CourseSharedScreensParamList &
     PlacesTeachingStack: NavigatorScreenParams<PlacesStackParamList>;
     CpdSurveys: { categoryId: string; typeId: string; typeName: string };
     GraduationCode: { id: string };
+    // Opened from the Today list and from Exams and deadlines
+    Lecture: { item: LectureItem };
+    Booking: { id: number };
+    BookingSeat: {
+      bookingId: number;
+      topicId: string;
+      slotId: string;
+      seatId: number;
+    };
+    Deadline: { item: DeadlineItem };
+    // Opened by the bell until the inbox replaces it
+    Messages: undefined;
   };
 
 const Stack = createNativeStackNavigator<
@@ -79,6 +98,7 @@ export const TeachingNavigator = () => {
         options={{
           ...rootOptions,
           headerTitle: t('teachingScreen.title'),
+          headerRight: ({ tintColor }) => <MessagesBell color={tintColor} />,
         }}
       />
       <Stack.Screen
@@ -179,6 +199,34 @@ export const TeachingNavigator = () => {
           animation: 'fade',
           contentStyle: { backgroundColor: 'transparent' },
         }}
+      />
+      <Stack.Screen
+        name="Lecture"
+        component={LectureScreen}
+        getId={({ params }) => `${params.item.courseId}${params.item.id}`}
+        options={{ headerTitle: t('common.lecture') }}
+      />
+      <Stack.Screen
+        name="Booking"
+        component={BookingScreen}
+        getId={({ params }) => `${params.id}`}
+        options={{ headerTitle: t('common.booking') }}
+      />
+      <Stack.Screen
+        name="BookingSeat"
+        component={BookingSeatScreen}
+        options={{ headerTitle: t('common.seat') }}
+      />
+      <Stack.Screen
+        name="Deadline"
+        component={DeadlineScreen}
+        getId={({ params }) => `${params.item.id}`}
+        options={{ headerTitle: t('common.deadline') }}
+      />
+      <Stack.Screen
+        name="Messages"
+        component={MessagesScreen}
+        options={{ headerTitle: t('messagesScreen.title') }}
       />
       {CourseSharedScreens()}
       {SharedScreens()}

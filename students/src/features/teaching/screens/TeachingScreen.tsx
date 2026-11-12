@@ -1,13 +1,22 @@
 import { useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, TouchableHighlight, View } from 'react-native';
+import {
+  PixelRatio,
+  ScrollView,
+  StyleSheet,
+  TouchableHighlight,
+  View,
+} from 'react-native';
 
 import {
-  faArrowsRotate,
+  faCalendarXmark,
+  faClipboard,
   faEye,
   faEyeSlash,
-} from '@fortawesome/free-solid-svg-icons';
+} from '@fortawesome/free-regular-svg-icons';
+import { faArrowsRotate } from '@fortawesome/free-solid-svg-icons';
 import {
+  APP_TIMEZONE,
   usePreferencesContext,
   useQueryStates,
   useQuietQueryErrors,
@@ -15,27 +24,29 @@ import {
 import {
   BottomBarSpacer,
   Card,
-  Col,
-  GlobalStyles,
   Icon,
-  Metric,
+  ListItem,
   OverviewList,
   QueryStateView,
   RefreshControl,
-  Row,
   Section,
   SectionHeader,
   SkeletonCard,
+  SkeletonRows,
   StateBlock,
+  StatusChip,
   Text,
   type Theme,
-  UnreadBadge,
   useStylesheet,
+  useTextScale,
   useTheme,
 } from '@polito/lib/ui';
-import { type Event, ExamStatusEnum } from '@polito/student-api-client';
-import { useScrollToTop } from '@react-navigation/native';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { Deadline, type Event } from '@polito/student-api-client';
+import { useNavigation, useScrollToTop } from '@react-navigation/native';
+import {
+  NativeStackNavigationProp,
+  NativeStackScreenProps,
+} from '@react-navigation/native-stack';
 
 import { AppPreferences } from '~/core/types/preferences';
 
@@ -45,53 +56,65 @@ import { useNotifications } from '../../../core/hooks/useNotifications';
 import { useGetCourses } from '../../../core/queries/courseHooks';
 import { useGetEventAdmissions } from '../../../core/queries/eventAdmissionHooks';
 import { useGetExams } from '../../../core/queries/examHooks';
-import { useGetStudent } from '../../../core/queries/studentHooks';
-import { useGetSurveyCategories } from '../../../core/queries/surveysHooks';
-import { formatFinalGrade, formatThirtiethsGrade } from '../../../utils/grades';
+import {
+  useGetDeadlineWeeks,
+  useGetStudent,
+} from '../../../core/queries/studentHooks';
+import {
+  useGetCpdSurveys,
+  useGetSurveyCategories,
+} from '../../../core/queries/surveysHooks';
+import { Exam } from '../../../core/types/api';
+import { DeadlineItem } from '../../agenda/types/AgendaItem';
 import { CourseListItem } from '../../courses/components/CourseListItem';
+import { CreditsRing } from '../components/CreditsRing';
 import { ExamListItem } from '../components/ExamListItem';
 import { GraduationSessionSection } from '../components/GraduationSessionSection';
-import { ProgressChart } from '../components/ProgressChart';
-import { SurveyTypesSection } from '../components/SurveyTypesSection';
 import { TeachingStackParamList } from '../components/TeachingNavigator';
+import { TodayList } from '../components/TodayList';
 
 type Props = NativeStackScreenProps<TeachingStackParamList, 'Home'>;
 
-/** The transcript card: the 140 px chart and 18 px of padding above and below */
-const TRANSCRIPT_CARD_HEIGHT = 176;
+/** Exam calls shown here; the rest are behind "See all" */
+const EXAMS_SHOWN = 4;
+/** Deadlines in the next two weeks join the exams */
+const DEADLINE_DAYS = 14;
+
+/** Today's Monday and the two after it, in the app time zone */
+const deadlineMondays = () => {
+  const monday = DateTime.now().setZone(APP_TIMEZONE).startOf('week');
+  return [0, 1, 2].map(week => monday.plus({ week }));
+};
+
+type ExamOrDeadline =
+  | { kind: 'exam'; at: number; exam: Exam }
+  | { kind: 'deadline'; at: number; deadline: Deadline };
 
 export const TeachingScreen = ({ navigation }: Props) => {
   const { t } = useTranslation();
   // Tapping the active tab again scrolls back to the top
   const scrollRef = useRef<ScrollView>(null);
   useScrollToTop(scrollRef);
-  const { colors, palettes } = useTheme();
   const styles = useStylesheet(createStyles);
-  const { courses: coursePreferences, hideGrades } =
+  const { courses: coursePreferences } =
     usePreferencesContext<AppPreferences>();
   const { getUnreadsCountPerCourse } = useNotifications();
-  const surveyCategoriesQuery = useGetSurveyCategories();
   const coursesQuery = useGetCourses();
   const examsQuery = useGetExams();
   const studentQuery = useGetStudent();
   const eventAdmissionsQuery = useGetEventAdmissions();
-  const transcriptBadge = null;
-  // These sections appear only when they have something to show
-  useQuietQueryErrors([surveyCategoriesQuery, eventAdmissionsQuery]);
+  const mondays = useMemo(deadlineMondays, []);
+  const deadlinesQueries = useGetDeadlineWeeks(mondays);
+  // These parts appear only when they have something to show
+  useQuietQueryErrors([eventAdmissionsQuery, ...deadlinesQueries.queries]);
 
   const eventAdmissionsByContext = useMemo(() => {
-    if (!eventAdmissionsQuery.data?.length) {
-      return [];
-    }
-
     const byContext = new Map<string, Event[]>();
-
-    eventAdmissionsQuery.data.forEach(event => {
+    (eventAdmissionsQuery.data ?? []).forEach(event => {
       const events = byContext.get(event.contextName) ?? [];
       events.push(event);
       byContext.set(event.contextName, events);
     });
-
     return [...byContext.entries()];
   }, [eventAdmissionsQuery.data]);
 
@@ -128,41 +151,58 @@ export const TeachingScreen = ({ navigation }: Props) => {
     return count > 0 ? count : undefined;
   }, [coursesQuery.data, coursePreferences]);
 
+  // Upcoming exam calls of followed courses, the first ones in date order
   const exams = useMemo(() => {
     if (!coursesQuery.data || !examsQuery.data) return [];
-
-    const hiddenCourses: string[] = [];
-
-    Object.keys(coursePreferences).forEach((key: string) => {
-      if (coursePreferences[key].isHidden) {
-        hiddenCourses.push(key);
-      }
-    });
-
-    return (
-      examsQuery.data
-        .filter(
-          e =>
-            !hiddenCourses.includes(e.uniqueShortcode) &&
-            (!e.examEndsAt ||
-              e.examEndsAt.valueOf() > DateTime.now().toJSDate().valueOf()),
-        )
-        .sort((a, b) => {
-          const status =
-            (a.status === ExamStatusEnum.Booked ? -1 : 0) +
-            (b.status === ExamStatusEnum.Booked ? 1 : 0);
-          return status !== 0
-            ? status
-            : (a.examStartsAt?.valueOf() ?? Number.MAX_SAFE_INTEGER) -
-                (b.examStartsAt?.valueOf() ?? Number.MAX_SAFE_INTEGER);
-        })
-        .slice(0, 4) ?? []
-    );
+    const now = Date.now();
+    return examsQuery.data
+      .filter(
+        e =>
+          !coursePreferences[e.uniqueShortcode]?.isHidden &&
+          (!e.examEndsAt || e.examEndsAt.valueOf() > now),
+      )
+      .sort(
+        (a, b) =>
+          (a.examStartsAt?.valueOf() ?? Number.MAX_SAFE_INTEGER) -
+          (b.examStartsAt?.valueOf() ?? Number.MAX_SAFE_INTEGER),
+      )
+      .slice(0, EXAMS_SHOWN);
   }, [coursePreferences, coursesQuery.data, examsQuery.data]);
+
+  const deadlines = useMemo(() => {
+    const today = DateTime.now().setZone(APP_TIMEZONE).startOf('day');
+    const until = today.plus({ day: DEADLINE_DAYS }).endOf('day');
+    const seen = new Set<number | undefined>();
+    return deadlinesQueries.data
+      .flatMap(week => week ?? [])
+      .filter(d => {
+        const at = DateTime.fromJSDate(d.date, { zone: APP_TIMEZONE });
+        if (at < today || at > until || seen.has(d.id)) return false;
+        seen.add(d.id);
+        return true;
+      });
+  }, [deadlinesQueries.data]);
+
+  const examsAndDeadlines = useMemo<ExamOrDeadline[]>(
+    () =>
+      [
+        ...exams.map(exam => ({
+          kind: 'exam' as const,
+          at: exam.examStartsAt?.valueOf() ?? Number.MAX_SAFE_INTEGER,
+          exam,
+        })),
+        ...deadlines.map(deadline => ({
+          kind: 'deadline' as const,
+          at: deadline.date.valueOf(),
+          deadline,
+        })),
+      ].sort((a, b) => a.at - b.at),
+    [exams, deadlines],
+  );
 
   const coursesStates = useQueryStates(coursesQuery);
   const examsStates = useQueryStates([examsQuery, coursesQuery], {
-    isEmpty: () => exams.length === 0,
+    isEmpty: () => examsAndDeadlines.length === 0,
   });
   const studentStates = useQueryStates(studentQuery);
   // When nothing loads at all, one block says so instead of three
@@ -185,13 +225,16 @@ export const TeachingScreen = ({ navigation }: Props) => {
             coursesQuery,
             examsQuery,
             studentQuery,
-            surveyCategoriesQuery,
             eventAdmissionsQuery,
+            ...deadlinesQueries.queries,
           ]}
           manual
         />
       }
     >
+      {/* The navy goes on above the list when the page is pulled down */}
+      <View style={styles.overscroll} />
+      <TodayList quiet={nothingLoaded} />
       <View style={styles.container}>
         {nothingLoaded ? (
           <StateBlock
@@ -220,16 +263,7 @@ export const TeachingScreen = ({ navigation }: Props) => {
           />
         ) : (
           <>
-            {eventAdmissionsByContext.map(([contextName, events]) => (
-              <GraduationSessionSection
-                key={contextName}
-                contextName={contextName}
-                events={events}
-              />
-            ))}
-            {surveyCategoriesQuery.data?.length ? (
-              <SurveyTypesSection types={surveyCategoriesQuery.data} />
-            ) : undefined}
+            <SurveysRow />
             <Section>
               <SectionHeader
                 title={t('coursesScreen.title')}
@@ -264,7 +298,7 @@ export const TeachingScreen = ({ navigation }: Props) => {
             </Section>
             <Section>
               <SectionHeader
-                title={t('examsScreen.title')}
+                title={t('teachingScreen.examsTitle')}
                 linkTo={{ screen: 'Exams' }}
                 linkToMoreCount={
                   examsQuery.data
@@ -282,15 +316,28 @@ export const TeachingScreen = ({ navigation }: Props) => {
                 }}
                 errorState={{ title: t('states.exams.failedTitle') }}
               >
-                {exams.map((exam, index) => (
-                  <ExamListItem
-                    key={`${exam.id}` + exam.moduleNumber}
-                    exam={exam}
-                    bottomBorder={index < exams.length - 1}
-                  />
-                ))}
+                {examsAndDeadlines.map(entry =>
+                  entry.kind === 'exam' ? (
+                    <ExamListItem
+                      key={`${entry.exam.id}` + entry.exam.moduleNumber}
+                      exam={entry.exam}
+                    />
+                  ) : (
+                    <DeadlineRow
+                      key={`deadline-${entry.deadline.id}`}
+                      deadline={entry.deadline}
+                    />
+                  ),
+                )}
               </OverviewList>
             </Section>
+            {eventAdmissionsByContext.map(([contextName, events]) => (
+              <GraduationSessionSection
+                key={contextName}
+                contextName={contextName}
+                events={events}
+              />
+            ))}
             <Section>
               <SectionHeader
                 title={t('common.transcript')}
@@ -298,93 +345,12 @@ export const TeachingScreen = ({ navigation }: Props) => {
               />
               <QueryStateView
                 states={studentStates}
-                skeleton={
-                  <SkeletonCard
-                    height={TRANSCRIPT_CARD_HEIGHT}
-                    style={styles.transcriptCard}
-                  />
-                }
+                skeleton={<TranscriptSkeleton />}
                 errorState={{ title: t('states.transcript.failedTitle') }}
               >
-                <View style={GlobalStyles.relative}>
-                  <Card style={styles.transcriptCard}>
-                    <TouchableHighlight
-                      onPress={() => navigation.navigate('Transcript')}
-                      underlayColor={colors.touchableHighlight}
-                    >
-                      <Row
-                        p={5}
-                        gap={5}
-                        align="center"
-                        justify="space-between"
-                        style={styles.transcriptRow}
-                      >
-                        <Col justify="center" flexShrink={1} gap={5}>
-                          <Metric
-                            title={t('transcriptMetricsScreen.weightedAverage')}
-                            value={formatThirtiethsGrade(
-                              !hideGrades
-                                ? studentQuery.data?.averageGrade
-                                : null,
-                            )}
-                            color={colors.title}
-                          />
-                          <Metric
-                            title={t('transcriptMetricsScreen.averageLabel')}
-                            value={formatFinalGrade(
-                              !hideGrades
-                                ? studentQuery.data?.estimatedFinalGrade
-                                : null,
-                            )}
-                            color={colors.title}
-                          />
-                        </Col>
-                        <Col style={styles.graph} flexShrink={1}>
-                          <View style={{ alignItems: 'center' }}>
-                            <ProgressChart
-                              label={
-                                studentQuery.data?.totalCredits
-                                  ? `${
-                                      hideGrades
-                                        ? '--'
-                                        : studentQuery.data
-                                            ?.totalAcquiredCredits
-                                    }/${studentQuery.data?.totalCredits}\n${t(
-                                      'common.ects',
-                                    )}`
-                                  : undefined
-                              }
-                              data={
-                                hideGrades
-                                  ? []
-                                  : studentQuery.data?.totalCredits
-                                    ? [
-                                        (studentQuery.data
-                                          ?.totalAttendedCredits ?? 0) /
-                                          studentQuery.data?.totalCredits,
-                                        (studentQuery.data
-                                          ?.totalAcquiredCredits ?? 0) /
-                                          studentQuery.data?.totalCredits,
-                                      ]
-                                    : []
-                              }
-                              boxSize={140}
-                              radius={40}
-                              thickness={18}
-                              colors={[
-                                palettes.primary[400],
-                                palettes.secondary[500],
-                              ]}
-                            />
-                          </View>
-                        </Col>
-                      </Row>
-                    </TouchableHighlight>
-                  </Card>
-                  {transcriptBadge && (
-                    <UnreadBadge text={transcriptBadge} style={styles.badge} />
-                  )}
-                </View>
+                <TranscriptCard
+                  onPress={() => navigation.navigate('Transcript')}
+                />
               </QueryStateView>
             </Section>
           </>
@@ -392,6 +358,238 @@ export const TeachingScreen = ({ navigation }: Props) => {
       </View>
       <BottomBarSpacer />
     </ScrollView>
+  );
+};
+
+/**
+ * "Teaching surveys: 2 to fill in", with the due date and why it matters.
+ * Only while there are mandatory surveys to fill in.
+ */
+const SurveysRow = () => {
+  const { t } = useTranslation();
+  const styles = useStylesheet(createStyles);
+  const { colors } = useTheme();
+  const { language } = usePreferencesContext<AppPreferences>();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<TeachingStackParamList>>();
+  const surveysQuery = useGetCpdSurveys();
+  const typesQuery = useGetSurveyCategories();
+  useQuietQueryErrors(surveysQuery);
+
+  if (surveysQuery.isLoading) {
+    return (
+      <SkeletonRows
+        count={1}
+        leading="icon"
+        subtitleLines={2}
+        style={styles.surveys}
+      />
+    );
+  }
+  const surveys = surveysQuery.data ?? [];
+  if (!surveys.length) return null;
+
+  const due = Math.min(...surveys.map(s => s.endsAt.valueOf()));
+  const date = DateTime.fromMillis(due, { zone: APP_TIMEZONE })
+    .setLocale(language)
+    .toFormat('ccc d LLL');
+  const types = typesQuery.data ?? [];
+  const open = () => {
+    // One kind of survey opens its list; several open the surveys page
+    if (types.length === 1) {
+      navigation.navigate('CpdSurveys', {
+        categoryId: types[0].categoryId,
+        typeId: types[0].typeId,
+        typeName: types[0].name,
+      });
+    } else {
+      navigation.navigate('ServicesTab' as any, {
+        screen: 'Surveys',
+        initial: false,
+      });
+    }
+  };
+
+  return (
+    <OverviewList style={styles.surveys}>
+      <ListItem
+        title={t('teachingScreen.surveysTitle', { count: surveys.length })}
+        subtitle={
+          Number.isFinite(due)
+            ? t('teachingScreen.surveysDue', { date })
+            : t('teachingScreen.surveysNoDue')
+        }
+        subtitleProps={{ numberOfLines: undefined }}
+        multilineTitle
+        leadingItem={
+          <Icon icon={faClipboard} size={24} color={colors.secondaryText} />
+        }
+        isAction
+        onPress={open}
+      />
+    </OverviewList>
+  );
+};
+
+/** A deadline among the exams: a neutral tile, the day and a "Deadline" chip */
+const DeadlineRow = ({ deadline }: { deadline: Deadline }) => {
+  const { t } = useTranslation();
+  const styles = useStylesheet(createStyles);
+  const { colors } = useTheme();
+  const { language } = usePreferencesContext<AppPreferences>();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<TeachingStackParamList>>();
+  const start = DateTime.fromJSDate(deadline.date, {
+    zone: APP_TIMEZONE,
+  }).startOf('day');
+  const subtitle = [
+    start.setLocale(language).toFormat('ccc d LLL'),
+    deadline.type,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+  const chip = t('teachingScreen.examChip.deadline');
+  // The deadline screen takes the agenda's item, built as the agenda does
+  const item: DeadlineItem = {
+    id: deadline.id!,
+    key: 'deadline-' + deadline.id,
+    type: 'deadline',
+    title: deadline.name,
+    start,
+    end: start.plus({ hour: 1 }),
+    startTimestamp: deadline.date.valueOf(),
+    date: start.toFormat('yyyy-MM-dd'),
+    url: deadline.url,
+  };
+  return (
+    <ListItem
+      title={deadline.name}
+      subtitle={subtitle}
+      leadingItem={
+        <View style={styles.neutralTile}>
+          <Icon
+            icon={faCalendarXmark}
+            size={20}
+            color={colors.neutralChipText}
+          />
+        </View>
+      }
+      chip={<StatusChip label={chip} tone="neutral" />}
+      chipLabel={chip}
+      showChevron={false}
+      onPress={() => navigation.navigate('Deadline', { item })}
+    />
+  );
+};
+
+/** The figure as the main number, the scale after it smaller: 26.21/30 */
+const Average = ({
+  label,
+  value,
+  scale,
+}: {
+  label: string;
+  value?: number | null;
+  scale: number;
+}) => {
+  const { colors } = useTheme();
+  return (
+    <View>
+      <Text variant="secondaryText">{label}</Text>
+      <Text
+        variant="number"
+        style={{ color: colors.title, fontVariant: ['tabular-nums'] }}
+      >
+        {value ?? '--'}
+        <Text variant="secondaryText" weight="semibold">
+          {` /${scale}`}
+        </Text>
+      </Text>
+    </View>
+  );
+};
+
+/**
+ * The transcript card: the two averages on the left and the double ring of
+ * credits on the right, centred. At large text the ring goes under them.
+ */
+const TranscriptCard = ({ onPress }: { onPress: () => void }) => {
+  const { t } = useTranslation();
+  const styles = useStylesheet(createStyles);
+  const { colors } = useTheme();
+  const { isLarge } = useTextScale();
+  const { hideGrades } = usePreferencesContext<AppPreferences>();
+  const { data: student } = useGetStudent();
+  const total = student?.totalCredits ?? 0;
+  const acquired = student?.totalAcquiredCredits ?? 0;
+  const attended = student?.totalAttendedCredits ?? 0;
+  const ringLabel = hideGrades
+    ? t('teachingScreen.creditsRingHiddenLabel')
+    : t('teachingScreen.creditsRingLabel', { acquired, attended, total });
+  const label = hideGrades
+    ? t('teachingScreen.transcriptHiddenLabel')
+    : t('teachingScreen.transcriptLabel', {
+        average: student?.averageGrade ?? '--',
+        final: student?.estimatedFinalGrade ?? '--',
+        credits: ringLabel,
+      });
+
+  return (
+    <Card style={styles.transcriptCard}>
+      <TouchableHighlight
+        onPress={onPress}
+        underlayColor={colors.touchableHighlight}
+        accessibilityRole="button"
+        accessibilityLabel={label}
+      >
+        <View style={[styles.transcript, isLarge && styles.transcriptLarge]}>
+          <View style={styles.averages}>
+            <Average
+              label={t('transcriptMetricsScreen.weightedAverage')}
+              value={hideGrades ? null : student?.averageGrade}
+              scale={30}
+            />
+            <Average
+              label={t('transcriptMetricsScreen.averageLabel')}
+              value={hideGrades ? null : student?.estimatedFinalGrade}
+              scale={110}
+            />
+          </View>
+          {total > 0 && (
+            <View style={styles.ring}>
+              <CreditsRing
+                acquired={acquired}
+                attended={attended}
+                total={total}
+                hidden={hideGrades}
+                unit={t('teachingScreen.ringCredits')}
+                accessibilityLabel={ringLabel}
+              />
+            </View>
+          )}
+        </View>
+      </TouchableHighlight>
+    </Card>
+  );
+};
+
+/** The card's height while the student loads: ring and padding, or stacked */
+const TranscriptSkeleton = () => {
+  const styles = useStylesheet(createStyles);
+  const { scale, isLarge } = useTextScale();
+  const k = Math.min(scale * PixelRatio.getFontScale(), 2);
+  // Two averages: a label line and a number line each, 12 apart
+  const averages = (20 + 32) * 2 * k + 12;
+  const ring = 120 * k;
+  const height = isLarge
+    ? averages + 16 + ring + 32
+    : Math.max(averages, ring) + 32;
+  return (
+    <SkeletonCard
+      height={height}
+      lines={['secondaryText', 'heading', 'secondaryText', 'heading']}
+      style={styles.transcriptCard}
+    />
   );
 };
 
@@ -424,29 +622,53 @@ const HideGrades = () => {
   );
 };
 
-const createStyles = ({ spacing }: Theme) =>
+const createStyles = ({ colors, controls, layout, shapes, spacing }: Theme) =>
   StyleSheet.create({
-    container: {
-      marginVertical: spacing[5],
-    },
-    transcriptRow: {
-      minHeight: TRANSCRIPT_CARD_HEIGHT,
-    },
-    transcriptCard: {
-      marginVertical: spacing[2],
-    },
-    badge: {
+    overscroll: {
       position: 'absolute',
-      top: 0,
-      right: 10,
+      top: -1000,
+      left: 0,
+      right: 0,
+      height: 1000,
+      backgroundColor: colors.header,
+    },
+    container: {
+      paddingTop: spacing[4],
+    },
+    surveys: {
+      marginBottom: spacing[6],
+    },
+    neutralTile: {
+      width: controls.courseTileSize,
+      height: controls.courseTileSize,
+      borderRadius: shapes.md,
+      backgroundColor: colors.neutralChipBg,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    transcriptCard: {},
+    ring: {
+      alignSelf: 'center',
+    },
+    transcript: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing[4],
+      padding: layout.cardPadding,
+    },
+    transcriptLarge: {
+      flexDirection: 'column',
+      alignItems: 'stretch',
+    },
+    averages: {
+      flexGrow: 1,
+      flexShrink: 1,
+      gap: spacing[3],
     },
     hideGradesSwitch: {
       display: 'flex',
       flexDirection: 'row',
       gap: spacing[1],
       alignItems: 'center',
-    },
-    graph: {
-      paddingHorizontal: spacing[4],
     },
   });
