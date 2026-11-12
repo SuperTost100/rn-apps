@@ -1,4 +1,4 @@
-import type { TextStyle } from 'react-native';
+import { Platform, type TextStyle } from 'react-native';
 
 /**
  * The Montserrat files bundled on Android and iOS, by weight.
@@ -78,9 +78,16 @@ export const resolveFontFace = (
     isItalic && file === 'Regular'
       ? 'Montserrat-Italic'
       : `Montserrat-${file}${isItalic ? 'Italic' : ''}`;
+  if (Platform.OS === 'android') {
+    // Android looks a bold or italic style up as "<family>_bold.ttf" or
+    // "<family>_italic.ttf" and falls back to the system font when that file
+    // is missing, so Montserrat-Bold at weight 700 drew Roboto. The file
+    // already has its weight and slant: ask for neither
+    return { fontFamily: name, fontWeight: 'normal', fontStyle: 'normal' };
+  }
   return {
     fontFamily: name,
-    // The weight of the file itself, so neither platform adds synthetic bold
+    // The weight of the file itself, so iOS adds no synthetic bold
     fontWeight: String(FILE_WEIGHTS[file]) as TextStyle['fontWeight'],
     // Matches the file: an italic file is not slanted again, and iOS keeps
     // the italic face when it looks the weight up in the family
