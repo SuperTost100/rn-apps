@@ -51,7 +51,7 @@ export const ServiceCard = ({
   ...props
 }: Props) => {
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
-  const { dark, colors, palettes } = useTheme();
+  const { colors } = useTheme();
   const { t } = useTranslation();
   const { accessibility } = usePreferencesContext<AppPreferences>();
   const isLargeFont = Number(accessibility?.fontSize) >= 125;
@@ -75,11 +75,7 @@ export const ServiceCard = ({
       accessibilityLabel={accessibilityLabel}
     >
       <Row accessibilityRole="button" justify="space-between" align="center">
-        <Icon
-          icon={icon}
-          size={28}
-          color={iconColor ?? palettes.primary[dark ? 400 : 500]}
-        />
+        <Icon icon={icon} size={28} color={iconColor ?? colors.link} />
         <IconButton
           accessibilityLabel={
             favorite
@@ -87,7 +83,7 @@ export const ServiceCard = ({
               : t('servicesScreen.favoriteInactive')
           }
           icon={favorite ? faStarFilled : faStar}
-          color={favorite ? palettes.orange[400] : colors.secondaryText}
+          color={favorite ? colors.accent : colors.secondaryText}
           onPress={() => onFavoriteChange(!favorite)}
           style={styles.favButton}
           disabled={disabled}

@@ -133,7 +133,7 @@ const HeaderRightDropdown = ({
 export const ProfileScreen = ({ navigation, route }: Props) => {
   const { t } = useTranslation();
   const { firstRequest } = route.params;
-  const { fontSizes, palettes } = useTheme();
+  const { fontSizes, colors } = useTheme();
   const [isQrVisible, setIsQrVisible] = useState(false);
   const { username } = useApiContext();
   const { mutate: logout } = useLogout();
@@ -290,10 +290,10 @@ export const ProfileScreen = ({ navigation, route }: Props) => {
                 <Icon
                   icon={faPersonThroughWindow}
                   size={fontSizes.xl}
-                  color={palettes.danger[700]}
+                  color={colors.dangerText}
                 />
               }
-              titleStyle={{ color: palettes.danger[700] }}
+              titleStyle={{ color: colors.dangerText }}
               onPress={() => handleLogout()}
               disabled={isOffline}
             />
