@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, TouchableHighlight, View } from 'react-native';
 
@@ -34,6 +34,7 @@ import {
   useTheme,
 } from '@polito/lib/ui';
 import { type Event, ExamStatusEnum } from '@polito/student-api-client';
+import { useScrollToTop } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { AppPreferences } from '~/core/types/preferences';
@@ -61,6 +62,9 @@ const TRANSCRIPT_CARD_HEIGHT = 176;
 
 export const TeachingScreen = ({ navigation }: Props) => {
   const { t } = useTranslation();
+  // Tapping the active tab again scrolls back to the top
+  const scrollRef = useRef<ScrollView>(null);
+  useScrollToTop(scrollRef);
   const { colors, palettes } = useTheme();
   const styles = useStylesheet(createStyles);
   const { courses: coursePreferences, hideGrades } =
@@ -173,6 +177,7 @@ export const TeachingScreen = ({ navigation }: Props) => {
 
   return (
     <ScrollView
+      ref={scrollRef}
       contentInsetAdjustmentBehavior="automatic"
       refreshControl={
         <RefreshControl

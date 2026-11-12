@@ -1,15 +1,8 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Platform, StyleSheet } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { faCalendar } from '@fortawesome/free-regular-svg-icons';
-import {
-  faBookOpen,
-  faCircleInfo,
-  faCompass,
-  faUser,
-} from '@fortawesome/free-solid-svg-icons';
 import {
   useApiContext,
   usePreferencesContext,
@@ -21,13 +14,15 @@ import {
   useGetSites,
 } from '@polito/lib/features/places';
 import {
-  HeaderLogo,
-  Icon,
+  OutlineIcon,
+  OutlineIconName,
   Text,
   Theme,
-  TranslucentView,
+  UnreadBadge,
   tabBarStyle,
+  useInnerTitleOptions,
   useStylesheet,
+  useTabRootHeaderOptions,
   useTextScale,
   useTheme,
 } from '@polito/lib/ui';
@@ -53,24 +48,91 @@ const TabNavigator = createBottomTabNavigator<RootParamList>();
 const androidTabBarHeight = 60;
 // Room for the label at its 14 px cap under the 20 px icon
 const androidLargeTextTabBarHeight = 64;
-const tabBarIconSize = 20;
 
 // The label grows with the text size up to 14 px, as in the mockup, and
 // never hides. At 14 px the longest labels (Teaching, Didattica) are 66 px
 // wide. A tab is 72 dp wide on a 360 dp phone, but its button pads 5 px on
-// each side, so the label takes that padding back.
-const TabLabel = ({ color, children }: { color: string; children: string }) => (
+// each side, so the label takes that padding back. The active tab's label
+// is bold, so the selection never rests on colour alone.
+const TabLabel = ({
+  focused,
+  color,
+  children,
+}: {
+  focused: boolean;
+  color: string;
+  children: string;
+}) => (
   <Text
     variant="tabLabel"
     maxFontSize={14}
     numberOfLines={1}
-    style={[tabLabelStyles.label, { color }]}
+    weight={focused ? 'bold' : undefined}
+    style={[tabBarStyles.label, { color }]}
   >
     {children}
   </Text>
 );
-const tabLabelStyles = StyleSheet.create({
+
+/**
+ * The tab icon: an outline glyph with a pill behind it on the active tab,
+ * and the unread count on its corner
+ */
+const TabIcon = ({
+  name,
+  focused,
+  color,
+  unread,
+}: {
+  name: OutlineIconName;
+  focused: boolean;
+  color: string;
+  unread?: number;
+}) => {
+  const { colors } = useTheme();
+  const { isLargest } = useTextScale();
+  return (
+    <View
+      style={[
+        tabBarStyles.pill,
+        isLargest && tabBarStyles.narrowPill,
+        focused && { backgroundColor: colors.tabIndicator },
+      ]}
+    >
+      <OutlineIcon name={name} color={color} />
+      {!!unread && (
+        <View
+          style={[
+            tabBarStyles.badge,
+            isLargest && tabBarStyles.narrowBadge,
+            { borderColor: colors.tabBarBackground },
+          ]}
+        >
+          <UnreadBadge text={unread} />
+        </View>
+      )}
+    </View>
+  );
+};
+
+const tabBarStyles = StyleSheet.create({
   label: { marginHorizontal: -5 },
+  pill: {
+    width: 56,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  narrowPill: { width: 48 },
+  badge: {
+    position: 'absolute',
+    top: -6,
+    left: 32,
+    borderWidth: 2,
+    borderRadius: 999,
+  },
+  narrowBadge: { left: 28 },
 });
 
 export const RootNavigator = ({
@@ -130,6 +192,32 @@ export const RootNavigator = ({
     [bottom, isLarge],
   );
 
+  const placesHeaderOptions = {
+    root: useTabRootHeaderOptions(),
+    inner: useInnerTitleOptions(),
+  };
+
+  // Badges count unread items only, which reading them clears: course
+  // announcements, files and lectures; ticket replies; messages
+  const unread = {
+    teaching: getUnreadsCount(['teaching']),
+    services: getUnreadsCount(['services', 'tickets']),
+    profile: filterUnread(profileMessages.data || []).length || undefined,
+  };
+  const tabOptions = (
+    title: string,
+    icon: OutlineIconName,
+    count?: number,
+  ) => ({
+    title,
+    tabBarAccessibilityLabel: count
+      ? `${title}, ${t('navigation.unreadCount', { count })}`
+      : title,
+    tabBarIcon: ({ focused, color }: { focused: boolean; color: string }) => (
+      <TabIcon name={icon} focused={focused} color={color} unread={count} />
+    ),
+  });
+
   return (
     <>
       <TabNavigator.Navigator
@@ -143,67 +231,46 @@ export const RootNavigator = ({
             hide: instantAnimation,
           },
           tabBarStyle: [styles.tabBarStyle, androidTabBarBottom],
-          tabBarBackground: () => <TranslucentView fallbackOpacity={1} />,
+          tabBarBackground: () => <View style={styles.tabBarBackground} />,
           tabBarItemStyle: styles.tabBarItemStyle,
+          tabBarActiveTintColor: colors.tabBar,
           tabBarInactiveTintColor: colors.tabBarInactive,
-          tabBarBadgeStyle: styles.tabBarBadgeStyle,
         }}
       >
         <TabNavigator.Screen
           name="TeachingTab"
           component={TeachingNavigator}
-          options={{
-            title: t('teachingScreen.title'),
-            tabBarIcon: ({ color }) => (
-              <Icon icon={faBookOpen} color={color} size={tabBarIconSize} />
-            ),
-            tabBarBadge: getUnreadsCount(['teaching']),
-          }}
+          options={tabOptions(
+            t('teachingScreen.title'),
+            'book',
+            unread.teaching,
+          )}
         />
         <TabNavigator.Screen
           name="AgendaTab"
           component={AgendaNavigator}
-          options={{
-            title: t('agendaScreen.title'),
-            tabBarIcon: ({ color }) => (
-              <Icon icon={faCalendar} color={color} size={tabBarIconSize} />
-            ),
-          }}
+          options={tabOptions(t('agendaScreen.title'), 'calendar')}
         />
         <TabNavigator.Screen
           name="PlacesTab"
-          options={{
-            title: t('placesScreen.title'),
-            tabBarIcon: ({ color }) => (
-              <Icon icon={faCompass} color={color} size={tabBarIconSize} />
-            ),
-          }}
+          options={tabOptions(t('placesScreen.title'), 'compass')}
         >
-          {() => <PlacesNavigator unreadMessagesModal={UnreadMessagesModal} />}
+          {() => (
+            <PlacesNavigator
+              unreadMessagesModal={UnreadMessagesModal}
+              headerOptions={placesHeaderOptions}
+            />
+          )}
         </TabNavigator.Screen>
         <TabNavigator.Screen
           name="ServicesTab"
           component={ServicesNavigator}
-          options={{
-            headerLeft: () => <HeaderLogo />,
-            title: t('common.services'),
-            tabBarIcon: ({ color }) => (
-              <Icon icon={faCircleInfo} color={color} size={tabBarIconSize} />
-            ),
-            tabBarBadge: getUnreadsCount(['services']),
-          }}
+          options={tabOptions(t('common.services'), 'grid', unread.services)}
         />
         <TabNavigator.Screen
           name="ProfileTab"
           component={UserNavigator}
-          options={{
-            title: t('profileScreen.title'),
-            tabBarIcon: ({ color }) => (
-              <Icon icon={faUser} color={color} size={tabBarIconSize} />
-            ),
-            tabBarBadge:
-              filterUnread(profileMessages.data || []).length || undefined,
-          }}
+          options={tabOptions(t('profileScreen.title'), 'user', unread.profile)}
         />
       </TabNavigator.Navigator>
       <OnboardingModal
@@ -214,30 +281,19 @@ export const RootNavigator = ({
   );
 };
 
-const createStyles = ({
-  colors,
-  palettes,
-  fontFamilies,
-  fontWeights,
-  fontSizes,
-}: Theme) =>
+const createStyles = ({ colors }: Theme) =>
   StyleSheet.create({
     tabBarStyle: {
       ...tabBarStyle,
       position: 'absolute',
       borderTopColor: colors.divider,
     },
+    // Solid, not translucent: the bar is white (the surface in dark)
+    tabBarBackground: {
+      flex: 1,
+      backgroundColor: colors.tabBarBackground,
+    },
     tabBarItemStyle: {
       paddingVertical: 3,
-    },
-    // Theme-independent hardcoded color
-    // eslint-disable-next-line react-native/no-color-literals
-    tabBarBadgeStyle: {
-      backgroundColor: palettes.rose[600],
-      color: 'white',
-      top: -2,
-      fontFamily: fontFamilies.body,
-      fontWeight: fontWeights.semibold,
-      fontSize: fontSizes.sm,
     },
   });

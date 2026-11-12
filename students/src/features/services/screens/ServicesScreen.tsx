@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SafeAreaView, ScrollView, StyleSheet } from 'react-native';
 
@@ -26,6 +26,7 @@ import {
   auto,
   useStylesheet,
 } from '@polito/lib/ui';
+import { useScrollToTop } from '@react-navigation/native';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { AppPreferences } from '~/core/types/preferences.ts';
@@ -40,6 +41,9 @@ import { ServiceCard } from '../components/ServiceCard';
 
 export const ServicesScreen = () => {
   const { t } = useTranslation();
+  // Tapping the active tab again scrolls back to the top
+  const scrollRef = useRef<ScrollView>(null);
+  useScrollToTop(scrollRef);
   const {
     favoriteServices: favoriteServiceIds,
     emailGuideRead,
@@ -187,7 +191,7 @@ export const ServicesScreen = () => {
     };
 
   return (
-    <ScrollView contentInsetAdjustmentBehavior="automatic">
+    <ScrollView ref={scrollRef} contentInsetAdjustmentBehavior="automatic">
       <SafeAreaView>
         {favoriteServices.length > 0 && (
           <Grid
