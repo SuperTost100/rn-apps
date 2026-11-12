@@ -1,13 +1,12 @@
-import { Fragment, useEffect, useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { SafeAreaView, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { useScreenReader } from '@polito/lib/core';
 import {
-  Divider,
+  BottomBarSpacer,
   OverviewList,
   RefreshControl,
-  Section,
   Theme,
   useStylesheet,
 } from '@polito/lib/ui';
@@ -80,62 +79,45 @@ export const WhatsNewScreen = ({ route }: Props) => {
 
   return (
     <ScrollView
-      style={styles.screen}
       contentInsetAdjustmentBehavior="automatic"
       refreshControl={<RefreshControl queries={[announcementsQuery]} manual />}
     >
-      <SafeAreaView>
-        <Section>
-          <View
-            accessibilityRole="list"
-            accessibilityLabel={
-              announcementsQuery.isLoading
-                ? t(config.loadingKey)
-                : t(config.listLabelKey, {
-                    count: announcements.length,
-                  })
-            }
-          >
-            <OverviewList
-              dividers={false}
-              rounded={false}
-              indented={false}
-              style={styles.list}
-              loading={announcementsQuery.isLoading}
-              emptyStateText={t(config.emptyKey)}
-            >
-              {announcements.map((announcement, index) => (
-                <Fragment key={announcement.id}>
-                  <WhatsNewListItem
-                    announcement={announcement}
-                    index={index}
-                    totalData={announcements.length}
-                  />
-                  {index < announcements.length - 1 && (
-                    <Divider style={styles.divider} />
-                  )}
-                </Fragment>
-              ))}
-            </OverviewList>
-          </View>
-        </Section>
-      </SafeAreaView>
+      <View
+        style={styles.list}
+        accessibilityRole="list"
+        accessibilityLabel={
+          announcementsQuery.isLoading
+            ? t(config.loadingKey)
+            : t(config.listLabelKey, {
+                count: announcements.length,
+              })
+        }
+      >
+        <OverviewList
+          queries={announcementsQuery}
+          isEmpty={() => announcements.length === 0}
+          skeleton={{ count: 3, titleLines: 2, trailing: 'none' }}
+          emptyState={{ title: t(config.emptyKey) }}
+          indented={false}
+        >
+          {announcements.map((announcement, index) => (
+            <WhatsNewListItem
+              key={announcement.id}
+              announcement={announcement}
+              index={index}
+              totalData={announcements.length}
+            />
+          ))}
+        </OverviewList>
+      </View>
+      <BottomBarSpacer />
     </ScrollView>
   );
 };
 
-const createStyles = ({ colors, spacing }: Theme) =>
+const createStyles = ({ spacing }: Theme) =>
   StyleSheet.create({
-    screen: {
-      backgroundColor: colors.background,
-    },
     list: {
-      backgroundColor: colors.background,
-      elevation: 0,
-      marginHorizontal: 0,
-      marginVertical: 0,
-    },
-    divider: {
-      marginHorizontal: spacing[5],
+      marginTop: spacing[2],
     },
   });

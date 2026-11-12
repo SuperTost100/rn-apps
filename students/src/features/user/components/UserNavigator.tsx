@@ -159,7 +159,7 @@ export const UserNavigator = () => {
         name="AccessibilitySettings"
         component={AccessibilitySettingsScreen}
         options={{
-          headerTitle: t('accessibilitySettingsScreen.fontSettingsTitle'),
+          headerTitle: t('accessibilitySettingsScreen.customFontSectionTitle'),
         }}
       />
       <Stack.Screen

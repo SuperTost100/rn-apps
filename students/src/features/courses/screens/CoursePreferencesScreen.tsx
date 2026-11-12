@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AccessibilityInfo, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -31,7 +31,6 @@ import {
   CourseSectionEnum,
   getCourseKey,
   useGetCourse,
-  useUpdateCoursePreferences,
 } from '~/core/queries/courseHooks';
 import { AppPreferences } from '~/core/types/preferences';
 
@@ -45,20 +44,11 @@ import {
 } from '../components/CourseLookSheets';
 import { SettingSwitchRow } from '../components/SettingSwitchRow';
 import { CourseContext, useCourseContext } from '../contexts/CourseContext';
+import {
+  NOTIFICATION_ROWS,
+  useCourseNotifications,
+} from '../hooks/useCourseNotifications';
 import { formatSize } from '../utils/fileTree';
-
-type NotificationKey = 'notices' | 'files' | 'lectures';
-const NOTIFICATION_ROWS: {
-  key: NotificationKey;
-  icon: 'megaphone' | 'file' | 'video';
-}[] = [
-  { key: 'notices', icon: 'megaphone' },
-  { key: 'files', icon: 'file' },
-  { key: 'lectures', icon: 'video' },
-];
-
-/** How long "Saved" stays on a row */
-const SAVED_MS = 2000;
 
 /**
  * The downloaded files of the course: how much room they take, and a row
@@ -192,12 +182,9 @@ export const CoursePreferencesScreen = ({ navigation, route }: Props) => {
   const { t } = useTranslation();
   const styles = useStylesheet(createStyles);
   const { colors } = useTheme();
-  const { setFeedback } = useFeedbackContext();
   const colourName = useColourName();
   const { courseId, uniqueShortcode } = route.params;
   const courseQuery = useGetCourse(courseId);
-  const { mutateAsync: updateCoursePreferences } =
-    useUpdateCoursePreferences(courseId);
   const { courses: coursesPrefs, updatePreference } =
     usePreferencesContext<AppPreferences>();
   const coursePrefs = coursesPrefs[uniqueShortcode];
@@ -220,67 +207,10 @@ export const CoursePreferencesScreen = ({ navigation, route }: Props) => {
       [uniqueShortcode]: { ...defaultPrefs, ...coursePrefs, ...changes },
     });
 
-  // --- Notifications: optimistic, with the saved state and a rollback ---
-
-  const [overrides, setOverrides] = useState<
-    Partial<Record<NotificationKey, boolean>>
-  >({});
-  const [savedKey, setSavedKey] = useState<NotificationKey | null>(null);
-  const savedTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
-    undefined,
-  );
-  useEffect(() => () => clearTimeout(savedTimer.current), []);
-  const serverValues = courseQuery.data?.notifications;
-  const values = useMemo(
-    () => ({ ...serverValues, ...overrides }),
-    [serverValues, overrides],
-  );
-
-  // An override goes once the server says the same
-  useEffect(() => {
-    if (!serverValues) return;
-    setOverrides(prev => {
-      const next = { ...prev };
-      let changed = false;
-      (Object.keys(prev) as NotificationKey[]).forEach(key => {
-        if (serverValues[key] === prev[key]) {
-          delete next[key];
-          changed = true;
-        }
-      });
-      return changed ? next : prev;
-    });
-  }, [serverValues]);
-
-  const titles: Record<NotificationKey, string> = {
-    notices: t('course.settings.announcements'),
-    files: t('course.settings.files'),
-    lectures: t('course.settings.lectures'),
-  };
-
-  const setNotifications = (
-    changes: Partial<Record<NotificationKey, boolean>>,
-    savedRow: NotificationKey | null,
-  ) => {
-    const before = { ...overrides };
-    setOverrides(prev => ({ ...prev, ...changes }));
-    updateCoursePreferences({ notifications: changes })
-      .then(() => {
-        if (!savedRow) return;
-        clearTimeout(savedTimer.current);
-        setSavedKey(savedRow);
-        AccessibilityInfo.announceForAccessibility(t('course.settings.saved'));
-        savedTimer.current = setTimeout(() => setSavedKey(null), SAVED_MS);
-      })
-      .catch(() => {
-        setOverrides(before);
-        const text = savedRow
-          ? t('course.settings.saveFailed', { name: titles[savedRow] })
-          : t('course.settings.saveFailedAll');
-        setFeedback({ text, isError: true });
-        AccessibilityInfo.announceForAccessibility(text);
-      });
-  };
+  // Notifications: optimistic, with the saved state and a rollback, shared
+  // with Profile, Notifications
+  const { values, savedKey, titles, setNotifications } =
+    useCourseNotifications(courseId);
 
   return (
     <CourseContext.Provider value={courseId}>

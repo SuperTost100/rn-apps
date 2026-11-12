@@ -22,13 +22,16 @@ interface Props {
   /** The change was just saved: "Saved" shows in place of the subtitle */
   saved?: boolean;
   disabled?: boolean;
+  /** Read instead of the title and subtitle, e.g. with the course name */
+  accessibilityLabel?: string;
 }
 
 /**
  * A settings row with a switch. The whole row is the switch for screen
  * readers. "Saved" takes the subtitle's line for a moment, so the title
- * keeps its width; at 150% and above the switch moves under the text, so
- * a long word never breaks.
+ * keeps its width, or sits before the switch on a row without a subtitle,
+ * so the row keeps its height; at 150% and above the switch moves under the
+ * text, with "Saved" beside it, so a long word never breaks.
  */
 export const SettingSwitchRow = ({
   icon,
@@ -38,6 +41,7 @@ export const SettingSwitchRow = ({
   onChange,
   saved = false,
   disabled = false,
+  accessibilityLabel,
 }: Props) => {
   const { t } = useTranslation();
   const styles = useStylesheet(createStyles);
@@ -54,16 +58,28 @@ export const SettingSwitchRow = ({
       <Switch value={value} disabled={disabled} onValueChange={toggle} />
     </View>
   );
-  const secondLine = saved ? (
+  const savedNote = (
     <View style={styles.saved}>
       <OutlineIcon name="check-circle" color={colors.successText} size={16} />
       <Text variant="secondaryText" style={styles.savedText}>
         {t('course.settings.saved')}
       </Text>
     </View>
-  ) : subtitle ? (
+  );
+  const subtitleText = subtitle ? (
     <Text variant="secondaryText">{subtitle}</Text>
   ) : null;
+  const savedInSubtitle = saved && !!subtitle && !isLarge;
+  const secondLine = savedInSubtitle ? savedNote : subtitleText;
+  const trailing =
+    saved && !subtitle ? (
+      <View style={styles.trailing}>
+        {savedNote}
+        {control}
+      </View>
+    ) : (
+      control
+    );
 
   return (
     <ListItem
@@ -72,8 +88,11 @@ export const SettingSwitchRow = ({
       subtitle={
         isLarge ? (
           <View>
-            {secondLine}
-            <View style={styles.largeSwitch}>{control}</View>
+            {subtitleText}
+            <View style={styles.largeSwitch}>
+              {control}
+              {saved && savedNote}
+            </View>
           </View>
         ) : (
           (secondLine ?? undefined)
@@ -84,12 +103,14 @@ export const SettingSwitchRow = ({
           <OutlineIcon name={icon} color={colors.secondaryText} />
         )
       }
-      trailingItem={isLarge ? undefined : control}
+      trailingItem={isLarge ? undefined : trailing}
       onPress={toggle}
       disabled={disabled}
       accessibilityRole="switch"
       accessibilityState={{ checked: value, disabled }}
-      accessibilityLabel={[title, subtitle].filter(Boolean).join(', ')}
+      accessibilityLabel={
+        accessibilityLabel ?? [title, subtitle].filter(Boolean).join(', ')
+      }
     />
   );
 };
@@ -110,6 +131,13 @@ const createStyles = ({ colors, spacing }: Theme) =>
     },
     largeSwitch: {
       flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing[3],
       marginTop: spacing[2],
+    },
+    trailing: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing[2],
     },
   });

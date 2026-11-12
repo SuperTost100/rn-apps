@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { FlatList, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import {
+  FlatList,
+  Pressable,
+  StyleSheet,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 import AnimatedDotsCarousel from 'react-native-animated-dots-carousel';
 import { isTablet as isTabletHelper } from 'react-native-device-info';
 import Animated, {
@@ -245,6 +252,9 @@ export const CardSwiper = ({
   });
 
   const { colors } = useTheme();
+  const { t } = useTranslation();
+  const cardName = (item?: Item) =>
+    item?.isESC ? t('profile.cards.esc') : t('profile.cards.smartCard');
 
   const items: Item[] = [
     ...(hasSmartCard ? [{ isESC: false } as SmartCardItem] : []),
@@ -357,7 +367,39 @@ export const CardSwiper = ({
           })}
         />
       </View>
-      <View style={styles.dotsContainer}>
+      <Pressable
+        style={styles.dotsContainer}
+        disabled={items.length < 2}
+        // The dots also move between the cards without a swipe: a tap shows
+        // the other card, and screen readers adjust it like a slider
+        onPress={() => scrollToItem((currentPageIndex + 1) % items.length)}
+        accessible={items.length > 1}
+        accessibilityRole="adjustable"
+        accessibilityLabel={t('profile.cards.label')}
+        accessibilityValue={{
+          text: t('profile.cards.position', {
+            index: currentPageIndex + 1,
+            count: items.length,
+            name: cardName(items[currentPageIndex]),
+          }),
+        }}
+        accessibilityHint={t('profile.cards.hint')}
+        accessibilityActions={[
+          { name: 'increment' },
+          { name: 'decrement' },
+          { name: 'activate' },
+        ]}
+        onAccessibilityAction={({ nativeEvent: { actionName } }) => {
+          const last = items.length - 1;
+          if (actionName === 'increment') {
+            scrollToItem(Math.min(currentPageIndex + 1, last));
+          } else if (actionName === 'decrement') {
+            scrollToItem(Math.max(currentPageIndex - 1, 0));
+          } else {
+            scrollToItem((currentPageIndex + 1) % items.length);
+          }
+        }}
+      >
         <AnimatedDotsCarousel
           length={items.length > 1 ? items?.length : 0}
           currentIndex={currentPageIndex}
@@ -395,7 +437,7 @@ export const CardSwiper = ({
             },
           ]}
         />
-      </View>
+      </Pressable>
     </View>
   );
 };
@@ -405,7 +447,6 @@ const createStyles = ({ fontWeights, colors, spacing }: Theme) =>
     container: {
       flex: 1,
       height: '100%',
-      marginBottom: 20,
     },
     titleText: {
       fontSize: 14,
@@ -425,9 +466,12 @@ const createStyles = ({ fontWeights, colors, spacing }: Theme) =>
       paddingVertical: 16,
       alignItems: 'center',
     },
+    // 48 px tall, so the dots are a target as well as a picture
     dotsContainer: {
       alignItems: 'center',
-      height: 6,
+      justifyContent: 'center',
+      height: 48,
+      marginTop: -spacing[3],
     },
     buttonContainer: {
       top: 0,

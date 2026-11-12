@@ -66,17 +66,9 @@ export const WhatsNewListItem = ({ announcement, index, totalData }: Props) => {
       onPress={() => navigation.navigate('NewOverlay', { id: announcement.id })}
       style={({ pressed }) => [styles.item, pressed && styles.pressed]}
     >
-      <Text variant="title" style={styles.title}>
-        {announcement.title}
-      </Text>
-      <Text variant="secondaryText" style={styles.date}>
-        {dateLabel}
-      </Text>
-      {!!body && (
-        <Text variant="prose" style={styles.body}>
-          {body}
-        </Text>
-      )}
+      <Text variant="title">{announcement.title}</Text>
+      <Text variant="secondaryText">{dateLabel}</Text>
+      {!!body && <Text variant="prose">{body}</Text>}
       {!!announcement.cover && (
         <View
           style={styles.coverWrap}
@@ -95,45 +87,15 @@ export const WhatsNewListItem = ({ announcement, index, totalData }: Props) => {
   );
 };
 
-const createStyles = ({
-  colors,
-  shapes,
-  spacing,
-  fontSizes,
-  fontWeights,
-}: Theme) =>
+const createStyles = ({ colors, layout, shapes, spacing }: Theme) =>
   StyleSheet.create({
     item: {
       gap: spacing[1],
-      paddingHorizontal: spacing[5],
+      paddingHorizontal: layout.cardPadding,
       paddingVertical: spacing[4],
     },
     pressed: {
-      opacity: 0.7,
-    },
-    title: {
-      color: colors.title,
-      fontFamily: 'Montserrat-SemiBold',
-      fontSize: fontSizes.sm,
-      fontStyle: 'normal',
-      fontWeight: fontWeights.semibold,
-      lineHeight: fontSizes.xl,
-    },
-    date: {
-      color: colors.secondaryText,
-      fontFamily: 'Montserrat-Regular',
-      fontSize: fontSizes.sm,
-      fontStyle: 'normal',
-      fontWeight: fontWeights.normal,
-      lineHeight: fontSizes.xl,
-    },
-    body: {
-      color: colors.prose,
-      fontFamily: 'Montserrat-Regular',
-      fontSize: fontSizes.sm,
-      fontStyle: 'normal',
-      fontWeight: fontWeights.normal,
-      lineHeight: fontSizes.xl,
+      backgroundColor: colors.touchableHighlight,
     },
     coverWrap: {
       marginTop: spacing[2],

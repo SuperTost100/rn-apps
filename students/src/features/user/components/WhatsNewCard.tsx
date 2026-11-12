@@ -10,7 +10,6 @@ import {
   useWindowDimensions,
 } from 'react-native';
 
-import { faBullhorn } from '@fortawesome/free-solid-svg-icons';
 import {
   IS_IOS,
   dateFormatter,
@@ -19,7 +18,7 @@ import {
 } from '@polito/lib/core';
 import {
   CarouselDots,
-  Icon,
+  OutlineIcon,
   Text,
   Theme,
   useStylesheet,
@@ -44,7 +43,7 @@ const formatAnnouncementDate = dateFormatter('d MMMM yyyy');
 const Card = ({ announcement, index, total }: CardProps) => {
   const { t } = useTranslation();
   const styles = useStylesheet(createCardStyles);
-  const { fontSizes } = useTheme();
+  const { colors } = useTheme();
   const { accessibilityListLabel } = useAccessibility();
   const navigation =
     useNavigation<NativeStackNavigationProp<{ NewOverlay: { id: string } }>>();
@@ -64,10 +63,10 @@ const Card = ({ announcement, index, total }: CardProps) => {
       style={({ pressed }) => [styles.card, pressed && styles.pressed]}
     >
       <View style={styles.text}>
-        <Text variant="secondaryText" style={styles.date}>
+        <Text variant="secondaryText">
           {formatAnnouncementDate(announcement.date)}
         </Text>
-        <Text variant="title" style={styles.title} numberOfLines={2}>
+        <Text variant="title" numberOfLines={3}>
           {announcement.title}
         </Text>
       </View>
@@ -77,11 +76,7 @@ const Card = ({ announcement, index, total }: CardProps) => {
         importantForAccessibility="no-hide-descendants"
         accessibilityElementsHidden={IS_IOS}
       >
-        <Icon
-          icon={faBullhorn}
-          size={fontSizes['2xl']}
-          color={styles.icon.color}
-        />
+        <OutlineIcon name="megaphone" color={colors.secondaryText} />
       </View>
     </Pressable>
   );
@@ -166,25 +161,22 @@ export const WhatsNewCard = ({ announcements }: Props) => {
   );
 };
 
-const createCardStyles = ({
-  colors,
-  palettes,
-  shapes,
-  spacing,
-  fontSizes,
-  fontWeights,
-}: Theme) =>
+// A card of the redesign: the surface, its elevation in light and a hairline
+// in dark, the card radius
+const createCardStyles = ({ colors, elevation, shapes, spacing }: Theme) =>
   StyleSheet.create({
     card: {
       flexDirection: 'row',
       alignItems: 'center',
       backgroundColor: colors.surface,
-      borderColor: palettes.navy[400],
       borderRadius: shapes.lg,
-      borderWidth: 1,
       gap: spacing[3],
       paddingHorizontal: spacing[4],
       paddingVertical: spacing[4],
+      marginVertical: spacing[2],
+      ...elevation.card,
+      borderWidth: colors.cardBorder === 'transparent' ? 0 : 1,
+      borderColor: colors.cardBorder,
     },
     pressed: {
       opacity: 0.7,
@@ -193,36 +185,17 @@ const createCardStyles = ({
       flex: 1,
       gap: spacing[1],
     },
-    date: {
-      color: colors.secondaryText,
-      fontFamily: 'Montserrat-Regular',
-      fontSize: fontSizes.xs,
-      fontStyle: 'normal',
-      fontWeight: fontWeights.normal,
-      lineHeight: fontSizes.lg,
-    },
-    title: {
-      color: colors.title,
-      fontFamily: 'Montserrat-SemiBold',
-      fontSize: fontSizes.md,
-      fontStyle: 'normal',
-      fontWeight: fontWeights.semibold,
-      lineHeight: fontSizes.xl,
-    },
     icon: {
       alignItems: 'center',
-      color: colors.heading,
       justifyContent: 'center',
     },
   });
 
 const createStyles = ({ spacing }: Theme) =>
   StyleSheet.create({
-    container: {
-      marginTop: spacing[3],
-    },
+    container: {},
     dots: {
       alignItems: 'center',
-      marginTop: spacing[6],
+      marginTop: spacing[3],
     },
   });

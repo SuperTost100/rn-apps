@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { SafeAreaView, ScrollView, View } from 'react-native';
-
 import {
-  faAngleDown,
-  faBell,
-  faCircleInfo,
-  faCog,
-  faPersonThroughWindow,
-} from '@fortawesome/free-solid-svg-icons';
+  Alert,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native';
+
+import { faAngleDown } from '@fortawesome/free-solid-svg-icons';
 import { AuthProfile } from '@polito/auth-api-client';
 import {
   useApiContext,
@@ -20,6 +20,7 @@ import {
   BottomBarSpacer,
   Icon,
   ListItem,
+  OutlineIcon,
   OverviewList,
   RefreshControl,
   Row,
@@ -27,6 +28,8 @@ import {
   SectionHeader,
   StatefulMenuView,
   Text,
+  Theme,
+  useStylesheet,
   useTheme,
 } from '@polito/lib/ui';
 import { MenuAction, NativeActionEvent } from '@react-native-menu/menu';
@@ -44,6 +47,10 @@ import {
   useGetStudent,
 } from '../../../core/queries/studentHooks';
 import { deleteProfilePictureFile } from '../../../utils/profilePicture';
+import {
+  degreeNameAsTitle,
+  getStudentEnrollmentYear,
+} from '../../../utils/students';
 import { CareerStatus } from '../components/CareerStatus';
 import { SmartCardQrModal } from '../components/SmartCardQrModal';
 import { UserStackParamList } from '../components/UserNavigator';
@@ -135,18 +142,11 @@ export const ProfileScreen = ({ navigation, route }: Props) => {
   const scrollRef = useRef<ScrollView>(null);
   useScrollToTop(scrollRef);
   const { firstRequest } = route.params;
-  const { fontSizes, colors } = useTheme();
+  const styles = useStylesheet(createStyles);
+  const { colors } = useTheme();
   const [isQrVisible, setIsQrVisible] = useState(false);
   const { username } = useApiContext();
-  const { mutate: logout } = useLogout();
-  const handleLogout = () =>
-    logout(undefined, {
-      onSuccess: () => {
-        if (username) {
-          deleteProfilePictureFile(username);
-        }
-      },
-    });
+  const { mutate: logout, isPending: isLoggingOut } = useLogout();
   const profileQuery = useGetProfile();
   const profile = profileQuery.data;
   const studentQuery = useGetStudent();
@@ -160,12 +160,28 @@ export const ProfileScreen = ({ navigation, route }: Props) => {
   useQuietQueryErrors([escQuery, smartCardQuery, pictureQuery]);
   const mfaChallengeQuery = useMfaChallengeHandler();
 
-  const enrollmentYear = useMemo(() => {
-    if (!student) return '...';
-    return `${student.firstEnrollmentYear - 1}/${student.firstEnrollmentYear}`;
-  }, [student]);
-
   const isOffline = useOfflineDisabled();
+
+  const confirmLogout = () =>
+    Alert.alert(
+      t('profile.logout.confirmTitle'),
+      t('profile.logout.confirmText'),
+      [
+        { text: t('profile.logout.stay'), style: 'cancel' },
+        {
+          text: t('profile.logout.action'),
+          style: 'destructive',
+          onPress: () =>
+            logout(undefined, {
+              onSuccess: () => {
+                if (username) {
+                  deleteProfilePictureFile(username);
+                }
+              },
+            }),
+        },
+      ],
+    );
 
   const headerRight = useCallback(
     ({ tintColor }: { tintColor?: string }) => (
@@ -181,6 +197,9 @@ export const ProfileScreen = ({ navigation, route }: Props) => {
   useEffect(() => {
     navigation.setOptions({ headerRight });
   }, [headerRight, navigation]);
+
+  const iconColor = colors.secondaryText;
+  const logoutBlocked = isOffline || isLoggingOut;
 
   return (
     <ScrollView
@@ -200,14 +219,7 @@ export const ProfileScreen = ({ navigation, route }: Props) => {
       }
     >
       <SafeAreaView>
-        <View
-          accessible={true}
-          accessibilityLabel={`${t('profileScreen.smartCard')}. ${t(
-            'common.username',
-          )} ${profile?.username?.substring(1, profile?.username?.length)}, ${
-            profile?.firstName
-          } ${profile?.lastName}`}
-        >
+        <View style={styles.cards}>
           {!profile ||
           smartCardQuery.isLoading ||
           escQuery.isLoading ? null : smartCardUrl ||
@@ -237,7 +249,7 @@ export const ProfileScreen = ({ navigation, route }: Props) => {
             degreeName={student?.degreeName}
           />
         )}
-        <Section accessible={false}>
+        <View style={styles.section}>
           <SectionHeader
             title={t('common.career')}
             trailingItem={
@@ -249,12 +261,25 @@ export const ProfileScreen = ({ navigation, route }: Props) => {
           <OverviewList
             queries={studentQuery}
             isEmpty={() => false}
-            skeleton={{ count: 1 }}
+            skeleton={{ count: 1, leading: 'icon', titleLines: 2 }}
             errorState={{ title: t('states.career.failedTitle') }}
           >
             <ListItem
-              title={student?.degreeLevel ?? ''}
-              subtitle={t('profileScreen.cohort') + ' - ' + enrollmentYear}
+              title={
+                student
+                  ? [
+                      student.degreeLevel,
+                      degreeNameAsTitle(student.degreeName ?? ''),
+                    ]
+                      .filter(Boolean)
+                      .join(' ')
+                  : ''
+              }
+              titleProps={{ numberOfLines: 0 }}
+              subtitle={t('profile.career.firstYear', {
+                year: getStudentEnrollmentYear(student),
+              })}
+              leadingItem={<OutlineIcon name="bookopen" color={iconColor} />}
               linkTo={{
                 screen: 'Degree',
                 params: {
@@ -264,44 +289,65 @@ export const ProfileScreen = ({ navigation, route }: Props) => {
               }}
             />
           </OverviewList>
-          <OverviewList indented>
-            <ListItem
-              title={t('notificationsScreen.title')}
-              leadingItem={<Icon icon={faBell} size={fontSizes.xl} />}
-              linkTo="Notifications"
-            />
-            <ListItem
-              title={t('profileScreen.settings')}
-              leadingItem={<Icon icon={faCog} size={fontSizes.xl} />}
-              linkTo="Settings"
-            />
-            <ListItem
-              title={t('profileScreen.appInfo')}
-              leadingItem={<Icon icon={faCircleInfo} size={fontSizes.xl} />}
-              linkTo="AppInfo"
-              accessibilityRole="button"
-            />
-            <ListItem
-              title={t('common.logout')}
-              leadingItem={
-                <Icon
-                  icon={faPersonThroughWindow}
-                  size={fontSizes.xl}
-                  color={colors.dangerText}
-                />
-              }
-              titleStyle={{ color: colors.dangerText }}
-              onPress={() => handleLogout()}
-              // Logging out tells the server: it needs the network
-              disabled={isOffline}
-              accessibilityHint={
-                isOffline ? t('states.needsConnection') : undefined
-              }
-            />
-          </OverviewList>
-        </Section>
+        </View>
+        <OverviewList style={styles.group}>
+          <ListItem
+            title={t('notificationsScreen.title')}
+            leadingItem={<OutlineIcon name="bell" color={iconColor} />}
+            linkTo="Notifications"
+          />
+          <ListItem
+            title={t('profileScreen.settings')}
+            leadingItem={<OutlineIcon name="gear" color={iconColor} />}
+            linkTo="Settings"
+          />
+          <ListItem
+            title={t('profileScreen.appInfo')}
+            leadingItem={<OutlineIcon name="info" color={iconColor} />}
+            linkTo="AppInfo"
+          />
+        </OverviewList>
+        <OverviewList style={styles.logout}>
+          <ListItem
+            title={t('profile.logout.action')}
+            titleStyle={!logoutBlocked && { color: colors.dangerText }}
+            // Offline the row says why it can't log out, once: logging out
+            // asks the server to end the session and forget this phone
+            subtitle={
+              isOffline
+                ? t('profile.logout.offline')
+                : t('profile.logout.consequence')
+            }
+            subtitleProps={{ numberOfLines: 0 }}
+            leadingItem={
+              <OutlineIcon
+                name="logout"
+                color={logoutBlocked ? iconColor : colors.dangerText}
+              />
+            }
+            onPress={confirmLogout}
+            disabled={logoutBlocked}
+          />
+        </OverviewList>
         <BottomBarSpacer />
       </SafeAreaView>
     </ScrollView>
   );
 };
+
+const createStyles = ({ layout, spacing }: Theme) =>
+  StyleSheet.create({
+    // The cards keep their own size and text: only the space around them
+    cards: {
+      marginTop: spacing[2],
+    },
+    section: {
+      marginTop: spacing[4],
+    },
+    group: {
+      marginTop: layout.sectionGap,
+    },
+    logout: {
+      marginTop: spacing[10],
+    },
+  });

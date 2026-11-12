@@ -1,25 +1,14 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ReactElement, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+  AccessibilityInfo,
   Alert,
   Platform,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   View,
-  useColorScheme,
 } from 'react-native';
 
-import { faCalendarCheck } from '@fortawesome/free-regular-svg-icons';
-import {
-  faBroom,
-  faCalendarDay,
-  faCircleExclamation,
-  faCircleHalfStroke,
-  faFolderOpen,
-  faFont,
-  faShieldHalved,
-} from '@fortawesome/free-solid-svg-icons';
 import {
   PreferencesContextBase,
   useFeedbackContext,
@@ -29,24 +18,22 @@ import {
 } from '@polito/lib/core';
 import { useCheckMfa } from '@polito/lib/features/auth';
 import {
-  Badge,
   BottomBarSpacer,
-  Col,
-  DisclosureIndicator,
-  Icon,
   ListItem,
+  OutlineIcon,
+  OutlineIconName,
   OverviewList,
-  Section,
   SectionHeader,
-  StatefulMenuView,
-  SwitchListItem,
+  StatusChip,
+  StatusChipTone,
   Text,
   type Theme,
-  lightTheme,
   useStylesheet,
+  useTextScale,
   useTheme,
 } from '@polito/lib/ui';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { useDownloadsContext } from '~/core/contexts/DownloadsContext';
 import { getFileDatabase } from '~/core/database/FileDatabase';
@@ -59,12 +46,139 @@ import { version } from '../../../../package.json';
 import { useConfirmationDialog } from '../../../core/hooks/useConfirmationDialog';
 import { useUpdateDevicePreferences } from '../../../core/queries/studentHooks';
 import { formatFileSize } from '../../../utils/files';
+import { OptionSheet } from '../components/OptionSheet';
+import { UserStackParamList } from '../components/UserNavigator';
 
-const CleanCacheListItem = () => {
+type Sheet = 'theme' | 'text' | 'language' | 'storage';
+
+const TEXT_SIZES = [100, 125, 150, 175, 200] as const;
+type TextSize = (typeof TEXT_SIZES)[number];
+
+/** Languages in their own name, whatever the app's language */
+const LANGUAGE_NAMES = { en: 'English', it: 'Italiano' } as const;
+
+interface ValueRowProps {
+  icon: OutlineIconName;
+  title: string;
+  /** The current value, on the right; under the title at large text */
+  value?: string;
+  /** A state chip instead of a value; it moves under the title at large text */
+  chip?: ReactElement;
+  chipLabel?: string;
+  /** A line under the title, such as why the row is off */
+  note?: string;
+  onPress?: () => void;
+  disabled?: boolean;
+  accessibilityHint?: string;
+}
+
+/**
+ * A settings row: the icon, the name, the current value and a chevron. At
+ * 150% and above the value moves under the name, so the name never breaks.
+ */
+const ValueRow = ({
+  icon,
+  title,
+  value,
+  chip,
+  chipLabel,
+  note,
+  onPress,
+  disabled,
+  accessibilityHint,
+}: ValueRowProps) => {
+  const styles = useStylesheet(createStyles);
+  const { colors } = useTheme();
+  const { isLarge } = useTextScale();
+  const lines = [isLarge ? value : undefined, note].filter(Boolean);
+  return (
+    <ListItem
+      title={title}
+      titleProps={{ numberOfLines: 0 }}
+      subtitle={lines.length ? lines.join('\n') : undefined}
+      subtitleProps={{ numberOfLines: 0 }}
+      leadingItem={<OutlineIcon name={icon} color={colors.secondaryText} />}
+      trailingItem={
+        !isLarge && value ? (
+          <Text variant="secondaryText" style={styles.value}>
+            {value}
+          </Text>
+        ) : undefined
+      }
+      chip={chip}
+      chipLabel={chipLabel}
+      showChevron
+      onPress={onPress}
+      disabled={disabled}
+      accessibilityRole="button"
+      accessibilityLabel={[`${title}: ${value ?? chipLabel ?? ''}`, note]
+        .filter(Boolean)
+        .join('. ')}
+      accessibilityHint={accessibilityHint}
+    />
+  );
+};
+
+/** The authenticator's state as a word in a chip, and its tone */
+const useAuthenticatorState = () => {
   const { t } = useTranslation();
+  const { data: mfaStatus } = useCheckMfa(true);
+  const { hasPrivateKeyMFA, resetPrivateKeyMFA } =
+    usePolitoAppMfaPrivateKeyKeychain();
+  const [localMfaKey, setLocalMfaKey] = useState<boolean>(false);
 
+  useEffect(() => {
+    hasPrivateKeyMFA().then(res => setLocalMfaKey(res));
+  }, [hasPrivateKeyMFA, mfaStatus]);
+
+  const handleKeyRemoval = useCallback(async () => {
+    try {
+      await resetPrivateKeyMFA();
+      setLocalMfaKey(false);
+      Alert.alert(
+        t('mfaScreen.settings.removedTitle'),
+        t('mfaScreen.settings.removed'),
+        [{ text: t('common.ok') }],
+      );
+    } catch (error) {
+      console.error('Error removing MFA key:', error);
+    }
+  }, [resetPrivateKeyMFA, t]);
+
+  // A key the server no longer knows (removed from MFA management) goes
+  useEffect(() => {
+    if (
+      (mfaStatus?.status === 'available' ||
+        mfaStatus?.status === 'needsReauth') &&
+      localMfaKey
+    ) {
+      handleKeyRemoval();
+    }
+  }, [mfaStatus?.status, localMfaKey, handleKeyRemoval]);
+
+  let state: { label: string; tone: StatusChipTone };
+  if (mfaStatus?.status === 'active' && localMfaKey) {
+    state = { label: t('mfaScreen.settings.active'), tone: 'success' };
+  } else if (mfaStatus?.status === 'locked') {
+    state = { label: t('mfaScreen.settings.locked'), tone: 'warning' };
+  } else if (
+    mfaStatus?.status === 'available' ||
+    mfaStatus?.status === 'needsReauth'
+  ) {
+    state = { label: t('mfaScreen.settings.disabled'), tone: 'neutral' };
+  } else {
+    state = { label: t('common.error'), tone: 'danger' };
+  }
+  return { isAvailable: mfaStatus?.status !== 'unavailable', state };
+};
+
+/**
+ * Downloaded files: their size, and a row that removes them all after
+ * asking, saying how much it frees
+ */
+const RemoveFilesRow = () => {
+  const { t } = useTranslation();
   const { setFeedback } = useFeedbackContext();
-  const { fontSizes } = useTheme();
   const {
     getCoursesCachePath,
     removeFileFromStorage,
@@ -75,10 +189,6 @@ const CleanCacheListItem = () => {
   } = useDownloadsContext();
   const filesCache = getCoursesCachePath();
   const [cacheSize, setCacheSize] = useState<number>();
-  const confirm = useConfirmationDialog({
-    title: t('common.areYouSure?'),
-    message: t('settingsScreen.cleanCacheConfirmMessage'),
-  });
   const fileDatabaseRef = useRef(getFileDatabase());
 
   const refreshSize = useCallback(() => {
@@ -101,250 +211,57 @@ const CleanCacheListItem = () => {
       refreshSize();
     }, [refreshSize]),
   );
+
+  const size = cacheSize ? formatFileSize(cacheSize) : undefined;
+  const confirm = useConfirmationDialog({
+    title: t('profile.settings.removeFilesTitle'),
+    message: t('profile.settings.removeFilesText', { size }),
+    confirmText: t('profile.settings.removeFilesAction'),
+    cancelText: t('profile.settings.keepFiles'),
+  });
+
+  const remove = async () => {
+    if (!filesCache || !(await confirm())) return;
+    try {
+      const allFiles = await fileDatabaseRef.current.getAllFiles();
+      await Promise.all(
+        allFiles.map(f => removeFileFromStorage(f.path).catch(() => {})),
+      );
+      await fileDatabaseRef.current.deleteAllFiles();
+      await deleteLocalPath(filesCache).catch(() => {});
+      refreshCacheVersion();
+      setFeedback({
+        text: t('profile.settings.filesRemoved'),
+        isPersistent: false,
+      });
+      refreshSize();
+    } catch {
+      setFeedback({ text: t('profile.settings.removeFailed'), isError: true });
+    }
+  };
+
   return (
-    <ListItem
-      isAction
-      title={t('common.cleanCourseFiles')}
-      subtitle={t('coursePreferencesScreen.cleanCourseFilesSubtitle', {
-        size: cacheSize == null ? '-- MB' : formatFileSize(cacheSize),
-      })}
-      accessibilityRole="button"
-      disabled={
-        (cacheSize !== undefined && cacheSize === 0) || isAnyDownloadInProgress
+    <ValueRow
+      icon="trash"
+      title={t('profile.settings.removeFiles')}
+      value={
+        cacheSize === undefined ? '--' : (size ?? t('profile.settings.noFiles'))
       }
-      leadingItem={<Icon icon={faBroom} size={fontSizes['2xl']} />}
-      onPress={async () => {
-        if (filesCache && (await confirm())) {
-          try {
-            const allFiles = await fileDatabaseRef.current.getAllFiles();
-            await Promise.all(
-              allFiles.map(f => removeFileFromStorage(f.path).catch(() => {})),
-            );
-            await fileDatabaseRef.current.deleteAllFiles();
-            await deleteLocalPath(filesCache).catch(() => {});
-            refreshCacheVersion();
-            setFeedback({
-              text: t('coursePreferencesScreen.cleanCacheFeedback'),
-              isPersistent: false,
-            });
-            refreshSize();
-          } catch {
-            setFeedback({ text: t('common.error'), isPersistent: false });
-          }
-        }
-      }}
+      note={
+        isAnyDownloadInProgress ? t('profile.settings.downloading') : undefined
+      }
+      disabled={cacheSize === 0 || isAnyDownloadInProgress}
+      onPress={remove}
     />
   );
 };
 
-const ThemeIcon = () => {
-  const schemes: Record<string, string> = {
-    dark: lightTheme?.palettes.navy[900],
-    light: lightTheme?.palettes.lightBlue[200],
-  };
-  const { colorScheme } = usePreferencesContext<AppPreferences>();
-
-  if (colorScheme === 'system') {
-    return <Icon icon={faCircleHalfStroke} size={30} />;
-  }
-
-  return (
-    <View
-      style={{
-        width: 30,
-        height: 30,
-        borderRadius: 15,
-        backgroundColor: schemes[colorScheme],
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    />
-  );
-};
-
-const VisualizationListItem = () => {
+/**
+ * Where downloaded files go: the app's own storage, or a folder the student
+ * picks, which empties the downloads first as before
+ */
+const useStorageLocation = () => {
   const { t } = useTranslation();
-  const { colorScheme, updatePreference } =
-    usePreferencesContext<AppPreferences>();
-  const settingsColorScheme = useColorScheme();
-
-  const colorSchema = {
-    dark: lightTheme?.palettes.navy[900],
-    light: lightTheme?.palettes.lightBlue[200],
-  };
-
-  const themeColors = [
-    {
-      colorSchema: 'dark',
-      id: 'dark',
-      title: 'theme.dark',
-      color: colorSchema.dark,
-      state: colorScheme === 'dark',
-      image: Platform.select({ ios: 'circle.fill', android: 'circle' }),
-    },
-    {
-      colorSchema: 'light',
-      id: 'light',
-      title: 'theme.light',
-      color: colorSchema.light,
-      state: colorScheme === 'dark',
-      image: Platform.select({ ios: 'circle.fill', android: 'circle' }),
-    },
-    {
-      colorSchema: 'light',
-      id: 'system',
-      title: 'theme.system',
-      color:
-        colorScheme === 'dark' ||
-        (colorScheme === 'system' && settingsColorScheme === 'dark')
-          ? 'white'
-          : colorSchema.dark,
-      state: colorScheme === 'system',
-      image: Platform.select({
-        ios: 'circle.lefthalf.fill',
-        android: 'circle_half',
-      }),
-    },
-  ];
-
-  return (
-    <StatefulMenuView
-      actions={themeColors.map(cc => {
-        return {
-          id: cc.id,
-          title: t(`theme.${cc.id}`),
-          image: cc.image,
-          imageColor: cc.color,
-          state: cc.id === colorScheme ? 'on' : undefined,
-        };
-      })}
-      onPressAction={({ nativeEvent: { event } }) => {
-        updatePreference(
-          'colorScheme',
-          event as PreferencesContextBase<AppPreferences>['colorScheme'],
-        );
-      }}
-    >
-      <ListItem
-        title={t(`theme.${colorScheme}`)}
-        isAction
-        accessibilityLabel={`${t('common.theme')}: ${t(
-          `theme.${colorScheme}`,
-        )}. ${t('settingsScreen.openThemeMenu')}`}
-        leadingItem={<ThemeIcon />}
-      />
-    </StatefulMenuView>
-  );
-};
-
-const LanguageListItem = () => {
-  const { t } = useTranslation();
-  const { language, updatePreference } =
-    usePreferencesContext<AppPreferences>();
-  const { mutate } = useUpdateDevicePreferences();
-  const isDisabled = useOfflineDisabled();
-
-  const choices = useMemo(() => {
-    if (isDisabled) return [];
-
-    return ['it', 'en'] as const;
-  }, [isDisabled]);
-  return (
-    <StatefulMenuView
-      actions={choices.map(cc => {
-        return {
-          id: cc,
-          title: t(`common.${cc}`),
-          state: cc === language ? 'on' : undefined,
-        };
-      })}
-      onPressAction={({ nativeEvent: { event } }) => {
-        const lang = event as 'it' | 'en';
-
-        mutate({ updatePreferencesRequest: { language: lang } });
-        updatePreference('language', lang);
-
-        i18next
-          .changeLanguage(lang)
-          .then(() => (Settings.defaultLocale = lang));
-      }}
-    >
-      <ListItem
-        isAction
-        disabled={isDisabled}
-        accessibilityHint={isDisabled ? t('states.needsConnection') : undefined}
-        title={t(`common.${language}`)}
-        accessibilityLabel={`${t('common.language')}: ${t(
-          `common.${language}`,
-        )}. ${t('settingsScreen.openLanguageMenu')}`}
-      />
-    </StatefulMenuView>
-  );
-};
-
-// TODO: temporarily removed
-// eslint-disable-next-line unused-imports/no-unused-vars, @typescript-eslint/no-unused-vars
-const Notifications = () => {
-  const { t } = useTranslation();
-  const { fontSizes } = useTheme();
-  const { notifications, updatePreference } =
-    usePreferencesContext<AppPreferences>();
-
-  const onChangeNotification =
-    (notificationType: string) => (value: boolean) => {
-      updatePreference('notifications', {
-        ...notifications,
-        [notificationType]: value,
-      } as PreferencesContextBase<AppPreferences>['notifications']);
-    };
-
-  return (
-    <OverviewList indented>
-      <SwitchListItem
-        disabled
-        accessible={true}
-        accessibilityLabel={`${t('notifications.important')}. ${t(
-          `common.activeStatus.${notifications?.important}`,
-        )} `}
-        accessibilityRole="switch"
-        title={t('notifications.important')}
-        value={notifications?.important}
-        onChange={onChangeNotification('important')}
-        leadingItem={
-          <Icon icon={faCircleExclamation} size={fontSizes['2xl']} />
-        }
-      />
-      <SwitchListItem
-        disabled
-        accessible={true}
-        accessibilityLabel={`${t('notifications.events')}. ${t(
-          `common.activeStatus.${notifications?.events}`,
-        )} `}
-        accessibilityRole="switch"
-        title={t('notifications.events')}
-        value={notifications?.events}
-        onChange={onChangeNotification('events')}
-        leadingItem={<Icon icon={faCalendarDay} size={fontSizes['2xl']} />}
-      />
-      <SwitchListItem
-        disabled
-        accessible={true}
-        accessibilityLabel={`${t('notifications.presence')}. ${t(
-          `common.activeStatus.${notifications?.presence}`,
-        )} `}
-        accessibilityRole="switch"
-        title={t('notifications.reservationPresence')}
-        value={notifications?.presence}
-        onChange={onChangeNotification('presence')}
-        leadingItem={<Icon icon={faCalendarCheck} size={fontSizes['2xl']} />}
-      />
-    </OverviewList>
-  );
-};
-
-const StorageLocationListItem = () => {
-  const { t } = useTranslation();
-  const { fontSizes } = useTheme();
   const {
     fileStorageLocation,
     customStoragePath,
@@ -360,14 +277,6 @@ const StorageLocationListItem = () => {
     title: t('settingsScreen.storageChangeConfirmTitle'),
     message: t('settingsScreen.storageChangeConfirmMessage'),
   });
-
-  const choices = useMemo(
-    () => [
-      { id: 'internal', title: t('settingsScreen.storageInternal') },
-      { id: 'custom', title: t('settingsScreen.storageCustom') },
-    ],
-    [t],
-  );
 
   const handlePickDirectory = useCallback(async () => {
     if (!(await confirmStorageChange())) return;
@@ -443,8 +352,8 @@ const StorageLocationListItem = () => {
     removeFileFromStorage,
   ]);
 
-  const handleChange = useCallback(
-    async (newLocation: string) => {
+  const change = useCallback(
+    async (newLocation: 'internal' | 'custom') => {
       if (newLocation === currentLocation || isMoving) return;
       if (newLocation === 'custom') {
         await handlePickDirectory();
@@ -455,203 +364,210 @@ const StorageLocationListItem = () => {
     [currentLocation, isMoving, handlePickDirectory, handleSwitchToInternal],
   );
 
-  const subtitle = useMemo(() => {
-    if (currentLocation === 'custom' && customStorageDisplayPath) {
-      return customStorageDisplayPath;
-    }
-    return currentLocation === 'custom'
-      ? t('settingsScreen.storageCustomDescription')
-      : t('settingsScreen.storageInternalDescription');
-  }, [currentLocation, customStorageDisplayPath, t]);
+  const value =
+    currentLocation === 'custom'
+      ? (customStorageDisplayPath ?? t('profile.settings.storageFolder'))
+      : t('profile.settings.storageApp');
 
-  return (
-    <StatefulMenuView
-      actions={choices.map(c => ({
-        id: c.id,
-        title: c.title,
-        state: c.id === currentLocation ? 'on' : undefined,
-      }))}
-      onPressAction={({ nativeEvent: { event } }) => {
-        handleChange(event);
-      }}
-    >
-      <ListItem
-        isAction
-        disabled={isMoving}
-        title={
-          currentLocation === 'custom'
-            ? t('settingsScreen.storageCustom')
-            : t('settingsScreen.storageInternal')
-        }
-        subtitle={subtitle}
-        leadingItem={<Icon icon={faFolderOpen} size={fontSizes['2xl']} />}
-      />
-    </StatefulMenuView>
-  );
+  return { currentLocation, value, isMoving, change };
 };
 
+/**
+ * Settings as one grouped list: how the app looks, then security and
+ * storage. Each row shows its current value and opens its choices.
+ */
 export const SettingsScreen = () => {
   const { t } = useTranslation();
   const styles = useStylesheet(createStyles);
-  const { data: mfaStatus } = useCheckMfa(true);
-  const { hasPrivateKeyMFA, resetPrivateKeyMFA } =
-    usePolitoAppMfaPrivateKeyKeychain();
-  const { palettes } = useTheme();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<UserStackParamList>>();
+  const { colorScheme, language, accessibility, updatePreference } =
+    usePreferencesContext<AppPreferences>();
+  const { mutate: updateDevicePreferences } = useUpdateDevicePreferences();
+  const isOffline = useOfflineDisabled();
+  const authenticator = useAuthenticatorState();
+  const storage = useStorageLocation();
+  const [sheet, setSheet] = useState<Sheet | null>(null);
+  const closeSheet = () => setSheet(null);
 
-  const [localMfaKey, setLocalMfaKey] = useState<boolean>(false);
-  useEffect(() => {
-    hasPrivateKeyMFA().then(res => setLocalMfaKey(res));
-  }, [hasPrivateKeyMFA, mfaStatus]);
+  const textSize = (Number(accessibility?.fontSize) || 100) as TextSize;
+  const textSizeLabel = (size: TextSize) =>
+    size === 100 ? t('profile.settings.textDefault') : `${size}%`;
+  const spacingCount = [
+    accessibility?.lineHeight,
+    accessibility?.paragraphSpacing,
+    accessibility?.wordSpacing,
+  ].filter(Boolean).length;
 
-  const handleKeyRemoval = useCallback(async () => {
-    try {
-      await resetPrivateKeyMFA();
-      setLocalMfaKey(false);
-      Alert.alert(
-        t('mfaScreen.settings.removedTitle'),
-        t('mfaScreen.settings.removed'),
-        [{ text: t('common.ok') }],
-      );
-    } catch (error) {
-      console.error('Error removing MFA key:', error);
-    }
-  }, [resetPrivateKeyMFA, t]);
-
-  const handleBadgeStatus = () => {
-    if (mfaStatus?.status === 'active' && localMfaKey) {
-      return (
-        <Badge
-          backgroundColor={palettes.success[500]}
-          foregroundColor={palettes.text[100]}
-          text={t('mfaScreen.settings.active')}
-        />
-      );
-    }
-    if (mfaStatus?.status === 'locked') {
-      return (
-        <Badge
-          backgroundColor={palettes.warning[500]}
-          foregroundColor={palettes.warning[100]}
-          text={t('mfaScreen.settings.locked')}
-        />
-      );
-    }
-    if (
-      mfaStatus?.status === 'available' ||
-      mfaStatus?.status === 'needsReauth'
-    ) {
-      return (
-        <Badge
-          backgroundColor={palettes.warning[400]}
-          foregroundColor={palettes.text[100]}
-          text={t('mfaScreen.settings.disabled')}
-        />
-      );
-    }
-    return (
-      <Badge
-        backgroundColor={palettes.error[500]}
-        foregroundColor={palettes.error[100]}
-        text={t('common.error')}
-      />
-    );
+  const setLanguage = (lang: 'it' | 'en') => {
+    if (lang === language) return;
+    updateDevicePreferences({ updatePreferencesRequest: { language: lang } });
+    updatePreference('language', lang);
+    i18next.changeLanguage(lang).then(() => (Settings.defaultLocale = lang));
   };
 
-  useEffect(() => {
-    if (
-      (mfaStatus?.status === 'available' ||
-        mfaStatus?.status === 'needsReauth') &&
-      localMfaKey
-    ) {
-      handleKeyRemoval();
-    }
-  }, [mfaStatus?.status, localMfaKey, handleKeyRemoval]);
-
   return (
-    <ScrollView contentInsetAdjustmentBehavior="automatic">
-      <SafeAreaView>
-        <View style={styles.container}>
-          <Section>
-            <SectionHeader title={t('common.theme')} />
-            <OverviewList indented>
-              <VisualizationListItem />
-            </OverviewList>
-          </Section>
-          <Section>
-            <SectionHeader title={t('common.language')} />
-            <OverviewList indented>
-              <LanguageListItem />
-            </OverviewList>
-          </Section>
-          {/* <Section>
-              <SectionHeader
-                title={t('common.notifications')}
-                trailingItem={<Badge text={t('common.comingSoon')} accessibility={accessibility} />}
-              />
-              <Notifications />
-            </Section>*/}
-          {mfaStatus?.status !== 'unavailable' && (
-            <Section>
-              <SectionHeader title={t('settingsScreen.securityTitle')} />
-              <OverviewList indented>
-                <ListItem
-                  title={t('settingsScreen.authenticatorTitle')}
-                  accessibilityRole="button"
-                  linkTo={{
-                    screen: 'MfaSettings',
-                  }}
-                  leadingItem={<Icon icon={faShieldHalved} size={20} />}
-                  trailingItem={
-                    <View
-                      style={{ flexDirection: 'row', alignItems: 'center' }}
-                    >
-                      {handleBadgeStatus()}
-                      {Platform.OS === 'ios' && <DisclosureIndicator />}
-                    </View>
-                  }
-                />
-              </OverviewList>
-            </Section>
-          )}
-          <Section>
-            <SectionHeader title={t('common.accessibility')} />
-            <OverviewList indented>
-              <ListItem
-                isAction
-                title={t('accessibilitySettingsScreen.fontSettingsTitle')}
-                accessibilityRole="button"
-                linkTo={{ screen: 'AccessibilitySettings' }}
-                leadingItem={<Icon icon={faFont} size={20} />}
-              />
-            </OverviewList>
-          </Section>
-          {Platform.OS === 'android' && (
-            <Section>
-              <SectionHeader title={t('settingsScreen.storageTitle')} />
-              <OverviewList indented>
-                <StorageLocationListItem />
-              </OverviewList>
-            </Section>
-          )}
-          <Section>
-            <SectionHeader title={t('common.cache')} />
-            <OverviewList indented>
-              <CleanCacheListItem />
-            </OverviewList>
-          </Section>
-          <Col ph={4}>
-            <Text>{t('settingsScreen.appVersion', { version })}</Text>
-          </Col>
+    <>
+      <ScrollView contentInsetAdjustmentBehavior="automatic">
+        <View style={styles.first}>
+          <SectionHeader title={t('profile.settings.look')} />
+          <OverviewList>
+            <ValueRow
+              icon="theme"
+              title={t('common.theme')}
+              value={t(`theme.${colorScheme}`)}
+              onPress={() => setSheet('theme')}
+            />
+            <ValueRow
+              icon="text"
+              title={t('profile.settings.textSize')}
+              value={textSizeLabel(textSize)}
+              onPress={() => setSheet('text')}
+            />
+            <ValueRow
+              icon="file"
+              title={t('accessibilitySettingsScreen.customFontSectionTitle')}
+              value={
+                spacingCount
+                  ? t('profile.settings.spacingOn', { count: spacingCount })
+                  : t('profile.settings.spacingOff')
+              }
+              onPress={() => navigation.navigate('AccessibilitySettings')}
+            />
+            <ValueRow
+              icon="globe"
+              title={t('common.language')}
+              value={LANGUAGE_NAMES[language]}
+              // The server sends notifications in this language: changing it
+              // needs a connection
+              note={
+                isOffline ? t('profile.settings.languageOffline') : undefined
+              }
+              disabled={isOffline}
+              onPress={() => setSheet('language')}
+            />
+          </OverviewList>
         </View>
+        <View style={styles.section}>
+          <SectionHeader title={t('profile.settings.securityAndStorage')} />
+          <OverviewList>
+            {authenticator.isAvailable && (
+              <ValueRow
+                icon="shield"
+                title={t('settingsScreen.authenticatorTitle')}
+                chip={
+                  <StatusChip
+                    label={authenticator.state.label}
+                    tone={authenticator.state.tone}
+                  />
+                }
+                chipLabel={authenticator.state.label}
+                onPress={() => navigation.navigate('MfaSettings')}
+              />
+            )}
+            {Platform.OS === 'android' && (
+              <ValueRow
+                icon="hdd"
+                title={t('settingsScreen.storageTitle')}
+                value={storage.value}
+                disabled={storage.isMoving}
+                onPress={() => setSheet('storage')}
+              />
+            )}
+            <RemoveFilesRow />
+          </OverviewList>
+        </View>
+        <Text variant="secondaryText" style={styles.version}>
+          {t('settingsScreen.appVersion', { version })}
+        </Text>
         <BottomBarSpacer />
-      </SafeAreaView>
-    </ScrollView>
+      </ScrollView>
+
+      <OptionSheet
+        visible={sheet === 'theme'}
+        title={t('common.theme')}
+        options={(['system', 'light', 'dark'] as const).map(value => ({
+          value,
+          label: t(`theme.${value}`),
+        }))}
+        value={colorScheme}
+        onPick={value => {
+          updatePreference(
+            'colorScheme',
+            value as PreferencesContextBase<AppPreferences>['colorScheme'],
+          );
+          AccessibilityInfo.announceForAccessibility(
+            `${t('common.theme')}: ${t(`theme.${value}`)}`,
+          );
+        }}
+        onClose={closeSheet}
+        note={t('profile.settings.themeNote')}
+      />
+      <OptionSheet
+        visible={sheet === 'text'}
+        title={t('profile.settings.textSize')}
+        options={TEXT_SIZES.map(value => ({
+          value,
+          label: textSizeLabel(value),
+        }))}
+        value={textSize}
+        onPick={value => {
+          updatePreference('accessibility', {
+            ...accessibility,
+            fontSize: value,
+          });
+          AccessibilityInfo.announceForAccessibility(
+            `${t('profile.settings.textSize')}: ${textSizeLabel(value)}`,
+          );
+        }}
+        onClose={closeSheet}
+        note={t('profile.settings.textNote')}
+      />
+      <OptionSheet
+        visible={sheet === 'language'}
+        title={t('common.language')}
+        options={(['en', 'it'] as const).map(value => ({
+          value,
+          label: LANGUAGE_NAMES[value],
+        }))}
+        value={language}
+        onPick={setLanguage}
+        onClose={closeSheet}
+      />
+      <OptionSheet
+        visible={sheet === 'storage'}
+        title={t('settingsScreen.storageTitle')}
+        options={[
+          { value: 'internal', label: t('profile.settings.storageApp') },
+          { value: 'custom', label: t('profile.settings.storageFolder') },
+        ]}
+        value={storage.currentLocation}
+        onPick={value => storage.change(value as 'internal' | 'custom')}
+        onClose={closeSheet}
+        note={
+          storage.currentLocation === 'custom'
+            ? t('settingsScreen.storageCustomDescription')
+            : t('settingsScreen.storageInternalDescription')
+        }
+      />
+    </>
   );
 };
 
-const createStyles = ({ spacing }: Theme) =>
+const createStyles = ({ colors, layout, spacing }: Theme) =>
   StyleSheet.create({
-    container: {
-      paddingVertical: spacing[5],
+    first: {
+      marginTop: spacing[4],
+    },
+    section: {
+      marginTop: layout.sectionGap,
+    },
+    value: {
+      color: colors.secondaryText,
+      textAlign: 'right',
+    },
+    version: {
+      paddingHorizontal: layout.gutter,
+      marginTop: spacing[6],
     },
   });
