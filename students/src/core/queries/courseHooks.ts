@@ -516,6 +516,9 @@ export const useUpdateCoursePreferences = (courseId: number) => {
         courseId,
         coursePreferencesRequest: preferences,
       }),
+    // The caller says it failed (the switch goes back, with a message), so
+    // the app-wide alert with the server's text stays quiet
+    onError() {},
     onSuccess() {
       return queryClient.invalidateQueries({
         queryKey: getCourseKey(courseId),

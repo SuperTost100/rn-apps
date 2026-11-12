@@ -7,6 +7,7 @@ import {
   TextButton,
   Theme,
   useStylesheet,
+  useTextScale,
   useTheme,
 } from '@polito/lib/ui';
 
@@ -42,6 +43,7 @@ export const FilesToolbar = ({
   const { t } = useTranslation();
   const styles = useStylesheet(createStyles);
   const { colors } = useTheme();
+  const { scale } = useTextScale();
   const linkColor = disabled ? colors.secondaryText : colors.link;
 
   return (
@@ -90,7 +92,7 @@ export const FilesToolbar = ({
           style={styles.button}
         >
           <View style={styles.buttonContent}>
-            <OutlineIcon name="sort" color={linkColor} size={18} />
+            <OutlineIcon name="sort" color={linkColor} size={18 * scale} />
             <Text variant="chip" numberOfLines={1} style={{ color: linkColor }}>
               {t(`course.files.sortShort.${sort}`)}
             </Text>

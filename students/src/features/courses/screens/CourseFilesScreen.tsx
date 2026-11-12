@@ -580,8 +580,9 @@ const createStyles = ({ colors, layout, shapes, spacing }: Theme) =>
       flex: 1,
     },
     // The first block sits 16 px under the tab row
+    // The field keeps a 12 px margin of its own
     search: {
-      paddingHorizontal: layout.gutter,
+      paddingHorizontal: layout.gutter - spacing[3],
       paddingTop: spacing[4],
     },
     searchField: {
@@ -613,11 +614,12 @@ const createStyles = ({ colors, layout, shapes, spacing }: Theme) =>
       paddingHorizontal: layout.gutter,
       paddingTop: spacing[2],
     },
+    // The first crumb's label sits on the gutter
     crumbs: {
       flexDirection: 'row',
       flexWrap: 'wrap',
       alignItems: 'center',
-      paddingHorizontal: layout.gutter,
+      paddingHorizontal: layout.gutter - spacing[1],
       marginTop: spacing[2],
     },
     crumb: {

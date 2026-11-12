@@ -1,6 +1,6 @@
 import { PropsWithChildren } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Linking, StyleSheet, View } from 'react-native';
+import { Linking, StyleSheet, TouchableOpacity } from 'react-native';
 import ContextMenu from 'react-native-context-menu-view';
 
 import { faEllipsisVertical } from '@fortawesome/free-solid-svg-icons';
@@ -90,7 +90,6 @@ export const CourseAssignmentListItem = ({ item, disabled }: Props) => {
   return (
     <ListItem
       title={item.description}
-      titleProps={{ numberOfLines: 2 }}
       titleStyle={isWithdrawn && { color: colors.secondaryText }}
       subtitle={subtitle}
       subtitleProps={{ numberOfLines: 3 }}
@@ -119,9 +118,9 @@ export const CourseAssignmentListItem = ({ item, disabled }: Props) => {
       }
       trailingItem={
         <Menu assignmentId={item.id} isWithdrawn={isWithdrawn}>
-          <View
+          {/* A touchable without onPress keeps the tap from the row */}
+          <TouchableOpacity
             style={styles.menuButton}
-            accessible
             accessibilityRole="button"
             accessibilityLabel={t('course.assignments.optionsLabel', {
               name: item.description,
@@ -132,7 +131,7 @@ export const CourseAssignmentListItem = ({ item, disabled }: Props) => {
               size={controls.iconSize - 4}
               color={colors.secondaryText}
             />
-          </View>
+          </TouchableOpacity>
         </Menu>
       }
     />

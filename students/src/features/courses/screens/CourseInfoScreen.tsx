@@ -29,6 +29,7 @@ import {
   TextButton,
   Theme,
   useStylesheet,
+  useTextScale,
   useTheme,
 } from '@polito/lib/ui';
 import { Person } from '@polito/student-api-client';
@@ -70,6 +71,7 @@ export const CourseInfoScreen = () => {
   const courseId = useCourseContext();
   const styles = useStylesheet(createStyles);
   const { colors } = useTheme();
+  const { isLarge } = useTextScale();
   const { getUnreadsCount, getUnreadsCountPerCourse } = useNotifications();
   const { data: editions } = useGetCourseEditions(courseId);
   const courseQuery = useGetCourse(courseId);
@@ -192,7 +194,13 @@ export const CourseInfoScreen = () => {
       {states.status === 'ready' && course ? (
         <>
           <Card padded style={styles.headCard}>
-            <Text variant="cardTitle" style={styles.title}>
+            {/* At large text a smaller size keeps long words of course
+                names whole: the header shows the name too */}
+            <Text
+              variant={isLarge ? 'title' : 'cardTitle'}
+              weight="bold"
+              style={styles.title}
+            >
               {course.name}
             </Text>
             <Text variant="secondaryText">

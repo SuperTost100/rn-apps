@@ -200,7 +200,6 @@ const createStyles = ({ colors, controls, layout, shapes, spacing }: Theme) =>
     grid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      justifyContent: 'center',
       paddingHorizontal: layout.gutter - spacing[1],
       paddingTop: spacing[2],
     },

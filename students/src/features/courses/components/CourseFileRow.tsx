@@ -286,9 +286,9 @@ export const CourseFileRow = memo(
             else if (index === 2) removeDownload();
           }}
         >
-          <View
+          {/* A touchable without onPress keeps the tap from the row */}
+          <TouchableOpacity
             style={styles.menuButton}
-            accessible
             accessibilityRole="button"
             accessibilityLabel={t('course.files.optionsLabel', { name })}
           >
@@ -296,7 +296,7 @@ export const CourseFileRow = memo(
               name={isOutdated ? 'download' : 'check-circle'}
               color={isOutdated ? colors.link : colors.successText}
             />
-          </View>
+          </TouchableOpacity>
         </ContextMenu>
       );
     } else if (needsConnection) {
@@ -325,7 +325,6 @@ export const CourseFileRow = memo(
     return (
       <ListItem
         title={name}
-        titleProps={{ numberOfLines: 2 }}
         subtitle={subtitle}
         unread={unread}
         leadingItem={

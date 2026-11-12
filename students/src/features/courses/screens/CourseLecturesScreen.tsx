@@ -134,9 +134,11 @@ export const CourseLecturesScreen = () => {
             const key = `${section.courseId}-${section.type}-${index}`;
             const folded =
               isRelated && !unfolded[key] && section.data.length > FOLDED_ROWS;
-            const rows = folded
-              ? section.data.slice(0, FOLDED_ROWS)
-              : section.data;
+            // Newest first, as the files and announcements
+            const newest = [...section.data].sort(
+              (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+            );
+            const rows = folded ? newest.slice(0, FOLDED_ROWS) : newest;
             return (
               <View
                 key={key}
@@ -195,9 +197,12 @@ const LectureRow = ({ section, lecture }: LectureRowProps) => {
   const isVideo = section.type === 'VideoLecture';
   const isLive = !isVideo && isLiveVC(lecture);
   const duration = 'duration' in lecture ? lecture.duration : undefined;
-  const day = DateTime.fromJSDate(lecture.createdAt, { zone: APP_TIMEZONE })
-    .setLocale(language)
-    .toFormat('ccc d LLL yyyy');
+  const created = DateTime.fromJSDate(lecture.createdAt, {
+    zone: APP_TIMEZONE,
+  }).setLocale(language);
+  const day = created.toFormat(
+    created.year === DateTime.now().year ? 'ccc d LLL' : 'ccc d LLL yyyy',
+  );
   const teacherName = teacher
     ? `${teacher.firstName} ${teacher.lastName}`
     : undefined;
@@ -210,7 +215,6 @@ const LectureRow = ({ section, lecture }: LectureRowProps) => {
   return (
     <ListItem
       title={lecture.title}
-      titleProps={{ numberOfLines: 2 }}
       subtitle={[day, duration, teacherName].filter(Boolean).join(' · ')}
       leadingItem={
         <OutlineIcon

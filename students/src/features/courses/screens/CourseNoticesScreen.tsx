@@ -59,7 +59,13 @@ export const CourseNoticesScreen = () => {
         .sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime())
         .map(notice => ({
           ...notice,
-          text: getHtmlTextContent(notice.content).replace(/\s+/g, ' ').trim(),
+          // Paragraphs and list items end with a space, so words of two
+          // blocks do not run together
+          text: getHtmlTextContent(
+            notice.content.replace(/<\/(p|li|div|h\d)>|<br\s*\/?>/gi, ' $&'),
+          )
+            .replace(/\s+/g, ' ')
+            .trim(),
         })),
     [noticesQuery.data],
   );
@@ -113,7 +119,6 @@ export const CourseNoticesScreen = () => {
                   <ListItem
                     key={notice.id}
                     title={notice.text}
-                    titleProps={{ numberOfLines: 2 }}
                     subtitle={posted}
                     unread={unread}
                     leadingItem={

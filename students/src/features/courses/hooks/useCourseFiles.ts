@@ -169,6 +169,10 @@ export const useCourseFileActions = (courseId: number) => {
 // The key the Files tab kept its order under, so the choice carries over
 const sortKeyOf = (courseId: number) => `@files_sort_${courseId}_files`;
 const sortCache = new Map<number, FileSortOrder>();
+// The Files tab and its folder screens show the same order: each one listens
+const sortListeners = new Set<
+  (courseId: number, order: FileSortOrder) => void
+>();
 
 const parseSort = (stored: string | null): FileSortOrder | undefined => {
   if (!stored) return undefined;
@@ -183,6 +187,16 @@ export const useFileSort = (courseId: number) => {
   );
 
   useEffect(() => {
+    const listener = (id: number, next: FileSortOrder) => {
+      if (id === courseId) setOrderState(next);
+    };
+    sortListeners.add(listener);
+    return () => {
+      sortListeners.delete(listener);
+    };
+  }, [courseId]);
+
+  useEffect(() => {
     if (sortCache.has(courseId)) return;
     let cancelled = false;
     AsyncStorage.getItem(sortKeyOf(courseId))
@@ -190,7 +204,7 @@ export const useFileSort = (courseId: number) => {
         const parsed = parseSort(stored);
         if (parsed && !cancelled) {
           sortCache.set(courseId, parsed);
-          setOrderState(parsed);
+          sortListeners.forEach(listener => listener(courseId, parsed));
         }
       })
       .catch(() => {});
@@ -202,7 +216,7 @@ export const useFileSort = (courseId: number) => {
   const setOrder = useCallback(
     (next: FileSortOrder) => {
       sortCache.set(courseId, next);
-      setOrderState(next);
+      sortListeners.forEach(listener => listener(courseId, next));
       // shortcut: a failed write keeps the order for this session only, move
       // it to the preferences context if it must survive storage errors
       AsyncStorage.setItem(sortKeyOf(courseId), next).catch(() => {});
