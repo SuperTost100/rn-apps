@@ -2,17 +2,21 @@ import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet } from 'react-native';
 import { openCamera } from 'react-native-image-crop-picker';
 
-import { faFilePdf, faUpload } from '@fortawesome/free-solid-svg-icons';
+import { faCamera, faFolderOpen } from '@fortawesome/free-solid-svg-icons';
+import { useFeedbackContext } from '@polito/lib/core';
 import { pdfSizes } from '@polito/lib/features/courses';
 import {
+  Card,
   Icon,
+  List,
   ListItem,
-  OverviewList,
+  Text,
   Theme,
   useStylesheet,
   useTheme,
 } from '@polito/lib/ui';
 import {
+  errorCodes,
   isErrorWithCode,
   keepLocalCopy,
   pick,
@@ -20,6 +24,7 @@ import {
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { TeachingStackParamList } from '../../teaching/components/TeachingNavigator';
+import { useCameraErrorHandler } from '../hooks/useCameraErrorHandler';
 import { Assignment } from '../types/Assignment';
 
 type Props = NativeStackScreenProps<
@@ -27,19 +32,18 @@ type Props = NativeStackScreenProps<
   'CourseAssignmentUpload'
 >;
 
+/**
+ * The first step of an upload: pick a file from the phone or the cloud, or
+ * scan pages into a PDF with the camera. A file that cannot be read or a
+ * camera without permission says so instead of failing in silence.
+ */
 export const CourseAssignmentUploadScreen = ({ navigation, route }: Props) => {
   const { courseId } = route.params;
   const { t } = useTranslation();
-  const { fontSizes } = useTheme();
+  const { colors, controls } = useTheme();
   const styles = useStylesheet(createStyles);
-
-  const takePicture = () =>
-    openCamera({
-      ...pdfSizes,
-      mediaType: 'photo',
-      cropping: true,
-      freeStyleCropEnabled: true,
-    });
+  const { setFeedback } = useFeedbackContext();
+  const onCameraError = useCameraErrorHandler();
 
   const handlePickedFile = (file: Assignment) => {
     navigation.navigate('CourseAssignmentUploadConfirmation', {
@@ -48,83 +52,85 @@ export const CourseAssignmentUploadScreen = ({ navigation, route }: Props) => {
     });
   };
 
+  const pickFile = async () => {
+    try {
+      const [response] = await pick();
+      const [localCopy] = await keepLocalCopy({
+        files: [{ uri: response.uri, fileName: response.name || '' }],
+        destination: 'cachesDirectory',
+      });
+      if (localCopy.status !== 'success') {
+        throw new Error(localCopy.copyError ?? 'File copy failed');
+      }
+      handlePickedFile({
+        uri: localCopy.localUri,
+        name: response.name || '',
+        size: response.size || 0,
+        type: response.type || '',
+      });
+    } catch (e) {
+      if (isErrorWithCode(e) && e.code === errorCodes.OPERATION_CANCELED) {
+        return;
+      }
+      console.error(e);
+      setFeedback({
+        text: t('course.upload.pickFailed'),
+        isError: true,
+      });
+    }
+  };
+
+  const scan = async () => {
+    try {
+      const image = await openCamera({
+        ...pdfSizes,
+        mediaType: 'photo',
+        cropping: true,
+        freeStyleCropEnabled: true,
+      });
+      navigation.navigate('CourseAssignmentPdfCreation', {
+        courseId,
+        firstImageUri: image.path,
+      });
+    } catch (e) {
+      onCameraError(e);
+    }
+  };
+
+  const iconProps = { size: controls.iconSize, color: colors.secondaryText };
+
   return (
-    <ScrollView
-      contentInsetAdjustmentBehavior="automatic"
-      style={styles.screen}
-    >
-      <OverviewList indented>
-        <ListItem
-          isAction
-          title={t('courseAssignmentUploadScreen.ctaUploadFile')}
-          subtitle={t('courseAssignmentUploadScreen.ctaUploadFileSubtitle')}
-          leadingItem={<Icon icon={faUpload} size={fontSizes.xl} />}
-          onPress={async () => {
-            try {
-              const [response] = await pick();
-              const [localCopy] = await keepLocalCopy({
-                files: [
-                  {
-                    uri: response.uri,
-                    fileName: response.name || '',
-                  },
-                ],
-                destination: 'cachesDirectory',
-              });
-              if (localCopy.status !== 'success') {
-                throw new Error('File upload failed');
-              }
-              handlePickedFile({
-                uri: localCopy.localUri,
-                name: response.name || '',
-                size: response.size || 0,
-                type: response.type || '',
-              });
-            } catch (e) {
-              if (!isErrorWithCode(e)) {
-                console.error(e);
-              }
-            }
-          }}
-        />
-        <ListItem
-          isAction
-          title={t('courseAssignmentUploadScreen.ctaCreatePDF')}
-          subtitle={t('courseAssignmentUploadScreen.ctaCreatePDFSubtitle')}
-          leadingItem={<Icon icon={faFilePdf} size={fontSizes.xl} />}
-          onPress={async () => {
-            try {
-              const image = await takePicture();
-              navigation.navigate('CourseAssignmentPdfCreation', {
-                courseId,
-                firstImageUri: image.path,
-              });
-            } catch (e) {
-              console.error(e);
-            }
-          }}
-        />
-      </OverviewList>
+    <ScrollView contentInsetAdjustmentBehavior="automatic">
+      <Text variant="secondaryText" style={styles.intro}>
+        {t('course.upload.intro')}
+      </Text>
+      <Card>
+        <List>
+          <ListItem
+            isAction
+            title={t('courseAssignmentUploadScreen.ctaUploadFile')}
+            subtitle={t('courseAssignmentUploadScreen.ctaUploadFileSubtitle')}
+            leadingItem={<Icon icon={faFolderOpen} {...iconProps} />}
+            onPress={pickFile}
+          />
+          <ListItem
+            isAction
+            title={t('courseAssignmentUploadScreen.ctaCreatePDF')}
+            subtitle={t('courseAssignmentUploadScreen.ctaCreatePDFSubtitle')}
+            leadingItem={<Icon icon={faCamera} {...iconProps} />}
+            onPress={scan}
+          />
+        </List>
+      </Card>
     </ScrollView>
   );
 };
 
-const createStyles = ({ colors, shapes, spacing }: Theme) =>
+const createStyles = ({ layout, spacing }: Theme) =>
   StyleSheet.create({
-    screen: {
-      paddingTop: spacing[2],
-    },
-    uploadAction: {
-      borderRadius: shapes.sm,
-      backgroundColor: colors.surface,
-      marginHorizontal: spacing[4],
-      marginVertical: spacing[2],
-      padding: spacing[4],
-    },
-    innerContainer: {
-      display: 'flex',
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
+    intro: {
+      paddingHorizontal: layout.gutter,
+      paddingTop: spacing[4],
+      paddingBottom: spacing[1],
     },
   });

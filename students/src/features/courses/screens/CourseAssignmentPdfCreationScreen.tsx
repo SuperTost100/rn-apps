@@ -36,6 +36,7 @@ import {
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { TeachingStackParamList } from '../../teaching/components/TeachingNavigator';
+import { useCameraErrorHandler } from '../hooks/useCameraErrorHandler';
 
 type Props = NativeStackScreenProps<
   TeachingStackParamList,
@@ -53,6 +54,7 @@ export const CourseAssignmentPdfCreationScreen = ({
   const { courseId, firstImageUri } = route.params;
   const { t } = useTranslation();
   const { setFeedback } = useFeedbackContext();
+  const onCameraError = useCameraErrorHandler();
   const styles = useStylesheet(createStyles);
   const { bottom: marginBottom } = useSafeAreaInsets();
   const [imageUris, setImageUris] = useState<string[]>([firstImageUri]);
@@ -80,9 +82,7 @@ export const CourseAssignmentPdfCreationScreen = ({
         setImageUris(oldUris => [...oldUris, image.path]);
         setTimeout(() => pageSliderRef.current?.scrollToEnd());
       })
-      .catch(e => {
-        console.error(e);
-      });
+      .catch(onCameraError);
   };
 
   const deletePage = () => {
@@ -107,6 +107,10 @@ export const CourseAssignmentPdfCreationScreen = ({
       })
       .catch(e => {
         console.error(e);
+        setFeedback({
+          text: t('course.upload.deletePageFailed'),
+          isError: true,
+        });
       });
   };
 
@@ -257,13 +261,16 @@ const Action = ({
   onPress,
 }: ActionProps) => {
   const styles = useStylesheet(createStyles);
-  const { colors, palettes, fontSizes } = useTheme();
+  const { colors, controls } = useTheme();
   return (
     <TouchableHighlight
       onPress={onPress}
       style={styles.actionHighlight}
       underlayColor={colors.touchableHighlight}
       disabled={disabled}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ disabled, busy: loading }}
     >
       <View style={styles.action}>
         {loading ? (
@@ -271,12 +278,12 @@ const Action = ({
         ) : (
           <Icon
             icon={icon}
-            size={fontSizes.xl}
+            size={controls.iconSize}
             style={styles.actionIcon}
-            color={palettes.secondary[600]}
+            color={disabled ? colors.secondaryText : colors.link}
           />
         )}
-        <Text>{label}</Text>
+        <Text variant="label">{label}</Text>
       </View>
     </TouchableHighlight>
   );

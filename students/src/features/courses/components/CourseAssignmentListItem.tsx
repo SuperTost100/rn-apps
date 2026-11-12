@@ -1,24 +1,35 @@
-import { PropsWithChildren, useMemo } from 'react';
+import { PropsWithChildren } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Linking, Platform, TouchableHighlightProps } from 'react-native';
+import { Linking, StyleSheet, View } from 'react-native';
 import ContextMenu from 'react-native-context-menu-view';
 
 import { faEllipsisVertical } from '@fortawesome/free-solid-svg-icons';
-import { IS_ANDROID, formatDateTime } from '@polito/lib/core';
-import { FileListItem, IconButton, useTheme } from '@polito/lib/ui';
+import { APP_TIMEZONE, usePreferencesContext } from '@polito/lib/core';
+import {
+  Icon,
+  ListItem,
+  StatusChip,
+  Theme,
+  getIconFromMimeType,
+  useStylesheet,
+  useTheme,
+} from '@polito/lib/ui';
 import { CourseAssignment } from '@polito/student-api-client';
 
 import {
   useRestoreAssignment,
   useWithdrawAssignment,
 } from '~/core/queries/courseHooks';
-import { formatFileSize } from '~/utils/files';
 
+import { DateTime } from 'luxon';
+
+import { AppPreferences } from '../../../core/types/preferences';
 import { useCourseContext } from '../contexts/CourseContext';
+import { formatSize } from '../utils/fileTree';
 
 interface Props {
   item: CourseAssignment;
-  accessibilityListLabel?: string;
+  disabled?: boolean;
 }
 
 const Menu = ({
@@ -34,7 +45,7 @@ const Menu = ({
 
   return (
     <ContextMenu
-      dropdownMenuMode={IS_ANDROID}
+      dropdownMenuMode
       actions={[
         {
           title: isWithdrawn ? t('common.restore') : t('common.withdraw'),
@@ -43,16 +54,9 @@ const Menu = ({
         },
       ]}
       onPress={({ nativeEvent: { index } }) => {
-        switch (index) {
-          case 0:
-            if (isWithdrawn) {
-              restoreAssignment(assignmentId);
-            } else {
-              withdrawAssignment(assignmentId);
-            }
-            break;
-          default:
-        }
+        if (index !== 0) return;
+        if (isWithdrawn) restoreAssignment(assignmentId);
+        else withdrawAssignment(assignmentId);
       }}
     >
       {children}
@@ -60,70 +64,88 @@ const Menu = ({
   );
 };
 
-export const CourseAssignmentListItem = ({
-  item,
-  accessibilityListLabel,
-  ...rest
-}: Omit<TouchableHighlightProps, 'onPress'> & Props) => {
-  const { colors, spacing, fontSizes } = useTheme();
-  const subTitle = `${formatFileSize(item.sizeInKiloBytes)} - ${formatDateTime(
-    item.uploadedAt,
-  )}`;
-  const listItem = useMemo(
-    () => (
-      <FileListItem
-        onPress={async () => {
-          await Linking.openURL(item.url);
-        }}
-        title={item.description}
-        titleStyle={
-          item.deletedAt != null && {
-            color: colors.secondaryText,
-            textDecorationLine: 'line-through',
-          }
-        }
-        subtitle={subTitle}
-        accessibilityLabel={`${accessibilityListLabel}. ${item.description}, ${subTitle}`}
-        mimeType={item.mimeType}
-        iconColor={item.deletedAt != null ? colors.secondaryText : undefined}
-        trailingItem={Platform.select({
-          android: (
-            <Menu assignmentId={item.id} isWithdrawn={item.deletedAt != null}>
-              <IconButton
-                style={{
-                  padding: spacing[3],
-                }}
-                icon={faEllipsisVertical}
-                color={colors.secondaryText}
-                size={fontSizes.xl}
-                hitSlop={{
-                  right: +spacing[2],
-                  left: +spacing[2],
-                }}
-              />
-            </Menu>
-          ),
-        })}
-        {...rest}
-      />
-    ),
-    [
-      item,
-      subTitle,
-      accessibilityListLabel,
-      spacing,
-      colors.secondaryText,
-      fontSizes.xl,
-      rest,
-    ],
-  );
+/**
+ * A file handed in for the course: what it is, the file name, size and when
+ * it was sent, and "Withdrawn" when the student took it back. The menu
+ * withdraws or restores it.
+ */
+export const CourseAssignmentListItem = ({ item, disabled }: Props) => {
+  const { t } = useTranslation();
+  const { colors, controls } = useTheme();
+  const styles = useStylesheet(createStyles);
+  const { language } = usePreferencesContext<AppPreferences>();
+  const isWithdrawn = item.deletedAt != null;
+  const sent = DateTime.fromJSDate(item.uploadedAt, { zone: APP_TIMEZONE })
+    .setLocale(language)
+    .toFormat('ccc d LLL, HH:mm');
+  const subtitle = [
+    item.filename,
+    formatSize(item.sizeInKiloBytes, language),
+    sent,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+  const withdrawn = t('course.assignments.withdrawn');
 
-  if (Platform.OS === 'ios') {
-    return (
-      <Menu assignmentId={item.id} isWithdrawn={item.deletedAt != null}>
-        {listItem}
-      </Menu>
-    );
-  }
-  return listItem;
+  return (
+    <ListItem
+      title={item.description}
+      titleProps={{ numberOfLines: 2 }}
+      titleStyle={isWithdrawn && { color: colors.secondaryText }}
+      subtitle={subtitle}
+      subtitleProps={{ numberOfLines: 3 }}
+      leadingItem={
+        <Icon
+          icon={getIconFromMimeType(item.mimeType)}
+          size={controls.iconSize}
+          color={colors.secondaryText}
+        />
+      }
+      chip={
+        isWithdrawn ? (
+          <StatusChip label={withdrawn} tone="neutral" />
+        ) : undefined
+      }
+      chipLabel={isWithdrawn ? withdrawn : undefined}
+      onPress={() => Linking.openURL(item.url)}
+      disabled={disabled}
+      accessibilityLabel={[item.description, subtitle, isWithdrawn && withdrawn]
+        .filter(Boolean)
+        .join(', ')}
+      accessibilityHint={
+        disabled
+          ? t('states.needsConnection')
+          : t('course.assignments.opensFile')
+      }
+      trailingItem={
+        <Menu assignmentId={item.id} isWithdrawn={isWithdrawn}>
+          <View
+            style={styles.menuButton}
+            accessible
+            accessibilityRole="button"
+            accessibilityLabel={t('course.assignments.optionsLabel', {
+              name: item.description,
+            })}
+          >
+            <Icon
+              icon={faEllipsisVertical}
+              size={controls.iconSize - 4}
+              color={colors.secondaryText}
+            />
+          </View>
+        </Menu>
+      }
+    />
+  );
 };
+
+const createStyles = ({ controls, spacing }: Theme) =>
+  StyleSheet.create({
+    menuButton: {
+      width: controls.touchTarget,
+      height: controls.touchTarget,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: -spacing[3],
+    },
+  });
