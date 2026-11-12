@@ -394,8 +394,9 @@ const createStyles = ({ layout, spacing }: Theme) =>
       justifyContent: 'space-between',
       columnGap: spacing[3],
       minHeight: 52,
-      paddingLeft: layout.gutter,
-      paddingRight: layout.gutter - spacing[3],
+      // TextButton already reaches 12 px past its label: the label itself
+      // ends at the gutter
+      paddingHorizontal: layout.gutter,
       paddingTop: spacing[1],
     },
     statusText: {

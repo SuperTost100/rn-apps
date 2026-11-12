@@ -269,48 +269,43 @@ export const AgendaWeekGrid = ({
         })}
       </View>
       {hasAllDay && !loading && (
-        <View style={styles.allDay}>
+        <View style={styles.allDayBlock}>
+          {/* On its own line above the chips: the time gutter is narrower
+              than "Tutto il giorno" */}
           <Text
             variant="secondaryText"
-            style={[
-              styles.muted,
-              styles.small,
-              styles.allDayLabel,
-              { width: GUTTER },
-            ]}
-            // The gutter is narrower than "giorno": the label shrinks
-            // instead of breaking the word
-            numberOfLines={2}
-            adjustsFontSizeToFit
-            minimumFontScale={0.5}
+            style={[styles.muted, styles.small, styles.allDayLabel]}
           >
             {t('agendaScreen.allDay')}
           </Text>
-          {shownDays.map(day => (
-            <View key={day} style={styles.allDayColumn}>
-              {(entriesByDay.get(day) ?? [])
-                .filter(e => e.allDay)
-                .map(entry => (
-                  <Pressable
-                    key={entry.item.key}
-                    onPress={() => openItem(entry.item)}
-                    accessibilityRole="button"
-                    accessibilityLabel={itemLabel(entry, now, true)}
-                    style={styles.allDayChip}
-                  >
-                    <Text
-                      weight="bold"
-                      style={styles.allDayText}
-                      numberOfLines={2}
+          <View style={styles.allDay}>
+            <View style={{ width: GUTTER }} />
+            {shownDays.map(day => (
+              <View key={day} style={styles.allDayColumn}>
+                {(entriesByDay.get(day) ?? [])
+                  .filter(e => e.allDay)
+                  .map(entry => (
+                    <Pressable
+                      key={entry.item.key}
+                      onPress={() => openItem(entry.item)}
+                      accessibilityRole="button"
+                      accessibilityLabel={itemLabel(entry, now, true)}
+                      style={styles.allDayChip}
                     >
-                      {entry.item.type === 'exam'
-                        ? shortTitle(entry.item.title)
-                        : typeLabelOf(entry.item, t)}
-                    </Text>
-                  </Pressable>
-                ))}
-            </View>
-          ))}
+                      <Text
+                        weight="bold"
+                        style={styles.allDayText}
+                        numberOfLines={2}
+                      >
+                        {entry.item.type === 'exam'
+                          ? shortTitle(entry.item.title)
+                          : typeLabelOf(entry.item, t)}
+                      </Text>
+                    </Pressable>
+                  ))}
+              </View>
+            ))}
+          </View>
         </View>
       )}
       <View style={styles.body}>
@@ -434,14 +429,17 @@ const createStyles = ({ colors, layout, shapes, spacing }: Theme) =>
     number: {
       fontVariant: ['tabular-nums'],
     },
-    allDay: {
-      flexDirection: 'row',
+    allDayBlock: {
       backgroundColor: colors.surface,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderColor: colors.divider,
     },
+    allDay: {
+      flexDirection: 'row',
+    },
     allDayLabel: {
-      padding: spacing[1],
+      paddingHorizontal: spacing[1],
+      paddingTop: spacing[1],
     },
     allDayColumn: {
       flex: 1,

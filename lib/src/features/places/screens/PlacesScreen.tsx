@@ -539,9 +539,12 @@ export const PlacesScreen = ({ navigation, route }: Props) => {
           // The full label is read by screen readers; the visible hint is
           // short, because a placeholder is clipped, not shortened
           textFieldProps={{
-            placeholder: categoryFilterName
-              ? `${t('common.search')} ${categoryFilterName}`
-              : t('placesScreen.searchPlaceholder'),
+            placeholder:
+              categoryFilterName || isLarge
+                ? [t('common.search'), !isLarge && categoryFilterName]
+                    .filter(Boolean)
+                    .join(' ')
+                : t('placesScreen.searchPlaceholder'),
             onClearLabel: t('placesScreen.clearSearch'),
           }}
           isLoading={isLoadingPlaces}
