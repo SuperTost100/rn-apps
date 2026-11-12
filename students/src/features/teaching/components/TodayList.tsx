@@ -814,7 +814,9 @@ const createStyles = ({ colors, layout, spacing }: Theme) =>
       flexDirection: 'column',
       alignItems: 'flex-start',
     },
+    // As the date above: room to spare, so the last word is drawn
     metaText: {
+      flexGrow: 1,
       flexShrink: 1,
     },
     count: {

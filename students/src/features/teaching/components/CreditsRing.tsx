@@ -15,6 +15,8 @@ interface Props {
   accessibilityLabel: string;
   /** Under the figure, e.g. "credits" */
   unit: string;
+  /** Off inside a control whose label already states both values */
+  accessible?: boolean;
 }
 
 /** 120 px at 100% text, as 7.5 rem in the mockup */
@@ -35,6 +37,7 @@ export const CreditsRing = ({
   hidden = false,
   accessibilityLabel,
   unit,
+  accessible = true,
 }: Props) => {
   const { colors } = useTheme();
   const { scale } = useTextScale();
@@ -64,9 +67,10 @@ export const CreditsRing = ({
   return (
     <View
       style={{ width: size, height: size }}
-      accessible
-      accessibilityRole="image"
-      accessibilityLabel={accessibilityLabel}
+      accessible={accessible}
+      accessibilityRole={accessible ? 'image' : undefined}
+      accessibilityLabel={accessible ? accessibilityLabel : undefined}
+      importantForAccessibility={accessible ? 'auto' : 'no-hide-descendants'}
     >
       <Svg width={size} height={size} viewBox="0 0 120 120">
         {[OUTER_R, INNER_R].map(r => (

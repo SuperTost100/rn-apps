@@ -1284,7 +1284,7 @@
     "needsConnection": "Serve una connessione",
     "teaching": {
       "failedTitle": "Impossibile caricare Didattica",
-      "failedText": "Il server non ha risposto, quindi corsi, esami e libretto non sono visibili. Controlla la connessione e riprova."
+      "failedText": "Il server non ha risposto, quindi lezioni, corsi ed esami non sono visibili. Controlla la connessione e riprova."
     },
     "courses": {
       "emptyTitle": "Ancora nessun corso",

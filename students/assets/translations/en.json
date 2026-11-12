@@ -1258,7 +1258,7 @@
     "needsConnection": "Needs a connection",
     "teaching": {
       "failedTitle": "Couldn't load Teaching",
-      "failedText": "The server didn't answer, so your courses, exams and transcript aren't shown. Check your connection and try again."
+      "failedText": "The server didn't answer, so your lectures, courses and exams aren't shown. Check your connection and try again."
     },
     "courses": {
       "emptyTitle": "No courses yet",

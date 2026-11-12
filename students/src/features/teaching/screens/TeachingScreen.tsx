@@ -570,6 +570,8 @@ const TranscriptCard = ({ onPress }: { onPress: () => void }) => {
                 total={total}
                 hidden={hideGrades}
                 unit={t('teachingScreen.ringCredits')}
+                // The card's label already says what the ring shows
+                accessible={false}
                 accessibilityLabel={ringLabel}
               />
             </View>
@@ -616,7 +618,7 @@ const HideGrades = () => {
     <View
       style={styles.hideGradesSwitch}
       accessibilityLabel={`${label}. ${t(
-        `common.activeStatus.${hideGrades}`,
+        `common.activeStatus.${!!hideGrades}`,
       )} `}
       accessibilityRole="switch"
       accessible={true}
