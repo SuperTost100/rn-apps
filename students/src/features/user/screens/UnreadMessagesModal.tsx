@@ -27,7 +27,10 @@ import { AppPreferences } from '~/core/types/preferences';
 import { DateTime } from 'luxon';
 
 import { useMarkAsRead } from '../../../core/hooks/useMarkAsRead';
-import { useGetModalMessages } from '../../../core/queries/studentHooks';
+import {
+  setUrgentMessageShown,
+  useGetModalMessages,
+} from '../../../core/queries/studentHooks';
 import { TeachingStackParamList } from '../../teaching/components/TeachingNavigator';
 
 type Props = NativeStackScreenProps<TeachingStackParamList, 'MessagesModal'>;
@@ -65,6 +68,7 @@ export const UnreadMessagesModal = ({ navigation }: Props) => {
   useHideTabs(undefined, () => {
     const m = shown.current;
     if (!m) return;
+    setUrgentMessageShown(m.id);
     markAsRead.message(m.id);
     queryClient.setQueryData<Message[]>(MODAL_QUERY_KEY, prev =>
       prev?.filter(x => x.id !== m.id),

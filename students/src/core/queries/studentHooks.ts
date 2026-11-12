@@ -301,6 +301,15 @@ export const useUpdateDevicePreferences = () => {
   });
 };
 
+/**
+ * Urgent messages already shown at launch in this session. Leaving the
+ * urgent message marks it read, but a server that still reports it unread
+ * must not open it again on the next refresh
+ */
+const shownUrgentMessages = new Set<number>();
+export const setUrgentMessageShown = (id: number) =>
+  shownUrgentMessages.add(id);
+
 export const useGetMessages = (enabled = true) => {
   const queryClient = useQueryClient();
   const studentClient = useStudentClient();
@@ -325,7 +334,9 @@ export const useGetMessages = (enabled = true) => {
               hasMfaMessages = true;
               return false;
             }
-            return m.type === MessageType.Emergency;
+            return (
+              m.type === MessageType.Emergency && !shownUrgentMessages.has(m.id)
+            );
           });
 
           if (hasMfaMessages) {
