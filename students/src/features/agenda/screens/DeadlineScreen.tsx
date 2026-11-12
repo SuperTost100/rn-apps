@@ -39,8 +39,8 @@ export const DeadlineScreen = ({ route }: Props) => {
         <EventHead
           caption={
             deadline.deadlineType
-              ? `${t('common.deadline')} · ${deadline.deadlineType}`
-              : t('common.deadline')
+              ? `${t('agendaScreen.types.deadline')} · ${deadline.deadlineType}`
+              : t('agendaScreen.types.deadline')
           }
           date={deadline.start.setLocale(language).toFormat('ccc, d LLL yyyy')}
         />

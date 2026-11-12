@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   PanResponder,
@@ -164,6 +164,13 @@ export const DayStrip = ({
   const cell = Math.max(available / 7, circle + 8);
   const scrolls = cell * 7 > available + 1;
 
+  const scrollRef = useRef<ScrollView>(null);
+  useEffect(() => {
+    scrollRef.current?.scrollTo({
+      x: Math.max(0, days.indexOf(selected) * cell - cell * 2),
+      animated: true,
+    });
+  }, [days, selected, cell]);
   const onSwipeRef = useRef(onSwipe);
   onSwipeRef.current = onSwipe;
   const pan = useMemo(
@@ -202,16 +209,20 @@ export const DayStrip = ({
         style={[styles.day, { width: cell }]}
       >
         <Text
-          variant="caption"
+          variant="secondaryText"
           numberOfLines={1}
-          style={{ color: colors.onHeaderMuted }}
+          style={[styles.weekday, { color: colors.onHeaderMuted }]}
         >
           {date.toFormat(isLarge ? 'ccccc' : 'ccc')}
         </Text>
         <View
+          // Remounted when its state changes: updating the fill and the
+          // number's colour in place sometimes left the old colour on
+          // Android, a white number on the white fill
+          key={`${isSelected}-${isToday}`}
           style={[
             styles.number,
-            { width: circle, height: circle, borderRadius: circle / 2 },
+            { width: circle, height: circle },
             isToday && !isSelected && styles.todayNumber,
             isSelected && styles.selectedNumber,
           ]}
@@ -248,6 +259,13 @@ export const DayStrip = ({
     >
       {scrolls ? (
         <ScrollView
+          ref={scrollRef}
+          onLayout={() =>
+            scrollRef.current?.scrollTo({
+              x: Math.max(0, days.indexOf(selected) * cell - cell * 2),
+              animated: false,
+            })
+          }
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.strip}
@@ -301,6 +319,14 @@ const createStyles = ({ colors, layout, spacing }: Theme) =>
     number: {
       alignItems: 'center',
       justifyContent: 'center',
+      // A fixed radius: one computed per render was dropped on Android
+      // when the selected fill changed, which drew a square
+      borderRadius: 999,
+      overflow: 'hidden',
+    },
+    weekday: {
+      fontSize: 12,
+      lineHeight: 16,
     },
     todayNumber: {
       borderWidth: 2,

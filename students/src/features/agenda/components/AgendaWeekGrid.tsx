@@ -248,7 +248,11 @@ export const AgendaWeekGrid = ({
                 .join(', ')}
               style={styles.headDay}
             >
-              <Text variant="caption" weight="semibold" style={styles.muted}>
+              <Text
+                variant="secondaryText"
+                weight="semibold"
+                style={[styles.muted, styles.small]}
+              >
                 {format(day, 'ccc')}
               </Text>
               <View style={[styles.headNumber, isToday && styles.todayNumber]}>
@@ -267,8 +271,13 @@ export const AgendaWeekGrid = ({
       {hasAllDay && !loading && (
         <View style={styles.allDay}>
           <Text
-            variant="caption"
-            style={[styles.muted, styles.allDayLabel, { width: GUTTER }]}
+            variant="secondaryText"
+            style={[
+              styles.muted,
+              styles.small,
+              styles.allDayLabel,
+              { width: GUTTER },
+            ]}
           >
             {t('agendaScreen.allDay')}
           </Text>
@@ -307,7 +316,10 @@ export const AgendaWeekGrid = ({
         >
           {hours.map(hour => (
             <View key={hour} style={styles.hour}>
-              <Text variant="caption" style={[styles.muted, styles.number]}>
+              <Text
+                variant="secondaryText"
+                style={[styles.muted, styles.small, styles.number]}
+              >
                 {String(hour).padStart(2, '0')}
               </Text>
             </View>
@@ -409,6 +421,10 @@ const createStyles = ({ colors, layout, shapes, spacing }: Theme) =>
     },
     muted: {
       color: colors.secondaryText,
+    },
+    small: {
+      fontSize: 12,
+      lineHeight: 16,
     },
     number: {
       fontVariant: ['tabular-nums'],

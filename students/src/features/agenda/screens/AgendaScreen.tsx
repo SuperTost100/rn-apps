@@ -179,6 +179,8 @@ export const AgendaScreen = ({ navigation, route }: Props) => {
 
   // Refresh: the button and pull to refresh fetch the sources again
   const [isRefreshing, setIsRefreshing] = useState(false);
+  // The pull spinner shows only for a pull; the button has its own progress
+  const [isPulled, setIsPulled] = useState(false);
   const { time: savedTime } = useSavedAtText(states.updatedAt);
   const refresh = useCallback(() => {
     if (isRefreshing) return;
@@ -191,7 +193,10 @@ export const AgendaScreen = ({ navigation, route }: Props) => {
       return;
     }
     setIsRefreshing(true);
-    refreshAgendaQueries(client).finally(() => setIsRefreshing(false));
+    refreshAgendaQueries(client).finally(() => {
+      setIsRefreshing(false);
+      setIsPulled(false);
+    });
   }, [client, isRefreshing, savedTime, setFeedback, states.isOffline, t]);
   const wasRefreshing = useRef(false);
   useEffect(() => {
@@ -328,8 +333,11 @@ export const AgendaScreen = ({ navigation, route }: Props) => {
         contentInsetAdjustmentBehavior="automatic"
         refreshControl={
           <RefreshControl
-            refreshing={isRefreshing}
-            onRefresh={refresh}
+            refreshing={isPulled && isRefreshing}
+            onRefresh={() => {
+              setIsPulled(true);
+              refresh();
+            }}
             tintColor={colors.onHeader}
             colors={[colors.primary]}
           />
@@ -368,7 +376,8 @@ export const AgendaScreen = ({ navigation, route }: Props) => {
         />
         <AgendaStatusRow
           title={statusTitle}
-          time={savedTime}
+          // The time of the data shown, once the week is there
+          time={entries ? savedTime : undefined}
           isRefreshing={isRefreshing}
           isOffline={states.isOffline}
           onRefresh={refresh}

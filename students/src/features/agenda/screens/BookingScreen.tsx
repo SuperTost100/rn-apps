@@ -33,7 +33,7 @@ import {
   useStylesheet,
   useTheme,
 } from '@polito/lib/ui';
-import { Booking } from '@polito/student-api-client';
+import { Booking, PlaceRef } from '@polito/student-api-client';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { inRange } from 'lodash';
@@ -58,6 +58,14 @@ const bookingLocationHasValidCoordinates = (
 ) => {
   return !!location?.latitude && !!location?.longitude && !!location.radiusInKm;
 };
+
+/**
+ * A link rather than a room. The type says so; a location that comes
+ * without it counts as a link when it has a URL and no building
+ */
+const isVirtualPlace = (location: Booking['location']) =>
+  location.type === 'virtualPlace' ||
+  (!location.type && 'url' in location && !('buildingId' in location));
 
 export const BookingScreen = ({ navigation, route }: Props) => {
   const { id } = route.params;
@@ -120,8 +128,10 @@ export const BookingScreen = ({ navigation, route }: Props) => {
   const onPressCheckIn = async () => {
     if (!booking?.id) return;
     getCurrentPosition()
-      .catch(() => {
-        setFeedback({ text: t('bookingScreen.locationUnavailable') });
+      .catch(error => {
+        // useGeolocation already says when location services are off
+        if (error?.code !== 2)
+          setFeedback({ text: t('bookingScreen.locationUnavailable') });
         return undefined;
       })
       .then(currentDeviceCoordinates => {
@@ -147,13 +157,13 @@ export const BookingScreen = ({ navigation, route }: Props) => {
   };
 
   const onPressLocation = async (location: Booking['location']) => {
-    if (location.type === 'virtualPlace') {
-      await openInAppLink(location.url);
-    } else if (location.type === 'place') {
+    if (isVirtualPlace(location)) {
+      await openInAppLink((location as { url: string }).url);
+    } else {
       navigation.navigate(placesStack(navigation), {
         screen: 'Place',
         params: {
-          placeId: resolvePlaceId(location),
+          placeId: resolvePlaceId(location as PlaceRef),
           isCrossNavigation: true,
           lat: booking?.locationCheck?.latitude,
           long: booking?.locationCheck?.longitude,
@@ -172,10 +182,12 @@ export const BookingScreen = ({ navigation, route }: Props) => {
     }
   };
 
+  const locationKind =
+    booking && isVirtualPlace(booking.location) ? 'virtualPlace' : 'place';
   const locationAccessibilityLabel = booking
     ? [
         booking.location.name,
-        t(`bookingScreen.locationAction.${booking.location.type}`),
+        t(`bookingScreen.locationAction.${locationKind}`),
       ].join(', ')
     : '';
 
@@ -211,24 +223,20 @@ export const BookingScreen = ({ navigation, route }: Props) => {
               <ListItem
                 isAction
                 accessibilityRole={
-                  booking.location.type === 'virtualPlace' ? 'link' : 'button'
+                  locationKind === 'virtualPlace' ? 'link' : 'button'
                 }
                 accessibilityLabel={locationAccessibilityLabel}
                 leadingItem={
                   <Icon
                     icon={
-                      booking.location.type === 'virtualPlace'
-                        ? faVideo
-                        : faLocationDot
+                      locationKind === 'virtualPlace' ? faVideo : faLocationDot
                     }
                     size={24}
                     color={colors.secondaryText}
                   />
                 }
                 title={booking.location.name}
-                subtitle={t(
-                  `bookingScreen.locationAction.${booking.location.type}`,
-                )}
+                subtitle={t(`bookingScreen.locationAction.${locationKind}`)}
                 onPress={() => onPressLocation(booking?.location)}
               />
             )}

@@ -145,14 +145,17 @@ const createStyles = ({ layout, spacing }: Theme) =>
       flexDirection: 'row',
       flexWrap: 'wrap',
       alignItems: 'center',
-      justifyContent: 'space-between',
       columnGap: spacing[3],
       minHeight: 52,
       paddingHorizontal: layout.gutter,
       paddingTop: spacing[1],
     },
+    // The title takes its own width and the time goes under it when both
+    // do not fit; a title that shrank lost its last word on Android
     statusTitle: {
-      flexShrink: 1,
+      flexGrow: 1,
+      flexShrink: 0,
+      maxWidth: '100%',
     },
     statusRight: {
       flexDirection: 'row',
