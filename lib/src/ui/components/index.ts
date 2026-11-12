@@ -1,6 +1,7 @@
 export * from './ActivityIndicator';
 export * from './AgendaCard';
 export * from './AgendaIcon';
+export * from './AgendaRow';
 export * from './Badge';
 export * from './BottomBarSpacer';
 export * from './BottomModal';
