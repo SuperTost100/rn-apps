@@ -3,6 +3,7 @@ import { PixelRatio, Platform } from 'react-native';
 import { NativeStackNavigationOptions } from '@react-navigation/native-stack';
 
 import { Theme } from '../types/Theme';
+import { resolveFontFace } from '../utils/font-face';
 import { MAX_COMBINED_TEXT_SCALE } from '../utils/text-scale';
 import { useTextScale } from './useTextScale';
 
@@ -26,10 +27,16 @@ export const useTitlesStyles = (
     const combined = Math.min(scale * osScale, MAX_COMBINED_TEXT_SCALE);
     return {
       headerTitleStyle: {
-        fontFamily: fontFamilies.heading,
+        // The Bold file itself: a heavier weight on the SemiBold file is
+        // drawn as synthetic bold on Android
+        fontFamily: resolveFontFace(
+          fontFamilies.heading,
+          fontWeights.bold,
+          false,
+        ).fontFamily,
+        fontWeight: fontWeights.bold,
         // The native header takes whole numbers only
         fontSize: Math.round((20 * combined) / osScale),
-        fontWeight: fontWeights.bold,
         color: colors.title,
       },
     };

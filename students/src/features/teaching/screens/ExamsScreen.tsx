@@ -7,6 +7,7 @@ import {
   OverviewList,
   RefreshControl,
   Section,
+  useTheme,
 } from '@polito/lib/ui';
 
 import { useGetExams } from '../../../core/queries/examHooks';
@@ -14,6 +15,7 @@ import { ExamListItem } from '../components/ExamListItem';
 
 export const ExamsScreen = () => {
   const { t } = useTranslation();
+  const { spacing } = useTheme();
   const examsQuery = useGetExams();
   const { accessibilityListLabel } = useAccessibility();
 
@@ -27,7 +29,8 @@ export const ExamsScreen = () => {
       refreshControl={<RefreshControl queries={[examsQuery]} manual />}
     >
       <SafeAreaView>
-        <Section>
+        {/* The card starts 16 px under the header: 8 here, 8 its margin */}
+        <Section style={{ paddingTop: spacing[2] }}>
           <OverviewList
             queries={examsQuery}
             indented

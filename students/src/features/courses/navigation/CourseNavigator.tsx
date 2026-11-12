@@ -124,6 +124,9 @@ export const CourseNavigator = ({ route, navigation }: Props) => {
       <TopTabs.Navigator
         tabBar={props => <TopTabBar {...props} />}
         initialRouteName={lastTabByCourse.get(id) ?? 'CourseInfoScreen'}
+        // Back leaves the course from any tab, instead of stopping on Info
+        // first, which would also reset the tab the course reopens on
+        backBehavior="none"
         screenListeners={({ route: tab }) => ({
           focus: () => lastTabByCourse.set(id, tab.name as CourseTab),
         })}

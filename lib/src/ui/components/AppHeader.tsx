@@ -77,7 +77,7 @@ export const AppHeader = ({
               style={styles.back}
             />
           )}
-          <View style={styles.title}>
+          <View style={[styles.title, isRoot && styles.rootTitle]}>
             {typeof headerTitle === 'function' ? (
               headerTitle({ children: title, tintColor: foreground })
             ) : (
@@ -155,6 +155,9 @@ const createStyles = ({ colors, layout, spacing }: Theme) =>
     },
     rootRow: {
       minHeight: 64,
+      // At large text the control moves under the title rather than
+      // squeezing it until a word breaks
+      flexWrap: 'wrap',
     },
     back: {
       // The arrow sits on the gutter, its 48 px target reaches past it
@@ -162,13 +165,22 @@ const createStyles = ({ colors, layout, spacing }: Theme) =>
       marginVertical: 0,
     },
     title: {
-      flex: 1,
+      flexGrow: 1,
+      flexShrink: 1,
+      flexBasis: 0,
       minWidth: 0,
+    },
+    rootTitle: {
+      flexBasis: 'auto',
     },
     right: {
       flexDirection: 'row',
       alignItems: 'center',
-      flexShrink: 0,
+      justifyContent: 'flex-end',
+      // A long control (the campus name) gives way to the title
+      flexShrink: 1,
+      maxWidth: '60%',
+      marginLeft: 'auto',
       // Header buttons pad their glyph: this keeps it near the gutter
       marginRight: -spacing[2],
     },

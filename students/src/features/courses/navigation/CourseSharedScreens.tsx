@@ -126,8 +126,7 @@ export const CourseSharedScreens = () => {
         component={CoursePreferencesScreen}
         getId={({ params }: { params: any }) => `${params.courseId}`}
         options={{
-          title: t('common.preferences'),
-          headerBackTitle: t('common.course'),
+          title: t('navigation.courseSettings'),
         }}
       />
       <Stack.Screen
