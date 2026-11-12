@@ -764,7 +764,16 @@
   "examRequestScreen": {
     "error": "Compila il campo di testo prima di procedere con la richiesta",
     "placeholder": "Inserisci qui le motivazioni della richiesta di sostenere l'esame anticipatamente",
-    "title": "Puoi richiedere al titolare del corso di sostenere l'esame senza avere acquisito la frequenza"
+    "title": "Puoi richiedere al titolare del corso di sostenere l'esame senza avere acquisito la frequenza",
+    "headerTitle": "Richiedi un posto",
+    "intro": "I posti per questo appello si ottengono su richiesta. Spiega a {{teacher}} perché ti serve.",
+    "introNoTeacher": "I posti per questo appello si ottengono su richiesta. Spiega al docente perché ti serve.",
+    "reasonLabel": "Perché ti serve un posto?",
+    "reasonError": "Scrivi il motivo, così il docente può decidere.",
+    "send": "Invia richiesta",
+    "sentFeedback": "Richiesta inviata.",
+    "failedTitle": "Richiesta non inviata",
+    "lostAnswer": "Il server non ha risposto e la richiesta non risulta inviata. Riprova."
   },
   "examRescheduleScreen": {
     "button": "Invia richiesta",
@@ -776,7 +785,19 @@
     "responsibilityDeclaration": "Dichiaro di prendere la responsabilità di quanto dichiarato",
     "requestReason": "Inserisci qui le tue motivazioni della richiesta di cambio data appello",
     "requestReasonTitle": "Puoi chiedere al titolare del corso di poter cambiare data del tuo appello",
-    "screenTitle": "Cambio data appello"
+    "screenTitle": "Cambio data appello",
+    "headerTitle": "Chiedi un’altra data",
+    "intro": "Chiedi a {{teacher}} un’altra data, per esempio perché si sovrappone a un altro esame.",
+    "introNoTeacher": "Chiedi al docente un’altra data, per esempio perché si sovrappone a un altro esame.",
+    "reasonLabel": "Motivo",
+    "reasonError": "Scrivi il motivo, così il docente può decidere.",
+    "datesLabel": "Date che proponi",
+    "datesError": "Scrivi almeno una data in cui puoi.",
+    "declaration": "Mi assumo la responsabilità di quanto scrivo in questa richiesta.",
+    "declarationError": "Conferma per inviare la richiesta.",
+    "sentFeedback": "Richiesta di cambio data inviata.",
+    "failedTitle": "Richiesta non inviata",
+    "lostAnswer": "Il server non ha risposto, quindi la richiesta potrebbe non essere arrivata. Riprova: se il docente la riceve due volte, vedrà lo stesso testo."
   },
   "examScreen": {
     "bookedCount": "Studenti prenotati",
@@ -794,7 +815,48 @@
     "title": "Appello",
     "noBookedCount": "Dato non disponibile",
     "requestReasonTitle": "Motivazioni della richiesta",
-    "requestDetailsTitle": "Dettagli della richiesta"
+    "requestDetailsTitle": "Dettagli della richiesta",
+    "placesLeft": "Posti liberi",
+    "placesOf": "su {{total}}",
+    "placesLabel": "{{left}} posti liberi su {{total}}",
+    "places": "Posti",
+    "noPlaceLimit": "Nessun limite",
+    "bookingClosesOn": "Prenotazioni fino a",
+    "requestsCloseOn": "Richieste fino a",
+    "canCancelUntil": "Puoi annullare fino a",
+    "bookNeedsConnection": "Per prenotare serve la connessione",
+    "requestNeedsConnection": "Per la richiesta serve la connessione",
+    "cancelNeedsConnection": "Per annullare serve la connessione",
+    "requestDifferentDate": "Chiedi un’altra data",
+    "requestPlace": "Richiedi un posto",
+    "onRequestText": "I posti per questo appello si ottengono su richiesta. Spiega al docente perché ti serve.",
+    "bookedLead": "Sei prenotato.",
+    "viewInAgenda": "Vedi in agenda",
+    "keepBooking": "Mantieni",
+    "cancelTitle": "Annullare la prenotazione per {{course}}?",
+    "cancelText": "{{when}}. Puoi prenotarti di nuovo fino a {{closes}}, finché ci sono posti.",
+    "bookedFeedback": "Appello prenotato: {{course}}, {{day}}.",
+    "cancelledFeedback": "Prenotazione annullata.",
+    "closedText": "Prenotazioni chiuse il {{date}}. Non ti sei prenotato a questo appello.",
+    "opensText": "Prenotazioni dal {{date}}.",
+    "notOpenText": "Le prenotazioni per questo appello non sono aperte.",
+    "requestedText": "Richiesta inviata a {{teacher}}. L’appello resta Richiesto finché il docente non risponde.",
+    "requestedTextNoTeacher": "Richiesta inviata. L’appello resta Richiesto finché il docente non risponde.",
+    "requestAcceptedText": "Il docente ha accettato la tua richiesta. Sei prenotato.",
+    "requestRejectedText": "Il docente ha rifiutato la tua richiesta.",
+    "dateChangeSent": "Richiesta di cambio data inviata a {{teacher}}.",
+    "dateChangeSentNoTeacher": "Richiesta di cambio data inviata.",
+    "dateChangeKeepsBooking": "La prenotazione resta valida finché il docente non risponde.",
+    "bookFailedTitle": "Prenotazione non riuscita",
+    "cancelFailedTitle": "Annullamento non riuscito",
+    "noServerReason": "Il server non ha indicato il motivo.",
+    "failedWhatToDo": "Riprova. Se non funziona ancora, scrivi alla segreteria da Servizi, Ticket.",
+    "lostAnswer": "Il server non ha risposto. La pagina ora mostra lo stato indicato dal server: se dice ancora Disponibile, riprova.",
+    "lostCancelAnswer": "Il server non ha risposto. La pagina ora mostra lo stato indicato dal server: se dice ancora Prenotato, riprova.",
+    "bookedStudentsValue": "{{booked}} su {{total}}",
+    "timeRange": "{{start}} - {{end}}",
+    "yourRequest": "La tua richiesta",
+    "statusLabel": "Stato: {{status}}"
   },
   "examsScreen": {
     "emptyState": "Non ci sono appelli disponibili",
@@ -1752,5 +1814,10 @@
       "defaultIconHint": "Torna all’icona iniziale dei corsi",
       "iconSet": "Icona: {{name}}"
     }
+  },
+  "examQuestionScreen": {
+    "headerTitle": "Prima di prenotarti",
+    "intro": "Il docente chiede di rispondere a una domanda prima della prenotazione.",
+    "book": "Prenota appello"
   }
 }

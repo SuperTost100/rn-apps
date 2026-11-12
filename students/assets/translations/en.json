@@ -749,7 +749,16 @@
   "examRequestScreen": {
     "error": "Fill in the text field before proceeding with the request",
     "placeholder": "Explain why you need to take the exam early",
-    "title": "You can request the course holder to take the exam without having attended the classes"
+    "title": "You can request the course holder to take the exam without having attended the classes",
+    "headerTitle": "Request a place",
+    "intro": "Places for this exam are given on request. Tell {{teacher}} why you need one.",
+    "introNoTeacher": "Places for this exam are given on request. Tell the teacher why you need one.",
+    "reasonLabel": "Why do you need a place?",
+    "reasonError": "Write the reason, so the teacher can decide.",
+    "send": "Send request",
+    "sentFeedback": "Request sent.",
+    "failedTitle": "Couldn't send the request",
+    "lostAnswer": "The server didn't answer and the request doesn't show as sent. Try again."
   },
   "examRescheduleScreen": {
     "button": "Send request",
@@ -761,7 +770,19 @@
     "responsibilityDeclaration": "I hereby declare that I take responsibility for the following.",
     "requestReason": "Enter your reasons for requesting a change of exam call date here",
     "requestReasonTitle": "You can ask the course holder if you can change the date of your exam call",
-    "screenTitle": "Exam call date change"
+    "screenTitle": "Exam call date change",
+    "headerTitle": "Request a different date",
+    "intro": "Ask {{teacher}} for another date, for example because it clashes with another exam.",
+    "introNoTeacher": "Ask the teacher for another date, for example because it clashes with another exam.",
+    "reasonLabel": "Reason",
+    "reasonError": "Write the reason, so the teacher can decide.",
+    "datesLabel": "Dates you suggest",
+    "datesError": "Write at least one date that works for you.",
+    "declaration": "I take responsibility for what I write in this request.",
+    "declarationError": "Confirm this to send the request.",
+    "sentFeedback": "Date change request sent.",
+    "failedTitle": "Couldn't send the request",
+    "lostAnswer": "The server didn't answer, so the request may not have arrived. Try again; if the teacher gets it twice, they will see the same text."
   },
   "examScreen": {
     "bookedCount": "Booked students",
@@ -779,7 +800,48 @@
     "title": "Exam call",
     "noBookedCount": "Data not available",
     "requestReasonTitle": "Request reason",
-    "requestDetailsTitle": "Request details"
+    "requestDetailsTitle": "Request details",
+    "placesLeft": "Places left",
+    "placesOf": "of {{total}}",
+    "placesLabel": "{{left}} places left of {{total}}",
+    "places": "Places",
+    "noPlaceLimit": "No limit",
+    "bookingClosesOn": "Booking closes on",
+    "requestsCloseOn": "Requests close on",
+    "canCancelUntil": "You can cancel until",
+    "bookNeedsConnection": "Booking needs a connection",
+    "requestNeedsConnection": "Requests need a connection",
+    "cancelNeedsConnection": "Cancelling needs a connection",
+    "requestDifferentDate": "Request a different date",
+    "requestPlace": "Request a place",
+    "onRequestText": "Places for this exam are given on request. Tell the teacher why you need one.",
+    "bookedLead": "You are booked.",
+    "viewInAgenda": "View in agenda",
+    "keepBooking": "Keep booking",
+    "cancelTitle": "Cancel your booking for {{course}}?",
+    "cancelText": "{{when}}. You can book again until {{closes}}, while places are left.",
+    "bookedFeedback": "Exam booked: {{course}}, {{day}}.",
+    "cancelledFeedback": "Booking cancelled.",
+    "closedText": "Booking closed on {{date}}. You did not book this exam.",
+    "opensText": "Booking opens on {{date}}.",
+    "notOpenText": "Booking is not open for this exam.",
+    "requestedText": "Request sent to {{teacher}}. The exam shows as Requested until the teacher answers.",
+    "requestedTextNoTeacher": "Request sent. The exam shows as Requested until the teacher answers.",
+    "requestAcceptedText": "The teacher accepted your request. You are booked.",
+    "requestRejectedText": "The teacher turned down your request.",
+    "dateChangeSent": "Date change request sent to {{teacher}}.",
+    "dateChangeSentNoTeacher": "Date change request sent.",
+    "dateChangeKeepsBooking": "Your booking stays as it is until the teacher answers.",
+    "bookFailedTitle": "Couldn't book the exam",
+    "cancelFailedTitle": "Couldn't cancel the booking",
+    "noServerReason": "The server didn't say why.",
+    "failedWhatToDo": "Try again. If it keeps failing, write to the student office from Services, Tickets.",
+    "lostAnswer": "The server didn't answer. The page now shows the state the server reports: if it still says Available, try again.",
+    "lostCancelAnswer": "The server didn't answer. The page now shows the state the server reports: if it still says Booked, try again.",
+    "bookedStudentsValue": "{{booked}} of {{total}}",
+    "timeRange": "{{start}} - {{end}}",
+    "yourRequest": "Your request",
+    "statusLabel": "Status: {{status}}"
   },
   "examsScreen": {
     "emptyState": "There are no open exam calls",
@@ -1726,5 +1788,10 @@
       "defaultIconHint": "Goes back to the icon every course has at first",
       "iconSet": "Icon: {{name}}"
     }
+  },
+  "examQuestionScreen": {
+    "headerTitle": "Before you book",
+    "intro": "The teacher asks one question before you book.",
+    "book": "Book exam"
   }
 }

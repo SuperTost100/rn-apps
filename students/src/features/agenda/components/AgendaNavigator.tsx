@@ -27,6 +27,9 @@ import {
   CourseSharedScreens,
   CourseSharedScreensParamList,
 } from '../../courses/navigation/CourseSharedScreens';
+import { ExamQuestionScreen } from '../../teaching/screens/ExamQuestionScreen';
+import { ExamRequestScreen } from '../../teaching/screens/ExamRequestScreen';
+import { ExamRescheduleScreen } from '../../teaching/screens/ExamRescheduleScreen';
 import { ExamScreen } from '../../teaching/screens/ExamScreen';
 import { AgendaScreen } from '../screens/AgendaScreen';
 import { BookingScreen } from '../screens/BookingScreen';
@@ -42,7 +45,10 @@ export type AgendaStackParamList = CourseSharedScreensParamList &
      */
     Agenda: { date?: string; requestedAt?: number } | undefined;
     Lecture: { item: LectureItem };
-    Exam: { id: number };
+    Exam: { id: number; dateChangeSent?: boolean };
+    ExamQuestion: { id: number };
+    ExamRequest: { id: number };
+    ExamReschedule: { id: number };
     Deadline: { item: DeadlineItem };
     Booking: { id: number };
     BookingSeat: {
@@ -95,6 +101,30 @@ export const AgendaNavigator = () => {
         getId={({ params }) => `${params.id}`}
         options={{
           headerTitle: t('common.examCall'),
+        }}
+      />
+      <Stack.Screen
+        name="ExamQuestion"
+        component={ExamQuestionScreen}
+        getId={({ params }) => `${params.id}`}
+        options={{
+          headerTitle: t('examQuestionScreen.headerTitle'),
+        }}
+      />
+      <Stack.Screen
+        name="ExamRequest"
+        component={ExamRequestScreen}
+        getId={({ params }) => `${params.id}`}
+        options={{
+          headerTitle: t('examRequestScreen.headerTitle'),
+        }}
+      />
+      <Stack.Screen
+        name="ExamReschedule"
+        component={ExamRescheduleScreen}
+        getId={({ params }) => `${params.id}`}
+        options={{
+          headerTitle: t('examRescheduleScreen.headerTitle'),
         }}
       />
       <Stack.Screen

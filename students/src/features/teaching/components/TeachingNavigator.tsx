@@ -52,7 +52,8 @@ export type TeachingStackParamList = CourseSharedScreensParamList &
     Home: undefined;
     Courses: undefined;
     Exams: undefined;
-    Exam: { id: number };
+    /** dateChangeSent: a date change request just went out from the page */
+    Exam: { id: number; dateChangeSent?: boolean };
     ExamQuestion: { id: number };
     ExamRequest: { id: number };
     ExamReschedule: { id: number };
@@ -130,7 +131,7 @@ export const TeachingNavigator = () => {
         component={ExamQuestionScreen}
         getId={({ params }) => `${params.id}`}
         options={{
-          headerTitle: t('common.examCall'),
+          headerTitle: t('examQuestionScreen.headerTitle'),
         }}
       />
       <Stack.Screen
@@ -138,7 +139,7 @@ export const TeachingNavigator = () => {
         component={ExamRequestScreen}
         getId={({ params }) => `${params.id}`}
         options={{
-          headerTitle: t('common.examCall'),
+          headerTitle: t('examRequestScreen.headerTitle'),
         }}
       />
       <Stack.Screen
@@ -146,7 +147,7 @@ export const TeachingNavigator = () => {
         component={ExamRescheduleScreen}
         getId={({ params }) => `${params.id}`}
         options={{
-          headerTitle: t('examRescheduleScreen.screenTitle'),
+          headerTitle: t('examRescheduleScreen.headerTitle'),
         }}
       />
       <Stack.Screen

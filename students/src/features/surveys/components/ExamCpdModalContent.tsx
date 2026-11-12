@@ -55,12 +55,12 @@ export const ExamCpdModalContent = ({ surveys, close }: Props) => {
   );
 };
 
-const createStyles = ({ palettes, dark }: Theme) =>
+const createStyles = ({ colors }: Theme) =>
   StyleSheet.create({
     icon: {
-      color: dark ? palettes.danger[200] : palettes.danger[800],
+      color: colors.warningText,
     },
     message: {
-      color: dark ? palettes.danger[200] : palettes.danger[800],
+      color: colors.prose,
     },
   });

@@ -1,128 +1,216 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Platform, ScrollView, View } from 'react-native';
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import { ScrollView, StyleSheet, TouchableHighlight, View } from 'react-native';
 
-import { useFeedbackContext } from '@polito/lib/core';
+import { faSquare, faSquareCheck } from '@fortawesome/free-regular-svg-icons';
+import { useFeedbackContext, useIsOnline } from '@polito/lib/core';
+import { useGetPerson } from '@polito/lib/features/people';
 import {
   BottomBarSpacer,
   CtaButton,
-  CtaButtonSpacer,
-  useSafeBottomBarHeight,
+  Icon,
+  Text,
+  TextField,
+  type Theme,
+  useStylesheet,
   useTheme,
 } from '@polito/lib/ui';
+import { ExamStatusEnum } from '@polito/student-api-client';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-import { Checkbox } from '../../../core/components/Checkbox';
+import { FailureNote } from '../../../core/components/FailureNote';
 import {
   useGetExams,
   useRescheduleRequest,
 } from '../../../core/queries/examHooks';
-import { ExamRescheduleComponent } from '../components/ExamRescheduleComponent';
+import {
+  MutationFailure,
+  describeMutationFailure,
+} from '../../../utils/mutationFailure';
 import { TeachingStackParamList } from '../components/TeachingNavigator';
 
 type Props = NativeStackScreenProps<TeachingStackParamList, 'ExamReschedule'>;
 
+/**
+ * Asks the teacher for another date: the reason and the dates the student
+ * suggests, both required, and the statement the university asks for.
+ * Errors show under each field when the student sends; once sent, the exam
+ * page confirms it in place.
+ */
 export const ExamRescheduleScreen = ({ navigation, route }: Props) => {
   const { id } = route.params;
+  const { t } = useTranslation();
+  const styles = useStylesheet(createStyles);
+  const { colors } = useTheme();
+  const { setFeedback } = useFeedbackContext();
+  const isOnline = useIsOnline();
   const examsQuery = useGetExams();
   const exam = examsQuery.data?.find(e => e.id === id);
-  const { left, right } = useSafeAreaInsets();
-  const { colors } = useTheme();
-  const { t } = useTranslation();
-  const { setFeedback } = useFeedbackContext();
-  const bottomBarHeight = useSafeBottomBarHeight();
-  const { mutateAsync: request, isPending: isBooking } =
-    useRescheduleRequest(id);
+  const teacher = useGetPerson(exam?.teacherId).data;
+  const { mutateAsync: request, isPending } = useRescheduleRequest(id);
 
-  const [firstState, setFirstState] = useState<{
-    isError: boolean;
-    value?: string;
-  }>({
-    isError: false,
-    value: undefined,
-  });
-  const [secondState, setSecondState] = useState<{
-    isError: boolean;
-    value?: string;
-  }>({
-    isError: false,
-    value: undefined,
-  });
-  const [isCheck, setIsCheck] = useState(false);
+  const [reason, setReason] = useState('');
+  const [dates, setDates] = useState('');
+  const [declared, setDeclared] = useState(false);
+  const [showErrors, setShowErrors] = useState(false);
+  const [failure, setFailure] = useState<MutationFailure>();
 
-  useEffect(() => {
-    (firstState.isError ||
-      secondState.isError ||
-      firstState.value?.length === 0 ||
-      secondState.value?.length === 0) &&
-      setIsCheck(false);
-  }, [firstState, secondState]);
+  const reasonError =
+    showErrors && !reason.trim()
+      ? t('examRescheduleScreen.reasonError')
+      : undefined;
+  const datesError =
+    showErrors && !dates.trim()
+      ? t('examRescheduleScreen.datesError')
+      : undefined;
+  const declarationError =
+    showErrors && !declared
+      ? t('examRescheduleScreen.declarationError')
+      : undefined;
 
-  const onSubmit = async () => {
-    if (!isCheck || !firstState.value || !secondState.value) {
+  const onSubmit = () => {
+    if (!exam) return;
+    if (!reason.trim() || !dates.trim() || !declared) {
+      setShowErrors(true);
       return;
     }
-    request({
-      courseShortcode: exam!.courseShortcode,
-      requestReason: firstState.value,
-      requestDetails: secondState.value,
-    }).then(() => {
-      setFeedback({ text: t('examRescheduleScreen.ctaRescheduleSuccess') });
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'Home' }],
-      });
-    });
+    setFailure(undefined);
+    return request({
+      courseShortcode: exam.courseShortcode,
+      requestReason: reason.trim(),
+      requestDetails: dates.trim(),
+    }).then(
+      () => {
+        setFeedback({ text: t('examRescheduleScreen.sentFeedback') });
+        navigation.popTo('Exam', { id, dateChangeSent: true });
+      },
+      async error => {
+        setFailure(await describeMutationFailure(error));
+        examsQuery.refetch();
+      },
+    );
   };
 
   return (
-    <>
-      <ScrollView contentInsetAdjustmentBehavior="automatic">
-        <SafeAreaView>
-          <ExamRescheduleComponent
-            setFirstState={setFirstState}
-            firstState={firstState}
-            secondState={secondState}
-            setSecondState={setSecondState}
-          />
-        </SafeAreaView>
-      </ScrollView>
-      <CtaButtonSpacer />
-      <BottomBarSpacer />
-      <View
-        style={{
-          position: 'absolute',
-          width: Platform.select({ android: '100%' }),
-          left: Platform.select({ ios: left }),
-          right,
-          bottom: bottomBarHeight,
-          backgroundColor: colors.background, // TODO: to be changed
-          paddingTop: 10,
-        }}
-      >
-        <Checkbox
-          text={t('examRescheduleScreen.responsibilityDeclaration')}
-          onPress={() => setIsCheck(!isCheck)}
-          isChecked={isCheck}
-          disable={
-            firstState.isError ||
-            secondState.isError ||
-            !firstState.value?.length ||
-            !secondState.value?.length
-          }
+    <ScrollView
+      contentInsetAdjustmentBehavior="automatic"
+      automaticallyAdjustKeyboardInsets
+      keyboardShouldPersistTaps="handled"
+    >
+      <View style={styles.form}>
+        <Text>
+          {[
+            teacher
+              ? t('examRescheduleScreen.intro', {
+                  teacher: `${teacher.firstName} ${teacher.lastName}`,
+                })
+              : t('examRescheduleScreen.introNoTeacher'),
+            exam?.status === ExamStatusEnum.Booked
+              ? t('examScreen.dateChangeKeepsBooking')
+              : undefined,
+          ]
+            .filter(Boolean)
+            .join(' ')}
+        </Text>
+        <TextField
+          variant="boxed"
+          label={t('examRescheduleScreen.reasonLabel')}
+          multiline
+          numberOfLines={4}
+          autoCapitalize="sentences"
+          value={reason}
+          onChangeText={setReason}
+          error={reasonError}
         />
+        <TextField
+          variant="boxed"
+          label={t('examRescheduleScreen.datesLabel')}
+          multiline
+          numberOfLines={3}
+          autoCapitalize="sentences"
+          value={dates}
+          onChangeText={setDates}
+          error={datesError}
+        />
+        <View>
+          <TouchableHighlight
+            underlayColor={colors.touchableHighlight}
+            onPress={() => setDeclared(value => !value)}
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: declared }}
+            accessibilityLabel={t('examRescheduleScreen.declaration')}
+            accessibilityHint={declarationError}
+            style={styles.check}
+          >
+            <View style={styles.checkRow}>
+              <Icon
+                icon={declared ? faSquareCheck : faSquare}
+                size={24}
+                color={declarationError ? colors.dangerText : colors.link}
+              />
+              <Text style={styles.checkText}>
+                {t('examRescheduleScreen.declaration')}
+              </Text>
+            </View>
+          </TouchableHighlight>
+          {declarationError && (
+            <Text variant="secondaryText" style={{ color: colors.dangerText }}>
+              {declarationError}
+            </Text>
+          )}
+        </View>
+        {failure && (
+          <FailureNote
+            title={t('examRescheduleScreen.failedTitle')}
+            failure={failure}
+            lostText={t('examRescheduleScreen.lostAnswer')}
+          />
+        )}
         <CtaButton
-          title={t('examRescheduleScreen.button')}
-          action={onSubmit}
-          loading={isBooking}
-          disabled={!isCheck}
           absolute={false}
+          containerStyle={styles.button}
+          title={
+            isOnline
+              ? t('examRescheduleScreen.button')
+              : t('examScreen.requestNeedsConnection')
+          }
+          action={onSubmit}
+          loading={isPending}
+          disabled={!isOnline || !exam}
         />
       </View>
-    </>
+      <BottomBarSpacer />
+    </ScrollView>
   );
 };
+
+const createStyles = ({ colors, controls, layout, shapes, spacing }: Theme) =>
+  StyleSheet.create({
+    form: {
+      gap: spacing[4],
+      paddingHorizontal: layout.gutter,
+      paddingTop: spacing[4],
+      paddingBottom: spacing[6],
+      backgroundColor: colors.surface,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.divider,
+    },
+    check: {
+      minHeight: controls.touchTarget,
+      justifyContent: 'center',
+      borderRadius: shapes.md,
+      marginHorizontal: -spacing[2],
+      paddingHorizontal: spacing[2],
+    },
+    checkRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing[3],
+    },
+    checkText: {
+      flex: 1,
+    },
+    button: {
+      padding: 0,
+    },
+  });

@@ -24,7 +24,7 @@ interface Props {
 }
 
 /** The tone of each exam state: the chip's word says the state, the tone repeats it */
-const STATUS_TONE: Record<ExamStatusEnum, StatusChipTone> = {
+export const EXAM_STATUS_TONE: Record<ExamStatusEnum, StatusChipTone> = {
   [ExamStatusEnum.Booked]: 'success',
   [ExamStatusEnum.RequestAccepted]: 'success',
   [ExamStatusEnum.Available]: 'info',
@@ -85,7 +85,7 @@ export const ExamListItem = ({ exam, accessibilityLabel, ...rest }: Props) => {
       chip={
         <StatusChip
           label={status}
-          tone={STATUS_TONE[exam.status] ?? 'neutral'}
+          tone={EXAM_STATUS_TONE[exam.status] ?? 'neutral'}
           icon={isBooked ? faCheck : undefined}
         />
       }
