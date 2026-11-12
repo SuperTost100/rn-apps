@@ -2,7 +2,11 @@ import { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert } from 'react-native';
 
-import { useDeviceLanguage, usePreferencesContext } from '../../../core';
+import {
+  ApiError,
+  useDeviceLanguage,
+  usePreferencesContext,
+} from '../../../core';
 import { UnsupportedIdentityTypeError } from '../errors/UnsupportedIdentityTypeError';
 import {
   useLogin,
@@ -10,7 +14,16 @@ import {
   useVisitChpass,
 } from '../queries/authHooks';
 
-export const useAuth = (ssoKey?: string) => {
+interface UseAuthOptions {
+  /**
+   * Shows a failed username and password login on the form, with the text
+   * to show, instead of an alert
+   */
+  onBasicLoginError?: (message: string) => void;
+}
+
+export const useAuth = (ssoKey?: string, options: UseAuthOptions = {}) => {
+  const { onBasicLoginError } = options;
   const { t } = useTranslation();
   const { loginUid } = usePreferencesContext();
   const { mutateAsync: login, isPending: isLoading } = useLogin();
@@ -40,8 +53,22 @@ export const useAuth = (ssoKey?: string) => {
         password,
         preferences: { language },
         loginType: 'basic',
-      }).catch(handleLoginError),
-    [login, language, handleLoginError],
+      }).catch((e: Error) => {
+        if (!onBasicLoginError) return handleLoginError(e);
+        if (e instanceof UnsupportedIdentityTypeError) {
+          onBasicLoginError(t('loginScreen.unsupportedUserType'));
+        } else if (
+          e instanceof ApiError &&
+          e.responseCode !== undefined &&
+          e.responseCode < 500
+        ) {
+          onBasicLoginError(t('auth.wrongCredentials'));
+        } else {
+          console.error(e);
+          onBasicLoginError(t('auth.loginFailed'));
+        }
+      }),
+    [login, language, handleLoginError, onBasicLoginError, t],
   );
 
   useEffect(() => {

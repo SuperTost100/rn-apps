@@ -1167,7 +1167,10 @@
     "recentCommunicationsLoading": "Loading communications",
     "recentCommunicationsListLoaded": "Communications list loaded",
     "recentCommunicationsListCount": "{{count}} communications",
-    "feedbackListLabel": "Feedback options"
+    "feedbackListLabel": "Feedback options",
+    "about": "About",
+    "whatsNewEmptyTitle": "Nothing new in this version",
+    "whatsNewEmptyText": "When an update changes something you use, it is described here."
   },
   "settingsScreen": {
     "appVersion": "Version {{version}}",
@@ -1191,8 +1194,8 @@
     "storageMovedFiles": "{{count}} files moved"
   },
   "ssoScreen": {
-    "ssoButton": "Sign in with Single-Sign-On",
-    "ssoLink": "or sign in with your credentials"
+    "ssoButton": "Log in with Single Sign-On",
+    "ssoLink": "Log in with username and password"
   },
   "surveysScreen": {
     "compiledEmptyState": "There are no compiled surveys",
@@ -2070,5 +2073,74 @@
       "emptyTitle": "No surveys",
       "emptyText": "Teaching surveys for your courses and other university surveys appear here."
     }
+  },
+  "profile": {
+    "career": {
+      "firstYear": "First year of enrolment: {{year}}"
+    },
+    "cards": {
+      "label": "Your cards",
+      "position": "{{name}}, {{index}} of {{count}}",
+      "hint": "Shows the other card",
+      "smartCard": "Smart card",
+      "esc": "European Student Card"
+    },
+    "logout": {
+      "action": "Log out",
+      "consequence": "Removes your login and the authenticator from this phone",
+      "offline": "Needs a connection: logging out also ends your session on the university server",
+      "confirmTitle": "Log out?",
+      "confirmText": "This removes from this phone:\n• your login, so you need your password to get back in\n• the PoliTO Authenticator key, so you need to set up the authenticator again before it can approve logins\n\nYour courses, exams and tickets stay on the university servers.",
+      "stay": "Stay logged in"
+    },
+    "notifications": {
+      "note": "Changes save as you make them. Important notifications from the university are always on.",
+      "general": "General",
+      "ticketsText": "Replies from the student office",
+      "bookingsText": "Reminders and changes to your bookings",
+      "saveFailed": "Couldn't save {{name}} for {{course}}. It is back as it was. Try again.",
+      "courseFailed": "Couldn't load the switches of this course",
+      "tryAgain": "Try again",
+      "coursesFailed": "Couldn't load your courses",
+      "noCourses": "No courses to set up",
+      "noCoursesText": "Courses in your study plan appear here, each with its own switches."
+    },
+    "settings": {
+      "look": "Look",
+      "securityAndStorage": "Security and storage",
+      "textSize": "Text size",
+      "textDefault": "Default",
+      "textNote": "Applies to the text in the app, on top of the text size of your phone.",
+      "themeNote": "System follows the light or dark setting of your phone.",
+      "spacingOff": "Off",
+      "spacingOn_one": "{{count}} on",
+      "spacingOn_other": "{{count}} on",
+      "languageOffline": "Needs a connection: the language is also saved on your university account",
+      "removeFiles": "Remove downloaded files",
+      "removeFilesTitle": "Remove downloaded files?",
+      "removeFilesText": "This frees {{size}} on this phone. You can download the files again from each course.",
+      "removeFilesAction": "Remove files",
+      "keepFiles": "Keep files",
+      "filesRemoved": "Downloaded files removed",
+      "removeFailed": "Couldn't remove all the downloaded files. Try again.",
+      "noFiles": "None",
+      "downloading": "Available when the downloads in progress finish",
+      "storageApp": "App storage",
+      "storageFolder": "A folder you choose"
+    }
+  },
+  "messagesScreen": {
+    "title": "Message"
+  },
+  "auth": {
+    "loggedOutTitle": "You are logged out",
+    "loggedOutText": "Your login and the authenticator key are no longer on this phone.",
+    "wrongCredentials": "Student ID or password is wrong. Check them and try again.",
+    "loginFailed": "Couldn't log in. Check your connection and try again.",
+    "enterUsername": "Enter your student ID",
+    "enterPassword": "Enter your password",
+    "fillBoth": "Enter your student ID and password to log in.",
+    "logIn": "Log in",
+    "mfaRequestedAt": "Requested at {{time}}"
   }
 }

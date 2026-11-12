@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useFocusEffect } from '@react-navigation/native';
@@ -10,11 +10,14 @@ import {
   usePreferencesContext,
 } from '../../../core';
 import {
+  Card,
   CtaButton,
+  InfoMessage,
   ListItem,
   OverviewList,
-  Section,
   SectionHeader,
+  StatusChip,
+  StatusChipTone,
   type Theme,
   useStylesheet,
   useTheme,
@@ -29,7 +32,7 @@ export type MfaSettingsProps = {
 export const MfaSettings = ({ onEnroll }: MfaSettingsProps) => {
   const { t } = useTranslation();
   const styles = useStylesheet(createStyles);
-  const { fontSizes, palettes, colors, spacing } = useTheme();
+  const { colors, spacing } = useTheme();
   const { data: mfa, refetch: refetchMfa } = useCheckMfa(true);
   const { hasPrivateKeyMFA } = usePolitoAppMfaPrivateKeyKeychain();
   const { mutate: logout } = useLogout();
@@ -48,126 +51,79 @@ export const MfaSettings = ({ onEnroll }: MfaSettingsProps) => {
     hasPrivateKeyMFA().then(res => setHasLocalMfaKey(res));
   }, [hasPrivateKeyMFA, mfa]);
 
-  const buttonHeight = spacing[4] + bottom;
+  const status: { label: string; tone: StatusChipTone } =
+    mfa?.status === 'available' || mfa?.status === 'needsReauth'
+      ? { label: t('mfaScreen.settings.disabled'), tone: 'neutral' }
+      : mfa?.status === 'locked'
+        ? { label: t('mfaScreen.settings.locked'), tone: 'warning' }
+        : hasLocalMfaKey
+          ? { label: t('mfaScreen.settings.active'), tone: 'success' }
+          : { label: t('common.error'), tone: 'danger' };
 
-  const getStatusText = () => {
-    if (mfa?.status === 'available' || mfa?.status === 'needsReauth') {
-      return t('mfaScreen.settings.disabled');
-    }
-    if (hasLocalMfaKey) {
-      return t('mfaScreen.settings.active');
-    }
-    return t('common.error');
-  };
-
-  const renderErrorBlock = (i18nKey: string) => (
-    <View style={styles.errorContainer}>
-      <Text style={styles.errorLabel}>{t('mfaScreen.settings.textError')}</Text>
-      <View style={styles.errorTextContainer}>
-        <RTFTrans
-          style={[
-            styles.text,
-            {
-              fontSize: fontSizes.md,
-              color: colors.longProse,
-              marginLeft: spacing[5],
-            },
-          ]}
-          i18nKey={i18nKey}
-        />
-      </View>
-    </View>
-  );
+  const showDetails =
+    mfa?.status !== 'locked' &&
+    (hasLocalMfaKey ||
+      mfa?.status === 'available' ||
+      mfa?.status === 'needsReauth');
+  const errorKey =
+    mfa?.status === 'locked'
+      ? 'mfaScreen.settings.lockedDescription'
+      : (mfa?.status !== 'active' &&
+            mfa?.status !== 'available' &&
+            mfa?.status !== 'needsReauth') ||
+          (mfa?.status === 'active' && !hasLocalMfaKey)
+        ? 'mfaScreen.settings.notAccessible'
+        : undefined;
+  const showAction =
+    (mfa?.status !== 'active' && mfa?.status !== 'locked') ||
+    (mfa?.status === 'active' && !hasLocalMfaKey);
+  const serial = mfa?.details?.serial;
+  const deviceName =
+    politoAuthnEnrolmentStatus?.insertedDeviceName ?? mfa?.details?.description;
 
   return (
-    <>
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={{ marginBottom: buttonHeight }}
-      >
-        <View style={styles.container}>
-          <Section>
-            <SectionHeader title={t('mfaScreen.settings.details')} />
-            <OverviewList indented>
-              <ListItem
-                title={t('mfaScreen.settings.status')}
-                trailingItem={
-                  <Text style={styles.infoValue}>{getStatusText()}</Text>
-                }
-              />
-              {mfa?.status !== 'locked' &&
-                (hasLocalMfaKey ||
-                  mfa?.status === 'available' ||
-                  mfa?.status === 'needsReauth') && (
-                  <>
-                    <ListItem
-                      title={t('mfaScreen.serial')}
-                      trailingItem={
-                        <Text
-                          style={[
-                            styles.infoValue,
-                            {
-                              color: !mfa?.details?.serial
-                                ? palettes.gray[400]
-                                : colors.longProse,
-                            },
-                          ]}
-                        >
-                          {mfa?.details?.serial ?? t('mfaScreen.settings.none')}
-                        </Text>
-                      }
-                    />
-                    <ListItem
-                      title={t('mfaScreen.enroll.deviceName')}
-                      trailingItem={
-                        <Text
-                          style={[
-                            styles.infoValue,
-                            {
-                              color: !mfa?.details?.description
-                                ? palettes.gray[400]
-                                : colors.longProse,
-                            },
-                          ]}
-                        >
-                          {politoAuthnEnrolmentStatus?.insertedDeviceName ??
-                            mfa?.details?.description ??
-                            t('mfaScreen.settings.notSet')}
-                        </Text>
-                      }
-                    />
-                  </>
-                )}
-              {mfa?.status === 'locked' &&
-                renderErrorBlock('mfaScreen.settings.lockedDescription')}
-              {mfa?.status !== 'locked' &&
-                mfa?.status !== 'active' &&
-                mfa?.status !== 'available' &&
-                mfa?.status !== 'needsReauth' &&
-                renderErrorBlock('mfaScreen.settings.notAccessible')}
-              {mfa?.status === 'active' &&
-                !hasLocalMfaKey &&
-                renderErrorBlock('mfaScreen.settings.notAccessible')}
-            </OverviewList>
-          </Section>
-
-          <Section>
-            <SectionHeader title={t('mfaScreen.settings.information')} />
-            <OverviewList indented>
-              <View style={styles.content} accessible>
-                <RTFTrans
-                  style={[styles.text, { fontSize: fontSizes.md }]}
-                  i18nKey="mfaScreen.settings.description"
-                />
-              </View>
-            </OverviewList>
-          </Section>
-        </View>
-      </ScrollView>
-      {((mfa?.status !== 'active' && mfa?.status !== 'locked') ||
-        (mfa?.status === 'active' && !hasLocalMfaKey)) && (
-        <View style={styles.buttonContainer}>
+    <ScrollView contentInsetAdjustmentBehavior="automatic">
+      <View style={styles.first}>
+        <SectionHeader title={t('mfaScreen.settings.details')} />
+        <OverviewList>
+          <ListItem
+            title={t('mfaScreen.settings.status')}
+            chip={<StatusChip label={status.label} tone={status.tone} />}
+            chipLabel={status.label}
+          />
+          {showDetails && (
+            <ListItem
+              inverted
+              title={serial ?? t('mfaScreen.settings.none')}
+              titleProps={{ numberOfLines: 0 }}
+              subtitle={t('mfaScreen.serial')}
+              accessibilityLabel={`${t('mfaScreen.serial')}: ${serial ?? t('mfaScreen.settings.none')}`}
+              titleStyle={!serial && { color: colors.secondaryText }}
+            />
+          )}
+          {showDetails && (
+            <ListItem
+              inverted
+              title={deviceName ?? t('mfaScreen.settings.notSet')}
+              titleProps={{ numberOfLines: 0 }}
+              subtitle={t('mfaScreen.enroll.deviceName')}
+              accessibilityLabel={`${t('mfaScreen.enroll.deviceName')}: ${deviceName ?? t('mfaScreen.settings.notSet')}`}
+              titleStyle={!deviceName && { color: colors.secondaryText }}
+            />
+          )}
+        </OverviewList>
+        {errorKey && (
+          <InfoMessage variant="error" style={styles.note}>
+            <RTFTrans
+              variant="secondaryText"
+              style={{ color: colors.dangerText }}
+              i18nKey={errorKey}
+            />
+          </InfoMessage>
+        )}
+        {showAction && (
           <CtaButton
+            absolute={false}
             title={
               mfa?.status === 'available' || mfa?.status === 'needsReauth'
                 ? t('mfaScreen.settings.enableNow')
@@ -187,72 +143,30 @@ export const MfaSettings = ({ onEnroll }: MfaSettingsProps) => {
                 logout();
               }
             }}
-            variant="filled"
-            absolute={false}
-            containerStyle={
-              [styles.buttonWrapper, { top: -spacing[16] - bottom }] as any
-            }
           />
-        </View>
-      )}
-    </>
+        )}
+      </View>
+      <View style={styles.section}>
+        <SectionHeader title={t('mfaScreen.settings.information')} />
+        <Card padded>
+          <RTFTrans i18nKey="mfaScreen.settings.description" />
+        </Card>
+      </View>
+      <View style={{ height: bottom + spacing[8] }} />
+    </ScrollView>
   );
 };
-const createStyles = ({ dark, colors, spacing, fontSizes }: Theme) =>
+
+const createStyles = ({ layout, spacing }: Theme) =>
   StyleSheet.create({
-    container: {
-      paddingVertical: spacing[5],
+    first: {
+      marginTop: spacing[4],
     },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: dark ? colors.surfaceDark : colors.background,
-      paddingVertical: spacing[2],
+    section: {
+      marginTop: layout.sectionGap,
     },
-    content: {
-      padding: spacing[7],
-      gap: spacing[4],
-    },
-    listItem: {
-      flexDirection: 'row',
-      alignItems: 'flex-start',
-      padding: spacing['1'],
-    },
-    text: {
-      flexDirection: 'column',
-      color: colors.longProse,
-    },
-    errorContainer: {
-      flexDirection: 'row',
-      alignItems: 'flex-start',
-      paddingVertical: spacing[2],
-      paddingHorizontal: spacing[4],
-    },
-    errorLabel: {
-      fontSize: fontSizes.md,
-      color: colors.longProse,
-      marginRight: spacing[4],
-      minWidth: 80,
-    },
-    errorTextContainer: {
-      flex: 1,
-      paddingLeft: 9,
-    },
-    formula: {
-      marginTop: spacing[1],
-    },
-    bold: {
-      fontWeight: 'bold',
-    },
-    buttonContainer: {
-      margin: spacing[2],
-    },
-    buttonWrapper: {
-      padding: 0,
-      elevation: 0,
-    },
-    infoValue: {
-      color: colors.longProse,
-      fontWeight: 'bold',
+    note: {
+      marginHorizontal: layout.gutter,
+      marginTop: spacing[2],
     },
   });

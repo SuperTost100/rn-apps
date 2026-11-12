@@ -1182,7 +1182,10 @@
     "recentCommunicationsLoading": "Caricamento comunicazioni",
     "recentCommunicationsListLoaded": "Elenco comunicazioni caricato",
     "recentCommunicationsListCount": "{{count}} comunicazioni",
-    "feedbackListLabel": "Opzioni di feedback"
+    "feedbackListLabel": "Opzioni di feedback",
+    "about": "Informazioni",
+    "whatsNewEmptyTitle": "Nessuna novità in questa versione",
+    "whatsNewEmptyText": "Quando un aggiornamento cambia qualcosa che usi, lo trovi descritto qui."
   },
   "settingsScreen": {
     "appVersion": "Versione {{version}}",
@@ -1206,8 +1209,8 @@
     "storageMovedFiles": "{{count}} file spostati"
   },
   "ssoScreen": {
-    "ssoButton": "Entra con Single-Sign-On",
-    "ssoLink": "oppure entra con le tue credenziali"
+    "ssoButton": "Accedi con Single Sign-On",
+    "ssoLink": "Accedi con username e password"
   },
   "surveysScreen": {
     "compiledEmptyState": "Non ci sono questionari compilati",
@@ -2090,5 +2093,74 @@
       "emptyTitle": "Nessun questionario",
       "emptyText": "Qui compaiono i questionari sulla didattica dei tuoi insegnamenti e gli altri questionari dell'ateneo."
     }
+  },
+  "profile": {
+    "career": {
+      "firstYear": "Primo anno di iscrizione: {{year}}"
+    },
+    "cards": {
+      "label": "Le tue tessere",
+      "position": "{{name}}, {{index}} di {{count}}",
+      "hint": "Mostra l'altra tessera",
+      "smartCard": "Smart card",
+      "esc": "European Student Card"
+    },
+    "logout": {
+      "action": "Esci",
+      "consequence": "Rimuove il tuo accesso e l'authenticator da questo telefono",
+      "offline": "Serve una connessione: l'uscita chiude anche la sessione sul server del Politecnico",
+      "confirmTitle": "Vuoi uscire?",
+      "confirmText": "Da questo telefono vengono rimossi:\n• il tuo accesso, quindi per rientrare ti serve la password\n• la chiave di PoliTO Authenticator, quindi dovrai attivarlo di nuovo prima che possa approvare gli accessi\n\nCorsi, esami e ticket restano sui server del Politecnico.",
+      "stay": "Non uscire"
+    },
+    "notifications": {
+      "note": "Le modifiche si salvano subito. Le notifiche importanti del Politecnico restano sempre attive.",
+      "general": "Generali",
+      "ticketsText": "Risposte della segreteria",
+      "bookingsText": "Promemoria e modifiche alle tue prenotazioni",
+      "saveFailed": "Non è stato possibile salvare {{name}} per {{course}}. È tornato com'era. Riprova.",
+      "courseFailed": "Impossibile caricare gli interruttori di questo corso",
+      "tryAgain": "Riprova",
+      "coursesFailed": "Impossibile caricare i tuoi corsi",
+      "noCourses": "Nessun corso da impostare",
+      "noCoursesText": "Qui compaiono i corsi del tuo piano di studi, ognuno con i suoi interruttori."
+    },
+    "settings": {
+      "look": "Aspetto",
+      "securityAndStorage": "Sicurezza e archiviazione",
+      "textSize": "Dimensione del testo",
+      "textDefault": "Predefinita",
+      "textNote": "Vale per i testi dell'app e si somma alla dimensione del testo del telefono.",
+      "themeNote": "Di sistema segue l'aspetto chiaro o scuro impostato sul telefono.",
+      "spacingOff": "Disattivate",
+      "spacingOn_one": "{{count}} attiva",
+      "spacingOn_other": "{{count}} attive",
+      "languageOffline": "Serve una connessione: la lingua viene salvata anche sul tuo account del Politecnico",
+      "removeFiles": "Rimuovi i file scaricati",
+      "removeFilesTitle": "Rimuovere i file scaricati?",
+      "removeFilesText": "Libera {{size}} su questo telefono. Puoi scaricare di nuovo i file da ogni corso.",
+      "removeFilesAction": "Rimuovi i file",
+      "keepFiles": "Tieni i file",
+      "filesRemoved": "File scaricati rimossi",
+      "removeFailed": "Non è stato possibile rimuovere tutti i file scaricati. Riprova.",
+      "noFiles": "Nessuno",
+      "downloading": "Disponibile al termine dei download in corso",
+      "storageApp": "Memoria dell'app",
+      "storageFolder": "Una cartella a tua scelta"
+    }
+  },
+  "messagesScreen": {
+    "title": "Messaggio"
+  },
+  "auth": {
+    "loggedOutTitle": "Hai chiuso la sessione",
+    "loggedOutText": "Il tuo accesso e la chiave dell'authenticator non sono più su questo telefono.",
+    "wrongCredentials": "Matricola o password errate. Controllale e riprova.",
+    "loginFailed": "Accesso non riuscito. Controlla la connessione e riprova.",
+    "enterUsername": "Inserisci la matricola",
+    "enterPassword": "Inserisci la password",
+    "fillBoth": "Inserisci matricola e password per accedere.",
+    "logIn": "Accedi",
+    "mfaRequestedAt": "Richiesta alle {{time}}"
   }
 }

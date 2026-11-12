@@ -259,7 +259,8 @@
     "virtualClassroom_plural": "Virtual classrooms",
     "visualization": "Visualization",
     "year": "year",
-    "yesterday": "Yesterday"
+    "yesterday": "Yesterday",
+    "warning": "Warning"
   },
   "contactsScreen": {
     "cancelRecentSearch": "Remove",
@@ -583,8 +584,8 @@
     "fcmUnsupported": "An error occurred during push notifications setup. This problem can be caused by the lack of Google Play Services on this device. It is possible to keep using this app, however push notifications won't be received."
   },
   "ssoScreen": {
-    "ssoButton": "Sign in with Single-Sign-On",
-    "ssoLink": "or sign in with your credentials"
+    "ssoButton": "Log in with Single Sign-On",
+    "ssoLink": "Log in with username and password"
   },
   "messageScreen": {
     "backTitle": "Archive",
@@ -1129,5 +1130,16 @@
       "profilePage": "Profile page"
     },
     "opensInBrowser": "{{label}}, opens in the browser"
+  },
+  "auth": {
+    "loggedOutTitle": "You are logged out",
+    "loggedOutText": "Your login and the authenticator key are no longer on this phone.",
+    "wrongCredentials": "Username or password is wrong. Check them and try again.",
+    "loginFailed": "Couldn't log in. Check your connection and try again.",
+    "enterUsername": "Enter your username",
+    "enterPassword": "Enter your password",
+    "fillBoth": "Enter your username and password to log in.",
+    "logIn": "Log in",
+    "mfaRequestedAt": "Requested at {{time}}"
   }
 }

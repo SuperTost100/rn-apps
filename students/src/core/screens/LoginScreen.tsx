@@ -2,174 +2,166 @@ import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Keyboard,
-  Platform,
   ScrollView,
   StyleSheet,
   TextInput,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
 import { useAuth } from '@polito/lib/features/auth';
 import {
   CtaButton,
-  IconButton,
-  OverviewList,
-  Row,
-  Section,
   Text,
+  TextButton,
   TextField,
   Theme,
   useStylesheet,
-  useTheme,
 } from '@polito/lib/ui';
 
 import { PolitoLogo } from '~/core/components/Logo.tsx';
 
+/**
+ * The username and password form: boxed fields, an error from the server
+ * under the password, and a Log in button that says why it is off until
+ * both fields are filled
+ */
 export const LoginScreen = () => {
   const { t } = useTranslation();
-  const { colors, fontSizes } = useTheme();
   const styles = useStylesheet(createStyles);
+  const { top, bottom } = useSafeAreaInsets();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const [serverError, setServerError] = useState<string>();
+  const [tried, setTried] = useState(false);
   const passwordRef = useRef<TextInput>(null);
-  const canLogin = username?.length && password?.length;
-  const { handleBasicLogin, handleSSO, viewChpass, isLoading } = useAuth();
+  const canLogin = username.length > 0 && password.length > 0;
+  const { handleBasicLogin, handleSSO, viewChpass, isLoading } = useAuth(
+    undefined,
+    { onBasicLoginError: setServerError },
+  );
 
-  const handleLogin = () => handleBasicLogin(username, password);
+  const handleLogin = () => {
+    setTried(true);
+    if (!canLogin) return;
+    setServerError(undefined);
+    Keyboard.dismiss();
+    handleBasicLogin(username, password);
+  };
 
   return (
     <ScrollView
       contentInsetAdjustmentBehavior="automatic"
       automaticallyAdjustKeyboardInsets
       keyboardShouldPersistTaps="handled"
+      contentContainerStyle={[
+        styles.content,
+        { paddingTop: top, paddingBottom: bottom },
+      ]}
     >
-      <View style={styles.logoContainer}>
+      <View style={styles.logo}>
         <PolitoLogo width="100%" height="100%" />
       </View>
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        <Section style={styles.section}>
-          <Text variant="title" role="heading" style={styles.title}>
-            {t('loginScreen.title')}
-          </Text>
-          <OverviewList style={styles.sectionList} accessible={false}>
-            <TextField
-              accessible={true}
-              textContentType="username"
-              label={t('loginScreen.usernameLabel')}
-              value={username}
-              accessibilityLabel={t('loginScreen.usernameLabelAccessibility')}
-              onChangeText={text => setUsername(text.trim())}
-              editable={!isLoading}
-              returnKeyType="next"
-              onSubmitEditing={() => {
-                passwordRef.current?.focus();
-              }}
-              style={styles.textFieldInput}
-            />
-            <Row align="center">
-              <TextField
-                accessible={true}
-                inputRef={passwordRef}
-                textContentType="password"
-                type="password"
-                label={t('loginScreen.passwordLabel')}
-                accessibilityLabel={t('loginScreen.passwordLabelAccessibility')}
-                onChangeText={setPassword}
-                value={password}
-                returnKeyType="done"
-                secureTextEntry={!passwordVisible}
-                onSubmitEditing={() => {
-                  Keyboard.dismiss();
-                  if (canLogin) {
-                    handleLogin();
-                  }
-                }}
-                editable={!isLoading}
-                style={styles.textFieldInput}
-              />
-              <IconButton
-                size={fontSizes.xl}
-                icon={passwordVisible ? faEyeSlash : faEye}
-                accessibilityLabel={t(
-                  passwordVisible
-                    ? 'loginScreen.hidePassword'
-                    : 'loginScreen.showPassword',
-                )}
-                color={colors.secondaryText}
-                style={styles.passwordToggle}
-                onPress={() => setPasswordVisible(old => !old)}
-              />
-            </Row>
-          </OverviewList>
-          <TouchableOpacity style={styles.link} onPress={() => viewChpass()}>
-            <Text variant="link" style={styles.textLink}>
-              {t('loginScreen.forgotYourPassword')}
-            </Text>
-          </TouchableOpacity>
-          <CtaButton
-            absolute={false}
-            title={t('loginScreen.cta')}
-            action={handleLogin}
-            loading={isLoading}
-            disabled={!canLogin}
-          />
-          <TouchableOpacity
-            style={styles.linkToSSO}
-            onPress={() => handleSSO()}
-          >
-            <Text variant="link" style={styles.textLink}>
-              {t('loginScreen.SSO')}
-            </Text>
-          </TouchableOpacity>
-        </Section>
-      </TouchableWithoutFeedback>
+      <Text variant="cardTitle" role="heading" style={styles.title}>
+        {t('loginScreen.title')}
+      </Text>
+      <TextField
+        variant="boxed"
+        textContentType="username"
+        autoComplete="username"
+        label={t('loginScreen.usernameLabel')}
+        value={username}
+        onChangeText={text => {
+          setUsername(text.trim());
+          setServerError(undefined);
+        }}
+        editable={!isLoading}
+        returnKeyType="next"
+        onSubmitEditing={() => passwordRef.current?.focus()}
+        error={tried && !username ? t('auth.enterUsername') : undefined}
+      />
+      <TextField
+        variant="boxed"
+        inputRef={passwordRef}
+        textContentType="password"
+        type="password"
+        label={t('loginScreen.passwordLabel')}
+        value={password}
+        onChangeText={text => {
+          setPassword(text);
+          setServerError(undefined);
+        }}
+        secureTextEntry={!passwordVisible}
+        returnKeyType="done"
+        onSubmitEditing={handleLogin}
+        editable={!isLoading}
+        error={
+          serverError ??
+          (tried && !password ? t('auth.enterPassword') : undefined)
+        }
+      />
+      <View style={styles.row}>
+        <TextButton
+          onPress={() => setPasswordVisible(old => !old)}
+          accessibilityState={{ checked: passwordVisible }}
+          accessibilityRole="switch"
+        >
+          {t(
+            passwordVisible
+              ? 'loginScreen.hidePassword'
+              : 'loginScreen.showPassword',
+          )}
+        </TextButton>
+        <TextButton onPress={() => viewChpass()}>
+          {t('loginScreen.forgotYourPassword')}
+        </TextButton>
+      </View>
+      <CtaButton
+        absolute={false}
+        title={t('auth.logIn')}
+        action={handleLogin}
+        loading={isLoading}
+        disabled={!canLogin}
+        // Says why the button is off, until both fields are filled
+        hint={canLogin ? undefined : t('auth.fillBoth')}
+        accessibilityHint={canLogin ? undefined : t('auth.fillBoth')}
+        containerStyle={styles.button}
+      />
+      <TextButton onPress={() => handleSSO()} style={styles.sso}>
+        {t('ssoScreen.ssoButton')}
+      </TextButton>
     </ScrollView>
   );
 };
 
-const createStyles = ({ spacing, fontSizes }: Theme) =>
+const createStyles = ({ layout, spacing }: Theme) =>
   StyleSheet.create({
-    logoContainer: {
-      width: '30%',
+    content: {
+      paddingHorizontal: layout.gutter,
+    },
+    logo: {
+      width: '24%',
       aspectRatio: 120 / 168,
       alignSelf: 'center',
-      marginTop: spacing[24],
-    },
-    section: {
-      marginTop: spacing[8],
-    },
-    sectionList: {
-      paddingBottom: Platform.select({ android: spacing[4] }),
+      marginTop: spacing[10],
+      marginBottom: spacing[6],
     },
     title: {
       textAlign: 'center',
-      fontSize: fontSizes.lg,
-      marginBottom: spacing[3],
-      marginHorizontal: spacing[5],
+      marginBottom: spacing[4],
     },
-    textFieldInput: {
-      flex: 1,
-      paddingHorizontal: Platform.select({
-        android: spacing[4],
-      }),
+    row: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'space-between',
+      marginHorizontal: -spacing[3],
     },
-    link: {
-      alignItems: 'flex-end',
-      paddingHorizontal: spacing[4],
-      paddingVertical: spacing[2],
+    button: {
+      paddingHorizontal: 0,
+    },
+    sso: {
+      alignSelf: 'center',
       marginBottom: spacing[8],
     },
-    linkToSSO: {
-      alignItems: 'center',
-      paddingHorizontal: spacing[4],
-      paddingVertical: spacing[2],
-    },
-    passwordToggle: {
-      marginRight: spacing[2],
-    },
-    textLink: { textDecorationLine: 'underline' },
   });

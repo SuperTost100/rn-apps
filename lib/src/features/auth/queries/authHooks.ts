@@ -46,6 +46,13 @@ const getClientId = async (
   return clientId;
 };
 
+/**
+ * Whether the student logged out in this run of the app, so the login
+ * screen can say so. A fresh launch without a login shows it plain.
+ */
+let loggedOutThisSession = false;
+export const hasLoggedOutThisSession = () => loggedOutThisSession;
+
 export const useLogin = () => {
   const {
     client: authClient,
@@ -111,6 +118,7 @@ export const useLogin = () => {
         .catch(rethrowApiError),
     onSuccess: async data => {
       const { token, clientId, username } = data;
+      loggedOutThisSession = false;
       refreshContext({ username, token });
       await credentialsKeychain.setCredentials(clientId, token);
       updatePreference('username', username);
@@ -131,6 +139,8 @@ export const useLogout = () => {
   return useMutation({
     mutationFn: () => authClient.logout(),
     onSuccess: async () => {
+      // Set before the context changes and the login screen appears
+      loggedOutThisSession = true;
       updatePreference('politoAuthnEnrolmentStatus', {});
       refreshContext();
       clearPersistedQueryCache().catch(e => {

@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Text, View } from 'react-native';
+import { Alert, View } from 'react-native';
 
+import { DateTime } from 'luxon';
 import useLatestCallback from 'use-latest-callback';
 
 import {
@@ -11,7 +12,7 @@ import {
   useFeedbackContext,
   usePolitoAppMfaPrivateKeyKeychain,
 } from '../../../core';
-import { CtaButton, useStylesheet } from '../../../ui';
+import { CtaButton, Text, useStylesheet } from '../../../ui';
 import { useMfaAuth } from '../queries/authHooks';
 import { signSecp256k1 } from '../utils/crypto';
 import { createStyles } from './MfaEnrollContent';
@@ -166,34 +167,55 @@ export const MfaAuthContent = ({
     finalizeAuth('mfaScreen.auth.accepted', success);
   };
 
-  return (
-    <>
-      <Text style={styles.subtitle}>{t('mfaScreen.auth.prompt')}</Text>
+  // When the login asked for approval: the challenge carries it
+  const requestedAt = challenge.requestTs
+    ? DateTime.fromJSDate(new Date(challenge.requestTs)).toLocaleString(
+        DateTime.TIME_SIMPLE,
+      )
+    : undefined;
 
-      <View style={styles.buttonsRow}>
-        <CtaButton
-          absolute={false}
-          title={t('mfaScreen.auth.denyAccess')}
-          action={onNo}
-          variant="outlined"
-          disabled={isPending}
-          loading={isPending}
-          style={styles.secondaryButton}
-          textStyle={styles.secondaryButton}
-        />
+  return (
+    <View style={styles.body}>
+      <Text variant="cardTitle" role="heading" style={styles.center}>
+        {t('mfaScreen.auth.prompt')}
+      </Text>
+      {requestedAt && (
+        <Text variant="secondaryText" style={styles.center}>
+          {t('auth.mfaRequestedAt', { time: requestedAt })}
+        </Text>
+      )}
+      <Text
+        variant="secondaryText"
+        weight="semibold"
+        style={styles.center}
+        accessibilityLiveRegion="none"
+      >
+        {t('mfaScreen.auth.expiration', { time: formattedTime })}
+      </Text>
+      <View style={styles.buttons}>
         <CtaButton
           absolute={false}
           title={t('mfaScreen.auth.allow')}
           action={onYes}
           disabled={isPending}
           loading={isPending}
-          style={styles.primaryButton}
+          containerStyle={styles.button}
+        />
+        <CtaButton
+          absolute={false}
+          title={t('mfaScreen.auth.denyAccess')}
+          action={onNo}
+          variant="outlined"
+          destructive
+          disabled={isPending}
+          containerStyle={styles.button}
         />
       </View>
-      <Text style={styles.time}>
-        {t('mfaScreen.auth.expiration', { time: formattedTime })}
-      </Text>
-      <RTFTrans style={styles.note} i18nKey="mfaScreen.auth.note" />
-    </>
+      <RTFTrans
+        variant="secondaryText"
+        style={styles.center}
+        i18nKey="mfaScreen.auth.note"
+      />
+    </View>
   );
 };

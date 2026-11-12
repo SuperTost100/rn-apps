@@ -270,7 +270,8 @@
     "yesterday": "Ieri",
     "fromTime": "dalle",
     "toTime": "alle",
-    "document": "Allegato"
+    "document": "Allegato",
+    "warning": "Attenzione"
   },
   "contactsScreen": {
     "cancelRecentSearch": "Rimuovi",
@@ -598,8 +599,8 @@
     "fcmUnsupported": "Si è verificato un errore durante l'attivazione delle notifiche push. Questo problema può essere causato dall'assenza dei servizi Google su questo dispositivo. È possibile continuare ad utilizzare l'app ma non si riceveranno notifiche push."
   },
   "ssoScreen": {
-    "ssoButton": "Entra con Single-Sign-On",
-    "ssoLink": "oppure entra con le tue credenziali"
+    "ssoButton": "Accedi con Single Sign-On",
+    "ssoLink": "Accedi con username e password"
   },
   "messageScreen": {
     "backTitle": "Archivio",
@@ -1156,5 +1157,16 @@
       "profilePage": "Pagina del profilo"
     },
     "opensInBrowser": "{{label}}, si apre nel browser"
+  },
+  "auth": {
+    "loggedOutTitle": "Hai chiuso la sessione",
+    "loggedOutText": "Il tuo accesso e la chiave dell'authenticator non sono più su questo telefono.",
+    "wrongCredentials": "Username o password errati. Controllali e riprova.",
+    "loginFailed": "Accesso non riuscito. Controlla la connessione e riprova.",
+    "enterUsername": "Inserisci lo username",
+    "enterPassword": "Inserisci la password",
+    "fillBoth": "Inserisci username e password per accedere.",
+    "logIn": "Accedi",
+    "mfaRequestedAt": "Richiesta alle {{time}}"
   }
 }

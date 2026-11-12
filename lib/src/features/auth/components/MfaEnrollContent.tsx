@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Dimensions, Platform, StyleSheet, View } from 'react-native';
+import { Alert, StyleSheet, View } from 'react-native';
 import DeviceInfo from 'react-native-device-info';
 import Animated, {
   useAnimatedKeyboard,
@@ -19,7 +19,6 @@ import {
 } from '../../../core';
 import {
   CtaButton,
-  OverviewList,
   TextField,
   type Theme,
   useSafeBottomBarHeight,
@@ -182,132 +181,79 @@ export const MfaEnrollContent = ({
 
   if (step === 0)
     return (
-      <>
+      <View style={styles.body}>
         <RTFTrans
+          variant="cardTitle"
           i18nKey="mfaScreen.enroll.prompt"
-          style={[
-            styles.prompt,
-            {
-              height: step > 0 ? 0 : undefined,
-            },
-          ]}
+          style={styles.center}
         />
-        <View style={styles.buttonsRow}>
+        <View style={styles.buttons}>
+          <CtaButton
+            absolute={false}
+            title={t('mfaScreen.enroll.confirm')}
+            action={onYes}
+            loading={isLoading}
+            containerStyle={styles.button}
+          />
           <CtaButton
             absolute={false}
             title={t('mfaScreen.enroll.cancel')}
             action={onNo}
             variant="outlined"
-            style={styles.secondaryButton}
-          />
-          <CtaButton
-            absolute={false}
-            title={t('mfaScreen.enroll.confirm')}
-            action={onYes}
-            style={styles.primaryButton}
-            loading={isLoading}
+            containerStyle={styles.button}
           />
         </View>
-        <RTFTrans i18nKey="mfaScreen.enroll.note" style={styles.enrollNote} />
-      </>
+        <RTFTrans
+          variant="secondaryText"
+          i18nKey="mfaScreen.enroll.note"
+          style={styles.center}
+        />
+      </View>
     );
   else
     return (
-      <>
-        <RTFTrans i18nKey="mfaScreen.enroll.devicePrompt" style={styles.note} />
-        <Animated.View
-          style={[
-            { width: '100%', alignItems: 'center' },
-            animatedBottomPadding,
-          ]}
-        >
-          {/* TextField centrato e largo l'80% */}
-          <View style={{ width: '80%', alignItems: 'center' }}>
-            <OverviewList style={styles.sectionList} accessible={false}>
-              <TextField
-                accessible={true}
-                label={t('mfaScreen.enroll.deviceName')}
-                value={deviceName}
-                onChangeText={setDeviceName}
-                inputStyle={styles.textFieldInput}
-              />
-            </OverviewList>
-          </View>
-          <View style={{ width: '80%', alignItems: 'center' }}>
-            <CtaButton
-              absolute={false}
-              title={t('common.confirm')}
-              action={onYes}
-              containerStyle={styles.confirmButtonContainer}
-              loading={isLoading}
-              disabled={deviceName.length === 0}
-            />
-          </View>
-        </Animated.View>
-      </>
+      <Animated.View style={[styles.body, animatedBottomPadding]}>
+        <RTFTrans
+          i18nKey="mfaScreen.enroll.devicePrompt"
+          style={styles.center}
+        />
+        <TextField
+          variant="boxed"
+          label={t('mfaScreen.enroll.deviceName')}
+          value={deviceName}
+          onChangeText={setDeviceName}
+          style={styles.field}
+        />
+        <CtaButton
+          absolute={false}
+          title={t('common.confirm')}
+          action={onYes}
+          containerStyle={styles.button}
+          loading={isLoading}
+          disabled={deviceName.length === 0}
+        />
+      </Animated.View>
     );
 };
 
-export const createStyles = ({ colors, spacing, palettes, dark }: Theme) =>
+export const createStyles = ({ spacing }: Theme) =>
   StyleSheet.create({
-    prompt: {
-      fontSize: 16,
-      color: dark ? colors.white : colors.black,
+    body: {
+      width: '100%',
+      maxWidth: 480,
+      gap: spacing[4],
+    },
+    center: {
       textAlign: 'center',
-      marginBottom: spacing[4],
-      marginHorizontal: spacing[5],
     },
-    subtitle: {
-      fontSize: 16,
-      color: dark ? colors.white : colors.black,
-      textAlign: 'center',
-      marginBottom: spacing[4],
-      marginHorizontal: spacing[5],
+    buttons: {
+      gap: spacing[3],
+      marginTop: spacing[2],
     },
-    buttonsRow: {
-      flexDirection: 'row',
+    button: {
+      padding: 0,
     },
-    confirmButtonContainer: {
-      width: '80%',
-      alignSelf: 'center',
-    },
-    primaryButton: {
-      backgroundColor: palettes.primary[500],
-      borderColor: palettes.primary[500],
-      width: spacing[40],
-    },
-    secondaryButton: {
-      borderColor: palettes.primary[500],
-      color: palettes.primary[500],
-      width: spacing[40],
-    },
-    note: {
-      fontSize: 15,
-      color: dark ? colors.white : colors.black,
-      textAlign: 'center',
-      marginTop: spacing[5],
-      marginBottom: spacing[3],
-      paddingHorizontal: spacing[5],
-    },
-    time: {
-      fontWeight: 500,
-      fontSize: 14,
-      color: dark ? colors.white : colors.black,
-      textAlign: 'center',
-      marginTop: spacing[5],
-    },
-    textFieldInput: {
-      textAlign: 'center',
-      minWidth: Dimensions.get('window').width,
-    },
-    sectionList: {
-      paddingBottom: Platform.select({ android: spacing[4] }),
-    },
-    enrollNote: {
-      fontSize: 16,
-      color: dark ? colors.white : colors.black,
-      textAlign: 'center',
-      marginTop: spacing[3],
-      marginHorizontal: spacing[5],
+    field: {
+      alignSelf: 'stretch',
     },
   });
