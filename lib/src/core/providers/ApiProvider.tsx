@@ -52,7 +52,17 @@ const DATA_MAX_AGE = 1000 * 3600 * 24 * 7;
 const queryStorage = new SQLiteStorage('queryClient');
 
 const queryPersister = experimental_createQueryPersister({
-  storage: queryStorage,
+  storage: {
+    getItem: key => queryStorage.getItem(key),
+    setItem: (key, value: string) => queryStorage.setItem(key, value),
+    removeItem: key => queryStorage.removeItem(key),
+    // Lets restoreQueries read every saved query at startup
+    entries: async () => {
+      const keys = await queryStorage.getAllKeys();
+      const pairs = await queryStorage.multiGet(keys);
+      return pairs.filter((p): p is [string, string] => p[1] !== null);
+    },
+  },
   serialize: SuperJSON.stringify,
   deserialize: SuperJSON.parse,
   maxAge: DATA_MAX_AGE,
@@ -233,10 +243,10 @@ export const ApiProvider = <Prefs extends object = {}>({
         queries: {
           gcTime: DATA_MAX_AGE,
           staleTime: 300000, // 5 minutes
-          // Runs the query function once even offline, so the persister can
-          // restore saved data after a cold start; network retries then wait
-          // for the connection
-          networkMode: 'offlineFirst',
+          // No request starts offline: React Native's fetch has no timeout,
+          // so one sent without a network can hang until the app restarts.
+          // Saved data comes from restoreQueries at startup instead
+          networkMode: 'online',
           retry: isEnvProduction ? 2 : 1,
           refetchOnWindowFocus: isEnvProduction,
           persister: queryPersister.persisterFn,
@@ -318,12 +328,33 @@ export const ApiProvider = <Prefs extends object = {}>({
     });
   }, []);
 
+  // Saved queries go into the cache before the first screen renders, so a
+  // cold start offline shows them. The per-query persister alone restores
+  // only inside the query function, which never runs offline
+  const [isCacheRestored, setIsCacheRestored] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    queryPersister
+      .restoreQueries(queryClient)
+      .catch(e => console.warn('Could not restore the saved queries', e))
+      .finally(() => {
+        if (!cancelled) setIsCacheRestored(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [queryClient]);
+
   // Initialization completed, splash can be hidden
   useEffect(() => {
-    if (hasResolvedInitialCredentials && !splashContext.isAppLoaded) {
+    if (
+      hasResolvedInitialCredentials &&
+      isCacheRestored &&
+      !splashContext.isAppLoaded
+    ) {
       splashContext.setIsAppLoaded(true);
     }
-  }, [hasResolvedInitialCredentials, splashContext]);
+  }, [hasResolvedInitialCredentials, isCacheRestored, splashContext]);
 
   return (
     <PolitoAppContext.Provider value={config}>
