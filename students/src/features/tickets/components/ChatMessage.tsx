@@ -78,7 +78,9 @@ export const ChatMessage = ({
         )}
         <HtmlMessage
           message={message.message?.trim() ?? ''}
-          baseStyle={styles.text}
+          baseStyle={
+            received ? { ...styles.text, ...styles.receivedText } : styles.text
+          }
         />
         <Attachments />
       </ChatBubble>
@@ -88,10 +90,8 @@ export const ChatMessage = ({
 
 const createStyles = ({ fontWeights, spacing, fontSizes, colors }: Theme) =>
   StyleSheet.create({
-    // Theme-independent hardcoded color
-    // eslint-disable-next-line react-native/no-color-literals
     agentText: {
-      color: 'white',
+      color: colors.prose,
       fontWeight: fontWeights.semibold,
       marginBottom: spacing[2],
     },
@@ -105,7 +105,12 @@ const createStyles = ({ fontWeights, spacing, fontSizes, colors }: Theme) =>
     text: {
       padding: 0,
       fontSize: fontSizes.sm,
-      color: colors.white,
-      textDecorationColor: colors.white,
+      color: colors.onMsgMe,
+      textDecorationColor: colors.onMsgMe,
+    },
+    // Incoming bubbles sit on the surface: text in the body colour
+    receivedText: {
+      color: colors.prose,
+      textDecorationColor: colors.prose,
     },
   });

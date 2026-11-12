@@ -11,10 +11,15 @@ type Props = ViewProps & {
   color?: string;
   valueStyle?: TextProps['style'];
   valueNumberOfLines?: number;
+  /**
+   * small (default): the value as a bold title, e.g. a period or a year.
+   * number and display: large figures, e.g. averages and credits.
+   */
+  size?: 'small' | 'number' | 'display';
 };
 
 /**
- * A view used to present a simple textual metric
+ * A label and its value, e.g. "Period" and "1 - 2027"
  */
 export const Metric = ({
   title,
@@ -22,24 +27,27 @@ export const Metric = ({
   color,
   valueStyle,
   valueNumberOfLines,
+  size = 'small',
   ...rest
 }: CardProps & Props) => {
-  const { colors, fontSizes, fontWeights } = useTheme();
+  const { colors } = useTheme();
 
   return (
     <View {...rest}>
-      {title && <Text accessible={false}>{title}</Text>}
+      {title && (
+        <Text variant="secondaryText" accessible={false}>
+          {title}
+        </Text>
+      )}
       {['string', 'number'].includes(typeof value) ? (
         <Text
           accessible={false}
+          variant={size === 'small' ? 'title' : size}
+          weight={size === 'small' ? 'bold' : undefined}
           numberOfLines={valueNumberOfLines}
           ellipsizeMode={valueNumberOfLines != null ? 'tail' : undefined}
           style={[
-            {
-              color: color ?? colors.accentText,
-              fontSize: fontSizes.lg,
-              fontWeight: fontWeights.semibold,
-            },
+            { color: color ?? colors.title, fontVariant: ['tabular-nums'] },
             valueStyle,
           ]}
         >

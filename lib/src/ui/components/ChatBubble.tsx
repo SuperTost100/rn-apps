@@ -11,10 +11,17 @@ interface Props extends PropsWithChildren<ViewProps> {
   bubbleStyle?: ViewProps['style'];
 }
 
+/**
+ * A message in a thread. Incoming ones sit on the surface at the start,
+ * outgoing ones on the msgMe role at the end, so the two sides differ by
+ * place as well as colour. Text inside uses colors.prose (incoming) or
+ * colors.onMsgMe (outgoing).
+ */
 export const ChatBubble = ({
   direction = 'outgoing',
   time,
   children,
+  bubbleStyle,
   ...props
 }: Props) => {
   const styles = useStylesheet(createStyles);
@@ -22,80 +29,36 @@ export const ChatBubble = ({
   return (
     <View {...props}>
       {time && <MessageTime time={time} right={direction === 'outgoing'} />}
-
       <View
         style={[
           styles.bubble,
           direction === 'incoming' ? styles.leftBubble : styles.rightBubble,
-          props.bubbleStyle,
+          bubbleStyle,
         ]}
       >
         {children}
-
-        <View
-          style={[
-            styles.arrow,
-            direction === 'incoming' ? styles.leftArrow : styles.rightArrow,
-          ]}
-        />
-        <View
-          style={[
-            styles.arrowOverlap,
-            direction === 'incoming'
-              ? styles.leftArrowOverlap
-              : styles.rightArrowOverlap,
-          ]}
-        />
       </View>
     </View>
   );
 };
 
-const createStyles = ({ colors, palettes, shapes, spacing }: Theme) =>
+const createStyles = ({ colors, layout, shapes, spacing }: Theme) =>
   StyleSheet.create({
     bubble: {
-      padding: spacing[2.5],
+      paddingHorizontal: layout.cardPadding,
+      paddingVertical: spacing[3],
       borderRadius: shapes.lg,
-      width: '70%',
+      maxWidth: '85%',
       marginTop: spacing[1],
     },
     rightBubble: {
       alignSelf: 'flex-end',
-      backgroundColor: palettes.primary[600],
+      backgroundColor: colors.msgMe,
     },
     leftBubble: {
       alignSelf: 'flex-start',
-      backgroundColor: palettes.primary[500],
-    },
-    arrow: {
-      position: 'absolute',
-      width: spacing[5],
-      height: +spacing[6],
-      bottom: 0,
-    },
-    leftArrow: {
-      backgroundColor: palettes.primary[500],
-      borderBottomRightRadius: +spacing[6],
-      left: -spacing[2.5],
-    },
-    rightArrow: {
-      backgroundColor: palettes.primary[600],
-      borderBottomLeftRadius: +spacing[6],
-      right: -spacing[2.5],
-    },
-    arrowOverlap: {
-      position: 'absolute',
-      backgroundColor: colors.background,
-      width: spacing[5],
-      height: 35,
-      bottom: -spacing[2],
-    },
-    leftArrowOverlap: {
-      borderBottomRightRadius: 18,
-      left: -spacing[5],
-    },
-    rightArrowOverlap: {
-      borderBottomLeftRadius: +spacing[5],
-      right: -spacing[5],
+      backgroundColor: colors.surface,
+      borderWidth: colors.cardBorder === 'transparent' ? 0 : 1,
+      borderColor: colors.cardBorder,
     },
   });

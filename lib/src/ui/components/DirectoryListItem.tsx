@@ -30,21 +30,21 @@ export const DirectoryListItem = ({
   unread = false,
   ...props
 }: TouchableHighlightProps & Props) => {
-  const { palettes } = useTheme();
+  const { colors, controls } = useTheme();
   const styles = useStylesheet(createItemStyles);
 
   return (
     <ListItem
       leadingItem={
         <View>
-          <Icon icon={faFolder} size={24} color={palettes.secondary[500]} />
+          <Icon
+            icon={faFolder}
+            size={controls.iconSize}
+            color={colors.accent}
+          />
           {isDownloaded && (
             <View style={styles.downloadedIconContainer}>
-              <Icon
-                icon={faCheckCircle}
-                size={12}
-                color={palettes.success[600]}
-              />
+              <Icon icon={faCheckCircle} size={12} color={colors.successText} />
             </View>
           )}
         </View>
@@ -61,7 +61,7 @@ const createItemStyles = ({ colors }: Theme) =>
     downloadedIconContainer: {
       padding: 2,
       borderRadius: 16,
-      backgroundColor: colors.background,
+      backgroundColor: colors.surface,
       position: 'absolute',
       top: -5,
       left: -8,

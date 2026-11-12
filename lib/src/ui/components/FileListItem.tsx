@@ -87,7 +87,7 @@ export const FileListItem = ({
   iconColor,
   ...rest
 }: ListItemProps & Props) => {
-  const { palettes, fontSizes } = useTheme();
+  const { colors, controls } = useTheme();
   const styles = useStylesheet(createItemStyles);
   const { t } = useTranslation();
 
@@ -108,8 +108,8 @@ export const FileListItem = ({
         <View>
           <Icon
             icon={getIconFromMimeType(mimeType)}
-            size={fontSizes['2xl']}
-            color={iconColor}
+            size={controls.iconSize}
+            color={iconColor ?? colors.secondaryText}
           />
           {downloadProgress != null &&
           (downloadProgress < 1 || !isDownloaded) ? (
@@ -117,7 +117,7 @@ export const FileListItem = ({
               <ProgressIndicator
                 progress={Math.min(1, downloadProgress)}
                 size={12}
-                color={palettes.secondary[600]}
+                color={colors.accent}
               />
             </View>
           ) : (
@@ -128,7 +128,7 @@ export const FileListItem = ({
                 <Icon
                   icon={faCheckCircle}
                   size={12}
-                  color={palettes.secondary[600]}
+                  color={colors.successText}
                 />
               </View>
             ) : (
@@ -136,7 +136,7 @@ export const FileListItem = ({
                 <Icon
                   icon={faExclamationCircle}
                   size={12}
-                  color={palettes.danger[600]}
+                  color={colors.dangerText}
                 />
               </View>
             ))
@@ -158,7 +158,8 @@ const createItemStyles = ({ spacing, colors }: Theme) =>
     downloadedIconContainer: {
       padding: 2,
       borderRadius: 16,
-      backgroundColor: colors.background,
+      // Rows sit on cards: the ring around the mark is the card's surface
+      backgroundColor: colors.surface,
       position: 'absolute',
       top: -5,
       left: -8,
