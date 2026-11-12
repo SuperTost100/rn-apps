@@ -183,9 +183,9 @@ export const ApiProvider = <Prefs extends object = {}>({
   );
 
   /**
-   * Queries: a region that renders states (useQueryStates) shows its own
-   * failure, so it gets no alert. When older data stays on screen a short
-   * snackbar says the refresh failed. Background consumers marked with
+   * Queries: when older data stays on screen, a short snackbar says the
+   * refresh failed. Without data, a region that renders states
+   * (useQueryStates) shows the failure itself, so it gets no alert. Background consumers marked with
    * useQuietQueryErrors say nothing. Screens not converted yet keep an
    * alert, with a translated message and Try again, never the server's text.
    */
@@ -208,8 +208,9 @@ export const ApiProvider = <Prefs extends object = {}>({
       };
       const presentation = errorPresentation(query);
       if (presentation === 'quiet') return;
-      if (presentation === 'states') {
-        if (query.state.data === undefined) return;
+      // Older data stays on screen: a short snackbar says the refresh failed,
+      // whichever screen reads the query
+      if (query.state.data !== undefined) {
         const { dataUpdatedAt } = query.state;
         setFeedback({
           id: 'refresh-failed',
@@ -224,6 +225,8 @@ export const ApiProvider = <Prefs extends object = {}>({
         });
         return;
       }
+      // Nothing to show: a region that renders states says so itself
+      if (presentation === 'states') return;
       Alert.alert(t('common.error'), t('states.loadFailed'), [
         { text: t('states.close'), style: 'cancel' },
         { text: t('states.tryAgain'), onPress: retry },
