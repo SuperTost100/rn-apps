@@ -503,7 +503,7 @@ export const PlacesScreen = ({ navigation, route }: Props) => {
                 >
                   {!isLarge && <Icon icon={faElevator} />}
 
-                  <Text variant="caption" style={styles.multipleFloors}>
+                  <Text variant="secondaryText" style={styles.multipleFloors}>
                     {t('placesScreen.multipleFloors')}
                   </Text>
                 </Row>
