@@ -62,6 +62,11 @@ const HiddenEventItem = ({ item, onToggle }: HiddenEventItemProps) => {
         isChecked={item.restoreVisibility}
         containerStyle={styles.checkbox}
         iconColor={palettes.navy[dark ? '50' : '400']}
+        accessibilityLabel={
+          item.type === 'recurrence'
+            ? `${getLongDayTime(item.day)} ${item.start}-${item.end}`
+            : `${getLongDayTime(DateTime.fromISO(item.day).weekday)} ${item.start}-${item.end}`
+        }
       />
       <Col style={styles.cardCol}>
         <Row align="center">

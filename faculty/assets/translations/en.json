@@ -524,7 +524,9 @@
   "freeRoomsScreen": {
     "noFreeRooms": "No free rooms found",
     "title": "Free rooms",
-    "maxViewLimitMessage": "Maximum display limit reached "
+    "maxViewLimitMessage": "Maximum display limit reached ",
+    "previousSlot": "Previous time slot",
+    "nextSlot": "Next time slot"
   },
   "grades": {
     "absent": "Abs",

@@ -70,6 +70,7 @@ export const VirtualOperatorFeedbackBar = ({
         <Row gap={3} style={styles.buttons}>
           <IconButton
             icon={faThumbsDown}
+            accessibilityLabel={t('ticketScreen.feedbackNo')}
             onPress={() => handleFeedback(false)}
             disabled={isPending}
             color={palettes.danger[600]}
@@ -79,6 +80,7 @@ export const VirtualOperatorFeedbackBar = ({
           />
           <IconButton
             icon={faThumbsUp}
+            accessibilityLabel={t('ticketScreen.feedbackYes')}
             onPress={() => handleFeedback(true)}
             disabled={isPending}
             color={colors.white}

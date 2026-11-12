@@ -266,6 +266,7 @@ export const FreeRoomsScreen = ({ navigation }: Props) => {
         <Row align="center" gap={2} ph={1}>
           <IconButton
             icon={faChevronLeft}
+            accessibilityLabel={t('freeRoomsScreen.previousSlot')}
             color={colors.secondaryText}
             disabled={!freeRooms?.data}
             onPress={() =>
@@ -294,6 +295,7 @@ export const FreeRoomsScreen = ({ navigation }: Props) => {
           </View>
           <IconButton
             icon={faChevronRight}
+            accessibilityLabel={t('freeRoomsScreen.nextSlot')}
             color={colors.secondaryText}
             disabled={!freeRooms?.data || isFeedbackVisible}
             onPress={() =>

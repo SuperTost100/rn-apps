@@ -151,6 +151,7 @@ export const CourseStatisticsScreen = ({ route }: Props) => {
                   onPress: () =>
                     openModal(CourseStatisticsTypes.enrolledExamBottomSheet),
                   icon: faQuestionCircle,
+                  accessibilityLabel: t('courseStatisticsScreen.explain'),
                   color: colors.link,
                 }}
               />
@@ -177,6 +178,7 @@ export const CourseStatisticsScreen = ({ route }: Props) => {
                       CourseStatisticsTypes.enrolledExamDetailBottomSheet,
                     ),
                   icon: faQuestionCircle,
+                  accessibilityLabel: t('courseStatisticsScreen.explain'),
                   color: colors.link,
                 }}
               />
@@ -204,6 +206,7 @@ export const CourseStatisticsScreen = ({ route }: Props) => {
                       CourseStatisticsTypes.enrolledExamDetailBottomSheet,
                     ),
                   icon: faQuestionCircle,
+                  accessibilityLabel: t('courseStatisticsScreen.explain'),
                   color: colors.link,
                 }}
               />

@@ -409,7 +409,8 @@
       "single": "Singola",
       "compare": "Comparativa",
       "error": "Visualizzazione comparativa non disponibile per mancanza di dati nei periodi precedenti"
-    }
+    },
+    "explain": "Come leggere il grafico"
   },
   "courseHideEventScreen": {
     "button": "Mostra in agenda",
@@ -653,7 +654,9 @@
   "freeRoomsScreen": {
     "noFreeRooms": "Nessuna aula libera trovata",
     "title": "Aule libere",
-    "maxViewLimitMessage": "Raggiunto il limite massimo di visulizzazione"
+    "maxViewLimitMessage": "Raggiunto il limite massimo di visulizzazione",
+    "previousSlot": "Fascia oraria precedente",
+    "nextSlot": "Fascia oraria successiva"
   },
   "grades": {
     "absent": "Assente",
@@ -1035,7 +1038,9 @@
     "markAsResolvedHint": "Comunica alla segreteria che non ti serve altro",
     "cannotResolveHint": "Non disponibile per questo ticket ora",
     "resolved": "Ticket segnato come risolto.",
-    "resolveFailed": "Non è stato possibile segnare il ticket come risolto. Controlla la connessione e riprova."
+    "resolveFailed": "Non è stato possibile segnare il ticket come risolto. Controlla la connessione e riprova.",
+    "feedbackNo": "No, non mi soddisfa",
+    "feedbackYes": "Sì, mi soddisfa"
   },
   "ticketResolvedScreen": {
     "title": "Ticket risolto",
@@ -1707,7 +1712,9 @@
       "hint": "Mostra l'altra tessera",
       "smartCard": "Smart card",
       "esc": "European Student Card",
-      "requestCard": "Richiedi la carta"
+      "requestCard": "Richiedi la carta",
+      "escInfo": "Impostazioni dati ESC",
+      "showQr": "Mostra il codice QR della carta"
     },
     "logout": {
       "action": "Esci",

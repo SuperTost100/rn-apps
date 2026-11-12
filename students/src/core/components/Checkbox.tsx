@@ -22,6 +22,7 @@ export const Checkbox = ({
   dimension = 'default',
   icon,
   iconColor,
+  accessibilityLabel,
 }: {
   text?: string;
   onPress: () => void;
@@ -33,6 +34,8 @@ export const Checkbox = ({
   dimension?: 'default' | 'small';
   icon?: IconDefinition;
   iconColor?: string;
+  /** Defaults to the text next to the box */
+  accessibilityLabel?: string;
 }) => {
   const styles = useStylesheet(createStyles);
 
@@ -45,6 +48,10 @@ export const Checkbox = ({
           dimension === 'small' && { height: 20, width: 20 },
         ]}
         disabled={disable ?? false}
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: isChecked, disabled: !!disable }}
+        accessibilityLabel={accessibilityLabel ?? text}
+        hitSlop={12}
         onPress={() => {
           onPress();
         }}

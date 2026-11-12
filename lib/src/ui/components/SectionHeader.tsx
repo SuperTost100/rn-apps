@@ -85,19 +85,25 @@ export const SectionHeader = ({
         : '')
     : undefined;
 
+  // A trailing icon is a button of its own: grouping it into the header
+  // would hide it from screen readers, so the title alone is the header
+  const groupTitle = accessible && !trailingIcon;
+
   return (
     <View style={styles.container}>
       <View
         style={styles.titleContainer}
-        accessible={accessible}
-        accessibilityRole="header"
-        accessibilityLabel={accessibilityLabel}
+        accessible={groupTitle}
+        accessibilityRole={groupTitle ? 'header' : undefined}
+        accessibilityLabel={groupTitle ? accessibilityLabel : undefined}
       >
         {separator && <Separator />}
         <View style={styles.innerTitleContainer}>
           <Text
             variant="heading"
             style={[styles.title, titleStyle]}
+            accessibilityRole={groupTitle ? undefined : 'header'}
+            accessibilityLabel={groupTitle ? undefined : accessibilityLabel}
             {...ellipsis}
           >
             {title}
