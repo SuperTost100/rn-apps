@@ -62,15 +62,19 @@ i18n.use(initReactI18next).init({
   },
 });
 
-initSentry({
-  dsn: 'https://0b3fe6c2fc0bd91481a14b1ad5c6b00d@sentry.k8s.polito.it/3',
-  // Test builds are private: they send nothing to the university's Sentry
-  enabled: isEnvProduction && !isTestBuild,
-  appName: 'students',
-  version: APP_VERSION,
-  dist: BUILD_NO,
-  environment: process.env.NODE_ENV,
-});
+// Test builds are private: they send nothing to the university's Sentry.
+// They skip the setup entirely, because the native SDK starts with the DSN
+// even when "enabled" is false
+if (!isTestBuild) {
+  initSentry({
+    dsn: 'https://0b3fe6c2fc0bd91481a14b1ad5c6b00d@sentry.k8s.polito.it/3',
+    enabled: isEnvProduction,
+    appName: 'students',
+    version: APP_VERSION,
+    dist: BUILD_NO,
+    environment: process.env.NODE_ENV,
+  });
+}
 
 extendSuperJSON();
 
