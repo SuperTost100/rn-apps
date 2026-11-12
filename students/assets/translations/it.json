@@ -1418,7 +1418,14 @@
       "description": "E’ la media, pesata in funzione dei crediti relativi ad ogni esame con voto*, espressa in trentesimi",
       "formula": "somma (voto * crediti) / somma crediti"
     },
-    "yourCareer": "La tua carriera"
+    "yourCareer": "La tua carriera",
+    "howComputed": "Come si calcolano",
+    "whatTheyAre": "Cosa sono",
+    "ringLegendAttended": "Esterno: frequentati",
+    "ringLegendAcquired": "Interno: acquisiti",
+    "ringLabel": "Crediti: {{acquired}} su {{total}} acquisiti (anello interno), {{attended}} su {{total}} frequentati (anello esterno)",
+    "figureLabel": "{{label}}: {{value}} su {{total}}",
+    "hiddenValue": "nascosto"
   },
   "videoControls": {
     "changePlaybackRate": "Cambia velocità di riproduzione",
