@@ -252,7 +252,6 @@ const createStyles = ({ spacing, colors, fontSizes, fontFamilies }: Theme) =>
     emptyStateText: {
       color: colors.secondaryText,
       textAlign: 'center',
-      fontSize: fontSizes.md,
       lineHeight: fontSizes.md * 1.5,
     },
     emptyStateTitle: {

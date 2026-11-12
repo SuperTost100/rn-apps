@@ -57,6 +57,7 @@ import {
 import { HeaderLogo } from '../../../ui/components/HeaderLogo';
 import { ThemeContext } from '../../../ui/contexts/ThemeContext';
 import { useStylesheet } from '../../../ui/hooks/useStylesheet';
+import { useTextScale } from '../../../ui/hooks/useTextScale';
 import { useTheme } from '../../../ui/hooks/useTheme';
 import { GlobalStyles } from '../../../ui/styles/GlobalStyles';
 import { darkTheme } from '../../../ui/themes/dark';
@@ -92,7 +93,8 @@ export const PlacesScreen = ({ navigation, route }: Props) => {
   const headerHeight = useHeaderHeight();
   const [tabsHeight, setTabsHeight] = useState(48);
   const campus = useGetCurrentCampus();
-  const { placesSearched, accessibility } = usePreferencesContext();
+  const { placesSearched } = usePreferencesContext();
+  const { isLarge } = useTextScale();
   const { cameraRef } = useContext(MapNavigatorContext);
   const { floorId: mapFloorId, setFloorId: setMapFloorId } =
     useContext(PlacesContext);
@@ -289,24 +291,17 @@ export const PlacesScreen = ({ navigation, route }: Props) => {
     if (campus) setFloorId(campus.floors?.find(f => f.level >= 0)?.id);
   }, [campus]);
   const floorSelectorButton = (
-    <TranslucentCard
-      {...(accessibility?.fontSize && Number(accessibility?.fontSize) >= 150
-        ? { style: { height: 55 } }
-        : {})}
-    >
+    <TranslucentCard {...(isLarge ? { style: { height: 55 } } : {})}>
       <TouchableOpacity
         accessibilityLabel={t('placesScreen.changeFloor')}
         disabled={!!debouncedSearch && displayFloorId != null}
       >
         <Row ph={3} pv={2.5} gap={1} align="center">
-          {accessibility?.fontSize && Number(accessibility?.fontSize) < 150 && (
-            <Icon icon={faElevator} />
-          )}
+          {!isLarge && <Icon icon={faElevator} />}
           <Text
             ellipsizeMode="tail"
             numberOfLines={1}
-            {...(accessibility?.fontSize &&
-            Number(accessibility?.fontSize) >= 150
+            {...(isLarge
               ? { style: { height: 75, marginVertical: -20, maxWidth: 250 } }
               : {
                   flexShrink: 1,
@@ -359,21 +354,13 @@ export const PlacesScreen = ({ navigation, route }: Props) => {
           }) => setTabsHeight(height)}
         >
           <PillIconButton
-            icon={
-              accessibility?.fontSize && Number(accessibility?.fontSize) < 150
-                ? faClock
-                : undefined
-            }
+            icon={!isLarge ? faClock : undefined}
             onPress={() => navigation.navigate('FreeRooms')}
           >
             {t('freeRoomsScreen.title')}
           </PillIconButton>
           <PillIconButton
-            icon={
-              accessibility?.fontSize && Number(accessibility?.fontSize) < 150
-                ? faChalkboardTeacher
-                : undefined
-            }
+            icon={!isLarge ? faChalkboardTeacher : undefined}
             onPress={() =>
               navigation.navigate({
                 name: 'Places',
@@ -384,11 +371,7 @@ export const PlacesScreen = ({ navigation, route }: Props) => {
             {t('placeCategories.classrooms')}
           </PillIconButton>
           <PillIconButton
-            icon={
-              accessibility?.fontSize && Number(accessibility?.fontSize) < 150
-                ? faBookReader
-                : undefined
-            }
+            icon={!isLarge ? faBookReader : undefined}
             onPress={() =>
               navigation.navigate({
                 name: 'Places',
@@ -399,11 +382,7 @@ export const PlacesScreen = ({ navigation, route }: Props) => {
             {t('placeCategories.studyRooms')}
           </PillIconButton>
           <PillIconButton
-            icon={
-              accessibility?.fontSize && Number(accessibility?.fontSize) < 150
-                ? faBookOpen
-                : undefined
-            }
+            icon={!isLarge ? faBookOpen : undefined}
             onPress={() =>
               navigation.navigate({
                 name: 'Places',
@@ -427,10 +406,7 @@ export const PlacesScreen = ({ navigation, route }: Props) => {
           <PillButton onPress={() => setCategoriesPanelOpen(true)}>
             <ThemeContext.Provider value={darkTheme}>
               <Row align="center" gap={2}>
-                {accessibility?.fontSize &&
-                  Number(accessibility?.fontSize) < 150 && (
-                    <Icon icon={faEllipsis} />
-                  )}
+                {!isLarge && <Icon icon={faEllipsis} />}
                 <Text weight="medium">{t('common.more')}</Text>
               </Row>
             </ThemeContext.Provider>
@@ -440,12 +416,7 @@ export const PlacesScreen = ({ navigation, route }: Props) => {
 
       <Animated.View style={[styles.controls, controlsAnimatedStyle]}>
         <Row gap={3} align="stretch" justify="space-between">
-          <TranslucentCard
-            {...(accessibility?.fontSize &&
-            Number(accessibility?.fontSize) >= 150
-              ? { style: { height: 40 } }
-              : {})}
-          >
+          <TranslucentCard {...(isLarge ? { style: { height: 40 } } : {})}>
             <IconButton
               icon={faCrosshairs}
               size={spacing[6]}
@@ -494,10 +465,7 @@ export const PlacesScreen = ({ navigation, route }: Props) => {
                   align="center"
                   style={{ opacity: 0.6 }}
                 >
-                  {accessibility?.fontSize &&
-                    Number(accessibility?.fontSize) < 150 && (
-                      <Icon icon={faElevator} />
-                    )}
+                  {!isLarge && <Icon icon={faElevator} />}
 
                   <Text
                     style={{

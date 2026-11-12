@@ -1,9 +1,9 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { faChartSimple } from '@fortawesome/free-solid-svg-icons';
-import { Icon, useStylesheet, useTheme } from '@polito/lib/ui';
+import { Icon, Text, useStylesheet, useTheme } from '@polito/lib/ui';
 import type { Theme } from '@polito/lib/ui';
 
 export const NoChartDataContainer = ({
@@ -31,14 +31,13 @@ export const NoChartDataContainer = ({
   );
 };
 
-const createStyles = ({ colors, fontSizes, fontWeights }: Theme) =>
+const createStyles = ({ colors, fontWeights }: Theme) =>
   StyleSheet.create({
     view: {
       position: 'relative',
     },
     title: {
       color: colors.tabBarInactive,
-      fontSize: fontSizes.md,
       fontWeight: fontWeights.semibold,
     },
     container: {

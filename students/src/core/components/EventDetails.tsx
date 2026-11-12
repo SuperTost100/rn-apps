@@ -20,7 +20,7 @@ export const EventDetails = ({
   timeLabel,
   ...rest
 }: Props) => {
-  const { spacing, fontSizes } = useTheme();
+  const { spacing } = useTheme();
   const formatHHmm = dateFormatter('HH:mm');
   return (
     <View style={{ padding: spacing[5] }} {...rest}>
@@ -30,16 +30,14 @@ export const EventDetails = ({
       </Text>
       {time &&
         (typeof time === 'string' ? (
-          <Text style={{ fontSize: fontSizes.md }}>
+          <Text>
             {time}
             {endTime && ` - ${formatHHmm(endTime)}`}
           </Text>
         ) : (
           time
         ))}
-      {!!timeLabel && (
-        <Text style={{ fontSize: fontSizes.md }}>{timeLabel}</Text>
-      )}
+      {!!timeLabel && <Text>{timeLabel}</Text>}
     </View>
   );
 };

@@ -8,8 +8,8 @@ import { ShapeSource, SymbolLayer } from '@rnmapbox/maps';
 
 import { capitalize } from 'lodash';
 
-import { usePreferencesContext } from '../../../core/contexts/PreferencesContext';
 import { notNullish } from '../../../core/utils/predicates';
+import { useTextScale } from '../../../ui/hooks/useTextScale';
 import { useTheme } from '../../../ui/hooks/useTheme';
 import { DEFAULT_CATEGORY_MARKER } from '../constants';
 import { usePlaceCategoriesMap } from '../hooks/usePlaceCategoriesMap';
@@ -42,7 +42,7 @@ export const MarkersLayer = ({
   const { t } = useTranslation();
   const { dark, fontSizes, colors } = useTheme();
   const placeCategoriesMap = usePlaceCategoriesMap();
-  const { accessibility } = usePreferencesContext();
+  const { isLarge } = useTextScale();
 
   const pois = useMemo((): (SearchPlace &
     PlaceCategory & { siteId: string })[] => {
@@ -63,11 +63,7 @@ export const MarkersLayer = ({
               !!placeCategoriesMap[p.category.subCategory.id]?.highlighted),
       );
     }
-    if (
-      accessibility?.fontSize &&
-      accessibility.fontSize >= 150 &&
-      selectedId
-    ) {
+    if (isLarge && selectedId) {
       const selected = result.find(x => x.id === selectedId);
       if (selected) {
         const R = 6371000; // Earth radius in metres
@@ -112,7 +108,7 @@ export const MarkersLayer = ({
       };
     });
   }, [
-    accessibility?.fontSize,
+    isLarge,
     selectedId,
     categoryId,
     placeCategoriesMap,
@@ -165,8 +161,7 @@ export const MarkersLayer = ({
           ? pois?.[features[0].properties?.index]
           : null;
 
-        const isAccessibleFont =
-          accessibility?.fontSize && accessibility.fontSize >= 150;
+        const isAccessibleFont = isLarge;
 
         if (selectedPoi) {
           if (isAccessibleFont) {
@@ -233,37 +228,24 @@ export const MarkersLayer = ({
           iconImage: ['get', 'markerUrl'],
           iconSize: 0.35,
           symbolSortKey: ['get', 'priority'],
-          textField:
-            accessibility?.fontSize && Number(accessibility?.fontSize) >= 150
-              ? [
-                  'case',
-                  ['==', ['get', 'id'], ['literal', selectedId ?? '']],
-                  ['get', 'name'],
-                  '',
-                ]
-              : ['get', 'name'],
-          textSize:
-            accessibility?.fontSize && accessibility.fontSize < 150
-              ? fontSizes['2xs']
-              : fontSizes['3xl'],
+          textField: isLarge
+            ? [
+                'case',
+                ['==', ['get', 'id'], ['literal', selectedId ?? '']],
+                ['get', 'name'],
+                '',
+              ]
+            : ['get', 'name'],
+          textSize: !isLarge ? fontSizes['2xs'] : fontSizes['3xl'],
           textFont: ['Open Sans Semibold'],
           textColor: ['get', 'color'],
           textOffset: [0, 1.2],
           textAnchor: 'top',
           textOptional: true,
-          textAllowOverlap:
-            accessibility?.fontSize && accessibility.fontSize < 150
-              ? false
-              : true,
+          textAllowOverlap: !isLarge ? false : true,
           textHaloBlur: 0.5,
           textHaloColor: dark ? colors.black : colors.white,
-          textHaloWidth: dark
-            ? accessibility?.fontSize && accessibility.fontSize < 150
-              ? 0
-              : 6
-            : accessibility?.fontSize && accessibility.fontSize < 150
-              ? 0.8
-              : 6,
+          textHaloWidth: dark ? (!isLarge ? 0 : 6) : !isLarge ? 0.8 : 6,
         }}
       />
     </ShapeSource>

@@ -217,7 +217,6 @@ const createStyles = ({
     },
     markResolved: {
       fontFamily: fontFamilies.title,
-      fontSize: fontSizes.md,
       fontWeight: fontWeights.medium,
       letterSpacing: 0.16,
       color: colors.link,

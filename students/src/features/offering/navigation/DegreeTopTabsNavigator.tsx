@@ -3,20 +3,19 @@ import { useTranslation } from 'react-i18next';
 import { Platform, View } from 'react-native';
 
 import { faAngleDown } from '@fortawesome/free-solid-svg-icons';
-import { useOfflineDisabled, usePreferencesContext } from '@polito/lib/core';
+import { useOfflineDisabled } from '@polito/lib/core';
 import {
   Icon,
   Row,
   StatefulMenuView,
   Text,
   TopTabBar,
+  useTextScale,
   useTheme,
 } from '@polito/lib/ui';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { ParamListBase } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-
-import { AppPreferences } from '~/core/types/preferences';
 
 import { useGetOfferingDegree } from '../../../core/queries/offeringHooks';
 import { getShortYear } from '../../../utils/offerings';
@@ -41,7 +40,7 @@ export const DegreeTopTabsNavigator = ({ route, navigation }: Props) => {
   const [year, setYear] = useState(initialYear);
   const degreeQuery = useGetOfferingDegree({ degreeId, year });
   const displayYear = degreeQuery.data?.year?.toString() || year;
-  const { accessibility } = usePreferencesContext<AppPreferences>();
+  const { isLarge } = useTextScale();
   const isOffline = useOfflineDisabled();
 
   const yearOptions = useMemo(() => {
@@ -83,12 +82,7 @@ export const DegreeTopTabsNavigator = ({ route, navigation }: Props) => {
             <Row
               align="center"
               style={{
-                marginTop:
-                  accessibility?.fontSize &&
-                  accessibility.fontSize >= 150 &&
-                  Platform.OS === 'ios'
-                    ? -spacing[3]
-                    : 0,
+                marginTop: isLarge && Platform.OS === 'ios' ? -spacing[3] : 0,
               }}
             >
               <Text variant="prose">
@@ -115,7 +109,7 @@ export const DegreeTopTabsNavigator = ({ route, navigation }: Props) => {
     t,
     colors.link,
     yearOptions,
-    accessibility?.fontSize,
+    isLarge,
   ]);
 
   return (

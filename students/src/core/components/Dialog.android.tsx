@@ -156,6 +156,5 @@ const styles = StyleSheet.create({
   label: {
     marginLeft: 8,
     flex: 1,
-    fontSize: 16,
   },
 });

@@ -46,10 +46,10 @@ import {
 import { BackgroundLayer, Camera, MapView } from '@rnmapbox/maps';
 
 import { IS_ANDROID, IS_IOS } from '../../../core/constants';
-import { usePreferencesContext } from '../../../core/contexts/PreferencesContext';
 import { useDeviceOrientation } from '../../../core/hooks/useDeviceOrientation';
 import { useKeyboardVisibile } from '../../../core/hooks/useKeyboardVisibile';
 import { ActivityIndicator } from '../../../ui/components/ActivityIndicator';
+import { useTextScale } from '../../../ui/hooks/useTextScale';
 import { GlobalStyles } from '../../../ui/styles/GlobalStyles';
 import { MapNavigatorContext } from '../contexts/MapNavigatorContext';
 
@@ -138,7 +138,7 @@ const MapNavigator = ({
   const previousKey = state.routes[state.index - 1]?.key;
   const previousDescriptor = previousKey ? descriptors[previousKey] : undefined;
   const parentHeaderBack = useContext(HeaderBackContext);
-  const { accessibility } = usePreferencesContext();
+  const { isLarge } = useTextScale();
 
   const headerBack = previousDescriptor
     ? {
@@ -343,10 +343,7 @@ const MapNavigator = ({
             >
               <MapView
                 onPress={() => {
-                  if (
-                    accessibility?.fontSize &&
-                    accessibility.fontSize >= 150
-                  ) {
+                  if (isLarge) {
                     setSelectedId('');
                   }
                 }}

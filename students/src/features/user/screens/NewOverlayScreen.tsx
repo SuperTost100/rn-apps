@@ -255,7 +255,6 @@ const createStyles = ({
     date: {
       color: colors.secondaryText,
       fontFamily: 'Montserrat-Regular',
-      fontSize: fontSizes.sm,
       fontStyle: 'normal',
       fontWeight: fontWeights.normal,
       lineHeight: fontSizes.xl,

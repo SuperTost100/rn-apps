@@ -74,7 +74,6 @@ const createStyles = ({
       fontWeight: fontWeights.medium,
     },
     text: {
-      fontSize: fontSizes.sm,
       marginLeft: spacing[1],
     },
     empty: {
