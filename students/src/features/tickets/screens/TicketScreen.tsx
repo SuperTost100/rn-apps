@@ -34,12 +34,12 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { AppPreferences } from '~/core/types/preferences';
 
+import { useMarkAsRead } from '../../../core/hooks/useMarkAsRead';
 import { useNotifications } from '../../../core/hooks/useNotifications';
 import {
   isResolvedTicketStatus,
   useGetTicket,
   useMarkTicketAsClosed,
-  useMarkTicketAsRead,
 } from '../../../core/queries/ticketHooks';
 import { ServiceStackParamList } from '../../services/components/ServicesNavigator';
 import { ChatMessage } from '../components/ChatMessage';
@@ -61,7 +61,7 @@ export const TicketScreen = ({ route, navigation }: Props) => {
   const styles = useStylesheet(createStyles);
   const ticketQuery = useGetTicket(id);
   const states = useQueryStates(ticketQuery);
-  const { mutate: markAsRead } = useMarkTicketAsRead(id);
+  const markAsRead = useMarkAsRead();
   const { mutateAsync: markTicketAsClosed } = useMarkTicketAsClosed(id);
   const { spacing } = useTheme();
   const bottomBarHeight = useBottomTabBarHeight();
@@ -78,20 +78,16 @@ export const TicketScreen = ({ route, navigation }: Props) => {
     ticket?.message,
   ].join(', ');
 
-  const markAsReadIfNeeded = useCallback(async () => {
-    if (!ticket) {
-      return;
-    }
-    await clearNotificationScope(['services', 'tickets', ticket.id.toString()]);
-    if (!ticket.unreadCount) {
-      return;
-    }
-    markAsRead();
-  }, [markAsRead, clearNotificationScope, ticket]);
-
+  // Runs again whenever the notifications refresh; useMarkAsRead sends each
+  // read call once, so a server that still reports the notification unread
+  // no longer gets the same call again on every refresh
+  const ticketId = ticket?.id;
+  const ticketUnread = !!ticket?.unreadCount;
   useEffect(() => {
-    markAsReadIfNeeded();
-  }, [markAsReadIfNeeded]);
+    if (ticketId === undefined) return;
+    clearNotificationScope(['services', 'tickets', ticketId.toString()]);
+    if (ticketUnread) markAsRead.ticket(ticketId);
+  }, [markAsRead, clearNotificationScope, ticketId, ticketUnread]);
 
   const isAutoResolved = useMemo(
     () => ticket?.status === TicketStatus.Autoresolved,

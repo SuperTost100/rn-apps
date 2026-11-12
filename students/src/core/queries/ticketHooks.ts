@@ -4,9 +4,7 @@ import {
   GetTicketAttachmentRequest,
   GetTicketReplyAttachmentRequest,
   ReplyToTicketRequest,
-  Ticket,
   TicketFeedbackRequest,
-  TicketOverview,
   TicketStatus,
   TicketsApi,
 } from '@polito/student-api-client';
@@ -175,25 +173,6 @@ export const useMarkTicketAsClosed = (ticketId: number) => {
     onSuccess() {
       return invalidatesQueries.forEach(queryKey =>
         client.invalidateQueries({ queryKey }),
-      );
-    },
-  });
-};
-
-export const useMarkTicketAsRead = (ticketId: number) => {
-  const ticketsClient = useTicketsClient();
-  const client = useQueryClient();
-
-  return useMutation({
-    mutationFn: () => ticketsClient.markTicketAsRead({ ticketId }),
-    onSuccess() {
-      client.setQueryData<Ticket>([TICKET_QUERY_PREFIX, ticketId], prev =>
-        prev ? { ...prev, unreadCount: 0 } : prev,
-      );
-      client.setQueryData<TicketOverview[]>(TICKETS_QUERY_KEY, prev =>
-        prev?.map(ticket =>
-          ticket.id === ticketId ? { ...ticket, unreadCount: 0 } : ticket,
-        ),
       );
     },
   });

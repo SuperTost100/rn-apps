@@ -8,22 +8,19 @@ import {
 } from '@polito/student-api-client';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useQueryClient } from '@tanstack/react-query';
 
 import { get, has, setWith } from 'lodash';
 
 import { CourseTabsParamList } from '../../features/courses/navigation/CourseNavigator';
-import {
-  NOTIFICATIONS_QUERY_KEY,
-  useGetNotifications,
-  useMarkNotificationAsRead,
-} from '../queries/studentHooks';
+import { notificationCourseId } from '../../features/inbox/inboxItems';
+import { useGetNotifications } from '../queries/studentHooks';
 import { RootParamList } from '../types/navigation';
 import {
   PushNotificationPayload,
   RemoteMessage,
   UnreadNotificationsByScope,
 } from '../types/notifications';
+import { useMarkAsRead } from './useMarkAsRead';
 import { useMfaChallengeHandler } from './useMfaChallengeHandler';
 
 const CourseTransactionId = {
@@ -64,7 +61,7 @@ const useUnreadNotificationsByScope = () => {
   const { data: notifications } = notificationsQuery;
   // Badges: a failed load leaves them as they were, with nothing to say
   useQuietQueryErrors(notificationsQuery);
-  return useMemo(
+  const unreadByScope = useMemo(
     () =>
       (notifications?.data
         ?.filter(n => !n.isRead)
@@ -86,6 +83,11 @@ const useUnreadNotificationsByScope = () => {
         }, {}) ?? {}) as UnreadNotificationsByScope,
     [notifications?.data],
   );
+  const unread = useMemo(
+    () => notifications?.data?.filter(n => !n.isRead) ?? [],
+    [notifications?.data],
+  );
+  return { byScope: unreadByScope, unread };
 };
 
 const extractSubtreeNotifications = (root: any) => {
@@ -114,10 +116,9 @@ type PathExtractor<T, Paths extends readonly unknown[] = readonly []> =
 
 export const useNotifications = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootParamList>>();
-  const unreadNotifications = useUnreadNotificationsByScope();
-  const { mutateAsync: markNotificationAsRead } =
-    useMarkNotificationAsRead(false);
-  const queryClient = useQueryClient();
+  const { byScope: unreadNotifications, unread } =
+    useUnreadNotificationsByScope();
+  const markAsRead = useMarkAsRead();
 
   const clearNotificationScope = useCallback(
     (notificationScope: PathExtractor<UnreadNotificationsByScope>) => {
@@ -136,13 +137,11 @@ export const useNotifications = () => {
         return;
       }
 
-      return Promise.all(
-        notificationsToClear.map(n => markNotificationAsRead(n.id)),
-      ).then(() =>
-        queryClient.invalidateQueries({ queryKey: NOTIFICATIONS_QUERY_KEY }),
-      );
+      // Sent once per notification in a session, so a screen whose effect
+      // runs again when the list refreshes does not send it again
+      return markAsRead.notifications(notificationsToClear.map(n => n.id));
     },
-    [markNotificationAsRead, queryClient, unreadNotifications],
+    [markAsRead, unreadNotifications],
   );
 
   const getUnreadsCount = useCallback(
@@ -171,22 +170,23 @@ export const useNotifications = () => {
     [unreadNotifications],
   );
 
+  // Read from each scope the way the inbox reads it, whatever the scope's
+  // depth, so a course's badge and its rows in the inbox agree
   const getUnreadsCountPerCourse = useCallback(
     (courseId?: number | null, prevEditions?: CourseModuleEdition[]) => {
       if (courseId === undefined || !prevEditions) return 0;
-      const courseIds = prevEditions.map(e => e.id);
+      const courseIds = prevEditions.map(e => Number(e.id));
       if (courseId) {
         courseIds.push(courseId);
       }
       return (
-        courseIds.reduce(
-          (acc, eid) =>
-            acc + (getUnreadsCount(['teaching', 'courses', `${eid}`]) ?? 0),
-          0,
-        ) || undefined
+        unread.filter(n => {
+          const id = notificationCourseId(n);
+          return id !== undefined && courseIds.includes(id);
+        }).length || undefined
       );
     },
-    [getUnreadsCount],
+    [unread],
   );
 
   const { refetch: refetchMfaChallenge } = useMfaChallengeHandler();
