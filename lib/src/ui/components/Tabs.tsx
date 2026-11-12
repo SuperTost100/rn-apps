@@ -12,7 +12,6 @@ import {
   LayoutChangeEvent,
   NativeScrollEvent,
   NativeSyntheticEvent,
-  Platform,
   ScrollView,
   ScrollViewProps,
   StyleSheet,
@@ -135,7 +134,7 @@ export const Tabs = ({
     <ScrollView
       ref={scrollRef}
       showsHorizontalScrollIndicator={false}
-      accessible={Platform.select({ android: true, ios: false })}
+      // Not accessible itself: each tab is its own element for screen readers
       accessibilityRole="tablist"
       horizontal
       scrollEventThrottle={32}
