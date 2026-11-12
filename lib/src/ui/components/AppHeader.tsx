@@ -54,7 +54,7 @@ export const AppHeader = ({
   const isRoot = variant === 'root';
   const foreground = isRoot ? colors.onHeader : colors.title;
   const title = getHeaderTitle(options, route.name);
-  const { headerTitle, headerRight } = options;
+  const { headerTitle, headerRight, headerLeft } = options;
 
   useLightStatusBar(isRoot && 'addListener' in navigation ? navigation : null);
 
@@ -69,14 +69,16 @@ export const AppHeader = ({
     >
       <HeaderForegroundContext.Provider value={foreground}>
         <View style={[styles.row, isRoot && styles.rootRow]}>
-          {back && (
-            <HeaderBackButton
-              tintColor={foreground}
-              onPress={navigation.goBack}
-              displayMode="minimal"
-              style={styles.back}
-            />
-          )}
+          {headerLeft
+            ? headerLeft({ tintColor: foreground, canGoBack: !!back })
+            : back && (
+                <HeaderBackButton
+                  tintColor={foreground}
+                  onPress={navigation.goBack}
+                  displayMode="minimal"
+                  style={styles.back}
+                />
+              )}
           <View style={[styles.title, isRoot && styles.rootTitle]}>
             {typeof headerTitle === 'function' ? (
               headerTitle({ children: title, tintColor: foreground })

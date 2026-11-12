@@ -54,7 +54,8 @@ const mimeTypeIcons: Record<IconType, IconDefinition> = {
 
 const mimeTypeKeywords = new RegExp(Object.keys(mimeTypeIcons).join('|'), 'i');
 
-const getIconFromMimeType = (mimeType?: string) => {
+/** The file-type icon for a mime type: PDF, Word, image, archive and so on */
+export const getIconFromMimeType = (mimeType?: string | null) => {
   if (!mimeType) return faFile;
   // Office mime types contain "openxml", which would match the "xml" keyword
   const match = mimeType.replace(/openxml/gi, '').match(mimeTypeKeywords);
