@@ -1289,6 +1289,11 @@
       "failedTitle": "Impossibile cercare nei contatti",
       "failedOneTitle": "Impossibile caricare il contatto",
       "loadingOne": "Caricamento del contatto"
+    },
+    "statistics": {
+      "loading": "Caricamento delle statistiche",
+      "failedTitle": "Impossibile caricare le statistiche",
+      "failedText": "Le statistiche del corso non hanno risposto. Riprova tra poco."
     }
   },
   "inboxScreen": {

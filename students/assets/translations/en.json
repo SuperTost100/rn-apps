@@ -1289,6 +1289,11 @@
       "failedTitle": "Couldn't search the contacts",
       "failedOneTitle": "Couldn't load this contact",
       "loadingOne": "Loading the contact"
+    },
+    "statistics": {
+      "loading": "Loading the statistics",
+      "failedTitle": "Couldn't load the statistics",
+      "failedText": "The course statistics didn't answer. Try again in a moment."
     }
   },
   "inboxScreen": {

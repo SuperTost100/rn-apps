@@ -10,11 +10,14 @@ import {
 } from 'react-native';
 
 import { faQuestionCircle } from '@fortawesome/free-regular-svg-icons';
+import { useQueryStates } from '@polito/lib/core';
 import {
   BottomModal,
   Card,
   LoadingContainer,
+  QueryStateView,
   SectionHeader,
+  SkeletonDetail,
   Theme,
   useBottomModal,
   useStylesheet,
@@ -48,11 +51,15 @@ export const CourseStatisticsScreen = ({ route }: Props) => {
     currentTeacherId: teacherId ? String(teacherId) : undefined,
   });
 
-  const { data: statistics, isFetching } = useGetCourseStatistics({
+  const statisticsQuery = useGetCourseStatistics({
     courseShortcode: shortCode,
     teacherId: currentFilters.currentTeacherId,
     year: currentFilters.currentYear,
   });
+  const { data: statistics, isFetching } = statisticsQuery;
+  // The first load and a failure use the state kit; a filter change keeps
+  // the charts on screen with the spinner over them
+  const states = useQueryStates(statisticsQuery);
 
   const filters = useMemo(() => {
     return computeStatisticsFilters(
@@ -139,87 +146,102 @@ export const CourseStatisticsScreen = ({ route }: Props) => {
             }}
             filterType={filter}
           />
-          <View style={styles.container}>
-            <View>
-              <SectionHeader
-                accessible
-                accessibilityLabel={t(
-                  'courseStatisticsScreen.enrolledExamTitle',
-                )}
-                title={t('courseStatisticsScreen.enrolledExamTitle')}
-                trailingIcon={{
-                  onPress: () =>
-                    openModal(CourseStatisticsTypes.enrolledExamBottomSheet),
-                  icon: faQuestionCircle,
-                  accessibilityLabel: t('courseStatisticsScreen.explain'),
-                  color: colors.link,
-                }}
+          <QueryStateView
+            states={states}
+            skeleton={
+              <SkeletonDetail
+                title={false}
+                cards={[240, 240, 240]}
+                label={t('states.statistics.loading')}
               />
-              <Card>
-                <LoadingContainer loading={isFetching}>
-                  <EnrolledExamChart
-                    width={graphWidth}
-                    statistics={statistics}
-                    noOfSections={4}
-                  />
-                </LoadingContainer>
-              </Card>
-            </View>
-            <View>
-              <SectionHeader
-                accessible
-                accessibilityLabel={t(
-                  'courseStatisticsScreen.enrolledExamDetailTitle',
-                )}
-                title={t('courseStatisticsScreen.enrolledExamDetailTitle')}
-                trailingIcon={{
-                  onPress: () =>
-                    openModal(
-                      CourseStatisticsTypes.enrolledExamDetailBottomSheet,
-                    ),
-                  icon: faQuestionCircle,
-                  accessibilityLabel: t('courseStatisticsScreen.explain'),
-                  color: colors.link,
-                }}
-              />
-              <Card>
-                <LoadingContainer loading={isFetching}>
-                  <EnrolledExamDetailChart
-                    width={graphWidth}
-                    statistics={statistics}
-                    noOfSections={4}
-                  />
-                </LoadingContainer>
-              </Card>
-            </View>
+            }
+            errorState={{
+              title: t('states.statistics.failedTitle'),
+              text: t('states.statistics.failedText'),
+            }}
+          >
+            <View style={styles.container}>
+              <View>
+                <SectionHeader
+                  accessible
+                  accessibilityLabel={t(
+                    'courseStatisticsScreen.enrolledExamTitle',
+                  )}
+                  title={t('courseStatisticsScreen.enrolledExamTitle')}
+                  trailingIcon={{
+                    onPress: () =>
+                      openModal(CourseStatisticsTypes.enrolledExamBottomSheet),
+                    icon: faQuestionCircle,
+                    accessibilityLabel: t('courseStatisticsScreen.explain'),
+                    color: colors.link,
+                  }}
+                />
+                <Card>
+                  <LoadingContainer loading={isFetching}>
+                    <EnrolledExamChart
+                      width={graphWidth}
+                      statistics={statistics}
+                      noOfSections={4}
+                    />
+                  </LoadingContainer>
+                </Card>
+              </View>
+              <View>
+                <SectionHeader
+                  accessible
+                  accessibilityLabel={t(
+                    'courseStatisticsScreen.enrolledExamDetailTitle',
+                  )}
+                  title={t('courseStatisticsScreen.enrolledExamDetailTitle')}
+                  trailingIcon={{
+                    onPress: () =>
+                      openModal(
+                        CourseStatisticsTypes.enrolledExamDetailBottomSheet,
+                      ),
+                    icon: faQuestionCircle,
+                    accessibilityLabel: t('courseStatisticsScreen.explain'),
+                    color: colors.link,
+                  }}
+                />
+                <Card>
+                  <LoadingContainer loading={isFetching}>
+                    <EnrolledExamDetailChart
+                      width={graphWidth}
+                      statistics={statistics}
+                      noOfSections={4}
+                    />
+                  </LoadingContainer>
+                </Card>
+              </View>
 
-            <View>
-              <SectionHeader
-                accessible
-                accessibilityLabel={t(
-                  'courseStatisticsScreen.examGradeDetailTitle',
-                )}
-                title={t('courseStatisticsScreen.examGradeDetailTitle')}
-                trailingIcon={{
-                  onPress: () =>
-                    openModal(
-                      CourseStatisticsTypes.enrolledExamDetailBottomSheet,
-                    ),
-                  icon: faQuestionCircle,
-                  accessibilityLabel: t('courseStatisticsScreen.explain'),
-                  color: colors.link,
-                }}
-              />
-              <Card>
-                <LoadingContainer loading={isFetching}>
-                  <CourseGradesChart
-                    width={graphWidth}
-                    statistics={statistics}
-                  />
-                </LoadingContainer>
-              </Card>
+              <View>
+                <SectionHeader
+                  accessible
+                  accessibilityLabel={t(
+                    'courseStatisticsScreen.examGradeDetailTitle',
+                  )}
+                  title={t('courseStatisticsScreen.examGradeDetailTitle')}
+                  trailingIcon={{
+                    onPress: () =>
+                      openModal(
+                        CourseStatisticsTypes.enrolledExamDetailBottomSheet,
+                      ),
+                    icon: faQuestionCircle,
+                    accessibilityLabel: t('courseStatisticsScreen.explain'),
+                    color: colors.link,
+                  }}
+                />
+                <Card>
+                  <LoadingContainer loading={isFetching}>
+                    <CourseGradesChart
+                      width={graphWidth}
+                      statistics={statistics}
+                    />
+                  </LoadingContainer>
+                </Card>
+              </View>
             </View>
-          </View>
+          </QueryStateView>
         </SafeAreaView>
       </ScrollView>
     </>
