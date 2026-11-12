@@ -431,7 +431,9 @@ const TodayRowView = ({
       : state === 'next'
         ? t('todayList.next')
         : undefined;
-  const meta = [kindWord, item.room].filter(Boolean).join(' · ');
+  // A short room code stays with its word: "Aula 5S", never "Aula" / "5S"
+  const room = item.room?.replace(/ (?=\S{1,4}$)/, '\u00A0');
+  const meta = [kindWord, room].filter(Boolean).join(' · ');
   const count = isMain ? countText(countdown(row, now), t) : null;
 
   const open = () => {

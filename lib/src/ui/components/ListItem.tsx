@@ -2,7 +2,9 @@ import {
   ReactElement,
   createContext,
   useContext,
+  useEffect,
   useLayoutEffect,
+  useState,
 } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -47,7 +49,8 @@ export interface ListItemProps extends TouchableHighlightProps {
   trailingItem?: ReactElement;
   /**
    * A status chip. It sits in the trailing column and moves under the
-   * subtitle at 150% text and above, so it never squeezes the title
+   * subtitle at 150% text and above, or when the title would not fit in its
+   * lines next to it, so it never squeezes the title
    */
   chip?: ReactElement;
   /** Read after the title and subtitle by screen readers, e.g. the chip's word */
@@ -121,6 +124,15 @@ export const ListItem = ({
     ? undefined
     : (titleProps?.numberOfLines ?? (isLarge ? 3 : 2));
 
+  // At 100% the chip moves under the text when the title would otherwise be
+  // cut: a hidden copy of the title, as wide as the text column, counts its
+  // lines. Once under, it stays there until the title changes.
+  const [chipUnder, setChipUnder] = useState(false);
+  useEffect(() => setChipUnder(false), [title]);
+  const chipBelow = !!chip && (isLarge || !!card || chipUnder);
+  const measureTitle =
+    !!chip && !chipBelow && typeof title === 'string' && !!titleLines;
+
   const titleElement =
     typeof title === 'string' ? (
       <View style={styles.titleRow}>
@@ -134,6 +146,7 @@ export const ListItem = ({
             titleStyle,
           ]}
           ellipsizeMode={titleProps?.ellipsizeMode ?? 'tail'}
+          keepWords
           {...titleProps}
           numberOfLines={titleLines}
         >
@@ -151,6 +164,7 @@ export const ListItem = ({
         style={subtitleStyle}
         numberOfLines={isLarge ? 3 : 2}
         ellipsizeMode="tail"
+        keepWords
         {...subtitleProps}
       >
         {subtitle}
@@ -170,7 +184,7 @@ export const ListItem = ({
 
   const chevron =
     !card && (showChevron ?? (!trailingItem && (!!linkTo || !!isAction)));
-  const trailingChip = chip && !isLarge && !card ? chip : null;
+  const trailingChip = chip && !chipBelow ? chip : null;
   const trailing =
     !card && (trailingChip || trailingItem || chevron) ? (
       <View style={[styles.trailingSlot, disabled && styles.dimmed]}>
@@ -237,11 +251,26 @@ export const ListItem = ({
             inverted && styles.inverted,
           ]}
         >
+          {measureTitle && (
+            <Text
+              variant="title"
+              weight={unread ? 'bold' : undefined}
+              style={[styles.title, titleStyle, styles.measure]}
+              onTextLayout={e => {
+                if (e.nativeEvent.lines.length > (titleLines ?? 0)) {
+                  setChipUnder(true);
+                }
+              }}
+              accessible={false}
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+            >
+              {title}
+            </Text>
+          )}
           {titleElement}
           {subtitleElement}
-          {chip && (isLarge || card) && (
-            <View style={styles.chipBelow}>{chip}</View>
-          )}
+          {chipBelow && <View style={styles.chipBelow}>{chip}</View>}
         </View>
         {trailing}
       </View>
@@ -296,6 +325,12 @@ const createStyles = ({ controls, layout, spacing }: Theme) =>
       marginLeft: layout.leadingGap,
       flexShrink: 0,
       maxWidth: '50%',
+    },
+    measure: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      opacity: 0,
     },
     chipBelow: {
       flexDirection: 'row',

@@ -87,6 +87,7 @@ export const AppHeader = ({
                 variant={isRoot ? 'largeTitle' : 'cardTitle'}
                 accessibilityRole="header"
                 numberOfLines={titleLines}
+                keepWords
                 style={{ color: foreground }}
               >
                 {title}

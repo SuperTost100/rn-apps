@@ -36,7 +36,7 @@ import {
 import { useDownloadFile } from '../../../core/hooks/useDownloadFile';
 import { useNotifications } from '../../../core/hooks/useNotifications';
 import { AppPreferences } from '../../../core/types/preferences';
-import { stripIdInParentheses } from '../../../utils/files';
+import { stripIdInParentheses, wrappableFileName } from '../../../utils/files';
 import { UnsupportedFileTypeError } from '../errors/UnsupportedFileTypeError';
 import { useCourseFileRequest } from '../hooks/useCourseFiles';
 import { FileItem, folderLabel, formatSize } from '../utils/fileTree';
@@ -324,7 +324,7 @@ export const CourseFileRow = memo(
 
     return (
       <ListItem
-        title={name}
+        title={wrappableFileName(name)}
         subtitle={subtitle}
         unread={unread}
         leadingItem={

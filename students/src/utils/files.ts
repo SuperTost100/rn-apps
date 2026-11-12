@@ -63,6 +63,18 @@ export const stripIdInParentheses = (name: string): string => {
 /**
  * Applies stripIdInParentheses to each segment of a path (folder names).
  */
+/**
+ * A file name that wraps at its separators instead of anywhere: a
+ * zero-width space after "_", "-" and "." and before the extension's dot,
+ * so "Esercitazione_03_soluzioni.pdf" breaks as "Esercitazione_03_" /
+ * "soluzioni.pdf" and never leaves one letter on a line.
+ */
+export const wrappableFileName = (name: string): string =>
+  name
+    .replace(/([_\-.])(?=[^\s])/g, '$1\u200B')
+    .replace(/\u200B?\.(?=[^.]+$)/, '\u200B.')
+    .replace(/\.\u200B(?=[^.]+$)/, '.');
+
 export const stripIdFromPathSegments = (path: string): string => {
   if (!path.trim()) return path;
   return path.split('/').filter(Boolean).map(stripIdInParentheses).join('/');
