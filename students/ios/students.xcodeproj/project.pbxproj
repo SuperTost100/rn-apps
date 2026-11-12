@@ -13,6 +13,7 @@
 		421B0ABE59B5422AA80527B9 /* Montserrat-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2B8C6611CD99474EB542989F /* Montserrat-Regular.ttf */; };
 		708F733D8BE05D66EE3C3F87 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E527B64FCAF0F704887044D /* ExpoModulesProvider.swift */; };
 		85D8E0ED2E21679200785302 /* BootSplash.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0915BB67F2D54C92A20F1CAC /* BootSplash.storyboard */; };
+		8A7055E544B312157D9D4A6E /* BootSplashTest.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = ECCC373366FAA3ACAAE1A54D /* BootSplashTest.storyboard */; };
 		944531432DCE469C9F10AB4F /* Montserrat-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DA6AD6D77E3B40548041A5A2 /* Montserrat-Bold.ttf */; };
 		96125A232AD6A8E600CF037A /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 96125A222AD6A8E600CF037A /* GoogleService-Info.plist */; };
 		97547E738A1E444EB344D4D0 /* Montserrat-BoldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4D12524BABDE4FD7BA5DBD6E /* Montserrat-BoldItalic.ttf */; };
@@ -47,15 +48,19 @@
 		5A28D4947060492C8F2FDEB8 /* Montserrat-MediumItalic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Montserrat-MediumItalic.ttf"; path = "../assets/fonts/Montserrat/Montserrat-MediumItalic.ttf"; sourceTree = "<group>"; };
 		6C3694B4707672CB4202EDCD /* Pods_students.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_students.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		7E527B64FCAF0F704887044D /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-students/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		7F961C2F5FA5368E03AEA2FA /* Pods-students.test.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-students.test.xcconfig"; path = "Target Support Files/Pods-students/Pods-students.test.xcconfig"; sourceTree = "<group>"; };
+		8F08C2F0E096C4760AA9F8CA /* studentsTest.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; name = studentsTest.entitlements; path = students/studentsTest.entitlements; sourceTree = "<group>"; };
 		96125A222AD6A8E600CF037A /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "./GoogleService-Info.plist"; sourceTree = "<group>"; };
 		96125A242AD6B04500CF037A /* students.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = students.entitlements; path = students/students.entitlements; sourceTree = "<group>"; };
 		B44D6C2329F17BF2001BA0DC /* DevInfo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = students/DevInfo.plist; sourceTree = "<group>"; };
 		B7AEFC7F2E16ADE70081F87A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = students/AppDelegate.swift; sourceTree = "<group>"; };
 		B7D759302BF2478B00178B49 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		B813406DDE44447AB8717E6E /* Montserrat-SemiBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Montserrat-SemiBold.ttf"; path = "../assets/fonts/Montserrat/Montserrat-SemiBold.ttf"; sourceTree = "<group>"; };
+		BCB0851B008017D9E8E38C70 /* TestInfo.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; name = TestInfo.plist; path = students/TestInfo.plist; sourceTree = "<group>"; };
 		C36BC2B3ADABFFA37BD69A86 /* Pods-students.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-students.debug.xcconfig"; path = "Target Support Files/Pods-students/Pods-students.debug.xcconfig"; sourceTree = "<group>"; };
 		D0B4891BE01447A7B4765D31 /* Montserrat-Italic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Montserrat-Italic.ttf"; path = "../assets/fonts/Montserrat/Montserrat-Italic.ttf"; sourceTree = "<group>"; };
 		DA6AD6D77E3B40548041A5A2 /* Montserrat-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Montserrat-Bold.ttf"; path = "../assets/fonts/Montserrat/Montserrat-Bold.ttf"; sourceTree = "<group>"; };
+		ECCC373366FAA3ACAAE1A54D /* BootSplashTest.storyboard */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file.storyboard; name = BootSplashTest.storyboard; path = students/BootSplashTest.storyboard; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -82,6 +87,9 @@
 				0915BB67F2D54C92A20F1CAC /* BootSplash.storyboard */,
 				5315202ED4F04B8D9FE446E5 /* Colors.xcassets */,
 				1B57746485E3A392EA81614A /* SceneDelegate.swift */,
+				BCB0851B008017D9E8E38C70 /* TestInfo.plist */,
+				8F08C2F0E096C4760AA9F8CA /* studentsTest.entitlements */,
+				ECCC373366FAA3ACAAE1A54D /* BootSplashTest.storyboard */,
 			);
 			name = students;
 			sourceTree = "<group>";
@@ -169,6 +177,7 @@
 			children = (
 				C36BC2B3ADABFFA37BD69A86 /* Pods-students.debug.xcconfig */,
 				2BFB747F5587852157976D00 /* Pods-students.release.xcconfig */,
+				7F961C2F5FA5368E03AEA2FA /* Pods-students.test.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -252,6 +261,7 @@
 				2BA0016F9B0543F5BBDA41F8 /* Montserrat-ExtraBold.ttf in Resources */,
 				E27CCBDF2F19415492F841F8 /* Montserrat-ExtraBoldItalic.ttf in Resources */,
 				96125A232AD6A8E600CF037A /* GoogleService-Info.plist in Resources */,
+				8A7055E544B312157D9D4A6E /* BootSplashTest.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -272,7 +282,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [[ -f \"$PODS_ROOT/../.xcode.env\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env\"\nfi\nif [[ -f \"$PODS_ROOT/../.xcode.env.local\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env.local\"\nfi\n\n# The project root by default is one level up from the ios directory\nexport PROJECT_ROOT=\"$PROJECT_DIR\"/..\n\nif [[ \"$CONFIGURATION\" = *Debug* ]]; then\n  export SKIP_BUNDLING=1\nfi\nif [[ -z \"$ENTRY_FILE\" ]]; then\n  # Set the entry JS file using the bundler's entry resolution.\n  export ENTRY_FILE=\"$(\"$NODE_BINARY\" -e \"require('expo/scripts/resolveAppEntry')\" \"$PROJECT_ROOT\" ios absolute | tail -n 1)\"\nfi\n\nif [[ -z \"$CLI_PATH\" ]]; then\n  # Use Expo CLI\n  export CLI_PATH=\"$(\"$NODE_BINARY\" --print \"require.resolve('@expo/cli')\")\"\nfi\nif [[ -z \"$BUNDLE_COMMAND\" ]]; then\n  # Default Expo CLI command for bundling\n  export BUNDLE_COMMAND=\"export:embed\"\nfi\n\n/bin/sh `\"$NODE_BINARY\" --print \"require('path').dirname(require.resolve('@sentry/react-native/package.json')) + '/scripts/sentry-xcode.sh'\"` `\"$NODE_BINARY\" --print \"require('path').dirname(require.resolve('react-native/package.json')) + '/scripts/react-native-xcode.sh'\"`\n";
+			shellScript = "if [[ -f \"$PODS_ROOT/../.xcode.env\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env\"\nfi\nif [[ -f \"$PODS_ROOT/../.xcode.env.local\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env.local\"\nfi\n\n# The project root by default is one level up from the ios directory\n# Test builds upload no source maps to Sentry\nif [[ \"$CONFIGURATION\" = \"Test\" ]]; then\n  export SENTRY_DISABLE_AUTO_UPLOAD=true\nfi\n\nexport PROJECT_ROOT=\"$PROJECT_DIR\"/..\n\nif [[ \"$CONFIGURATION\" = *Debug* ]]; then\n  export SKIP_BUNDLING=1\nfi\nif [[ -z \"$ENTRY_FILE\" ]]; then\n  # Set the entry JS file using the bundler's entry resolution.\n  export ENTRY_FILE=\"$(\"$NODE_BINARY\" -e \"require('expo/scripts/resolveAppEntry')\" \"$PROJECT_ROOT\" ios absolute | tail -n 1)\"\nfi\n\nif [[ -z \"$CLI_PATH\" ]]; then\n  # Use Expo CLI\n  export CLI_PATH=\"$(\"$NODE_BINARY\" --print \"require.resolve('@expo/cli')\")\"\nfi\nif [[ -z \"$BUNDLE_COMMAND\" ]]; then\n  # Default Expo CLI command for bundling\n  export BUNDLE_COMMAND=\"export:embed\"\nfi\n\n/bin/sh `\"$NODE_BINARY\" --print \"require('path').dirname(require.resolve('@sentry/react-native/package.json')) + '/scripts/sentry-xcode.sh'\"` `\"$NODE_BINARY\" --print \"require('path').dirname(require.resolve('react-native/package.json')) + '/scripts/react-native-xcode.sh'\"`\n";
 		};
 		085B7CE994A953E0D75AFD27 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -353,7 +363,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ \"$CONFIGURATION\" != \"Debug\" ]; then\n    /bin/sh ../../node_modules/@sentry/react-native/scripts/sentry-xcode-debug-files.sh #Updated path for monorepo\nelse\n  echo \"--- LOG: Debug mode, skipping Sentry build phase\"\nfi\n\n\n";
+			shellScript = "if [ \"$CONFIGURATION\" != \"Debug\" ] && [ \"$CONFIGURATION\" != \"Test\" ]; then\n    /bin/sh ../../node_modules/@sentry/react-native/scripts/sentry-xcode-debug-files.sh #Updated path for monorepo\nelse\n  echo \"--- LOG: Debug mode, skipping Sentry build phase\"\nfi\n\n\n";
 		};
 		DB37362F8A1015FE818B562C /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -499,6 +509,101 @@
 				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Release;
+		};
+		1F836F0FF0203E4E1655DCAD /* Test */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CC = "";
+				CCACHE_BINARY = /opt/homebrew/bin/ccache;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = YES;
+				CXX = "";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = i386;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					_LIBCPP_ENABLE_CXX17_REMOVED_UNARY_BINARY_FUNCTION,
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"${PODS_CONFIGURATION_BUILD_DIR}/ReactCommon/ReactCommon.framework/Headers",
+					"${PODS_CONFIGURATION_BUILD_DIR}/ReactCommon/ReactCommon.framework/Headers/react/nativemodule/core",
+					"${PODS_CONFIGURATION_BUILD_DIR}/React-runtimeexecutor/React_runtimeexecutor.framework/Headers",
+					"${PODS_CONFIGURATION_BUILD_DIR}/React-runtimeexecutor/React_runtimeexecutor.framework/Headers/platform/ios",
+					"${PODS_CONFIGURATION_BUILD_DIR}/ReactCommon-Samples/ReactCommon_Samples.framework/Headers",
+					"${PODS_CONFIGURATION_BUILD_DIR}/ReactCommon-Samples/ReactCommon_Samples.framework/Headers/platform/ios",
+					"${PODS_CONFIGURATION_BUILD_DIR}/React-Fabric/React_Fabric.framework/Headers/react/renderer/components/view/platform/cxx",
+					"${PODS_CONFIGURATION_BUILD_DIR}/React-NativeModulesApple/React_NativeModulesApple.framework/Headers",
+					"${PODS_CONFIGURATION_BUILD_DIR}/React-graphics/React_graphics.framework/Headers",
+					"${PODS_CONFIGURATION_BUILD_DIR}/React-graphics/React_graphics.framework/Headers/react/renderer/graphics/platform/ios",
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
+				LD = "";
+				LDPLUSPLUS = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					/usr/lib/swift,
+					"$(inherited)",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"\"$(SDKROOT)/usr/lib/swift\"",
+					"\"$(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME)\"",
+					"\"$(inherited)\"",
+				);
+				MTL_ENABLE_DEBUG_INFO = NO;
+				OTHER_CFLAGS = "$(inherited)";
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-DFOLLY_NO_CONFIG",
+					"-DFOLLY_MOBILE=1",
+					"-DFOLLY_USE_LIBCPP=1",
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					" ",
+				);
+				PRODUCT_NAME = "PoliTO Students";
+				REACT_NATIVE_PATH = "${PODS_ROOT}/../../../node_modules/react-native";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				USE_HERMES = true;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Test;
 		};
 		83CBBA201A601CBA00E9B192 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -695,6 +800,44 @@
 			};
 			name = Release;
 		};
+		A3C8FBFBF3181A876900C1FD /* Test */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 7F961C2F5FA5368E03AEA2FA /* Pods-students.test.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIconTest;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = students/studentsTest.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1090501;
+				DEVELOPMENT_TEAM = T7U74299G3;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				INFOPLIST_FILE = students/TestInfo.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Students test";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.9.5;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+					"-lc++",
+				);
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
+				PRODUCT_BUNDLE_IDENTIFIER = com.supertost100.studentstest;
+				PRODUCT_NAME = students;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Test;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -703,6 +846,7 @@
 			buildConfigurations = (
 				13B07F941A680F5B00A75B9A /* Debug */,
 				13B07F951A680F5B00A75B9A /* Release */,
+				A3C8FBFBF3181A876900C1FD /* Test */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -712,6 +856,7 @@
 			buildConfigurations = (
 				83CBBA201A601CBA00E9B192 /* Debug */,
 				83CBBA211A601CBA00E9B192 /* Release */,
+				1F836F0FF0203E4E1655DCAD /* Test */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

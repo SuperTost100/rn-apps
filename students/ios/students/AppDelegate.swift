@@ -74,6 +74,9 @@ class ReactNativeDelegate: ExpoReactNativeFactoryDelegate {
 
   override func customize(_ rootView: UIView) {
     super.customize(rootView)
-    RNBootSplash.initWithStoryboard("BootSplash", rootView: rootView)
+    // The launch screen named in Info.plist: test builds have their own,
+    // without the university's logo
+    let storyboard = Bundle.main.object(forInfoDictionaryKey: "UILaunchStoryboardName") as? String
+    RNBootSplash.initWithStoryboard(storyboard ?? "BootSplash", rootView: rootView)
   }
 }

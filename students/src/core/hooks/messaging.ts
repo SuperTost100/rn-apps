@@ -20,6 +20,7 @@ import {
 } from '@react-native-firebase/messaging';
 import { useQueryClient } from '@tanstack/react-query';
 
+import { hasPushNotifications } from '../../config/testBuild';
 import {
   MESSAGES_QUERY_KEY,
   NOTIFICATIONS_QUERY_KEY,
@@ -46,6 +47,9 @@ export const useInitFirebaseMessaging = () => {
     [queryClient],
   );
   useEffect(() => {
+    // The iOS test build cannot receive push notifications: it asks for no
+    // notification permission and registers no listener
+    if (!hasPushNotifications) return;
     let cancelled = false;
     const unsubscribers: (() => void)[] = [];
     // The setup is async, so a listener may be added after the cleanup ran
