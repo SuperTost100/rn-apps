@@ -83,17 +83,19 @@ export const useInboxActions = () => {
 
   const markItemRead = useCallback(
     async (item: InboxItem, refresh = true) => {
+      // A tap or "Mark all as read": sent even if sent before
+      const options = { refresh, force: true };
       const calls: Promise<boolean>[] = [];
       const { unreadNotificationIds, messageId, ticketId, ticketUnread } =
         item.read;
       if (unreadNotificationIds.length) {
-        calls.push(markAsRead.notifications(unreadNotificationIds, refresh));
+        calls.push(markAsRead.notifications(unreadNotificationIds, options));
       }
       if (messageId !== undefined && item.unread) {
-        calls.push(markAsRead.message(messageId, refresh));
+        calls.push(markAsRead.message(messageId, options));
       }
       if (ticketId !== undefined && ticketUnread) {
-        calls.push(markAsRead.ticket(ticketId));
+        calls.push(markAsRead.ticket(ticketId, options));
       }
       const results = await Promise.all(calls);
       return results.every(Boolean);

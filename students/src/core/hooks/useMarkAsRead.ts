@@ -17,25 +17,38 @@ import {
 import { TICKETS_QUERY_KEY, TICKET_QUERY_PREFIX } from '../queries/ticketHooks';
 
 /**
- * Read calls already sent in this session, by `n<id>`, `m<id>` or `t<id>`.
- * A call is sent once: when the server still reports the item unread after
- * answering, the next render does not send it again (the loop of hundreds of
- * identical PUT /notifications/{id}/read). A failed call is removed, so a
- * later visit can try again.
+ * Read calls by `n<id>`, `m<id>` or `t<id>`: in flight, and answered in this
+ * session. When the server still reports an item unread after answering,
+ * screens that mark items read by themselves do not send the call again on
+ * the next render (the loop of hundreds of identical
+ * PUT /notifications/{id}/read). A tap or "Mark all as read" sends it again
+ * (`force`), once. A failed call can always be sent again.
  */
-const sent = new Set<string>();
+const pending = new Set<string>();
+const done = new Set<string>();
 
-const once = (key: string, call: () => Promise<unknown>) => {
-  if (sent.has(key)) return null;
-  sent.add(key);
+const once = (key: string, call: () => Promise<unknown>, force = false) => {
+  if (pending.has(key) || (!force && done.has(key))) return null;
+  pending.add(key);
   return call().then(
-    () => true,
     () => {
-      sent.delete(key);
+      pending.delete(key);
+      done.add(key);
+      return true;
+    },
+    () => {
+      pending.delete(key);
       return false;
     },
   );
 };
+
+export interface MarkAsReadOptions {
+  /** Refresh the list afterwards. False when the caller does it once for a batch */
+  refresh?: boolean;
+  /** Send the call even if it was answered earlier in the session: a tap */
+  force?: boolean;
+}
 
 const setNotificationsRead = (client: QueryClient, ids: Set<number>) =>
   client.setQueryData<NotificationsGetNotifications200Response>(
@@ -58,20 +71,24 @@ const setTicketRead = (client: QueryClient, ticketId: number) => {
 
 /**
  * Marks notifications, messages and tickets as read: one request per item,
- * never repeated in a session, with the cached lists updated at once so
- * badges and rows change before the server answers.
- * Each function resolves to false when a request failed. With `refresh`
- * false the caller refreshes the lists itself, once for a batch.
+ * with the cached lists updated at once so badges and rows change before the
+ * server answers. Each function resolves to false when a request failed.
  */
 export const useMarkAsRead = () => {
   const client = useQueryClient();
 
   return useMemo(() => {
-    const notifications = async (ids: number[], refresh = true) => {
+    const notifications = async (
+      ids: number[],
+      { refresh = true, force = false }: MarkAsReadOptions = {},
+    ) => {
       const calls = ids
         .map(id =>
-          once(`n${id}`, () =>
-            new StudentApi().markNotificationAsRead({ notificationId: id }),
+          once(
+            `n${id}`,
+            () =>
+              new StudentApi().markNotificationAsRead({ notificationId: id }),
+            force,
           ),
         )
         .filter((c): c is Promise<boolean> => !!c);
@@ -85,9 +102,14 @@ export const useMarkAsRead = () => {
       return results.every(Boolean);
     };
 
-    const message = async (messageId: number, refresh = true) => {
-      const call = once(`m${messageId}`, () =>
-        new StudentApi().markMessageAsRead({ messageId }),
+    const message = async (
+      messageId: number,
+      { refresh = true, force = false }: MarkAsReadOptions = {},
+    ) => {
+      const call = once(
+        `m${messageId}`,
+        () => new StudentApi().markMessageAsRead({ messageId }),
+        force,
       );
       if (!call) return true;
       client.setQueryData<Message[]>(MESSAGES_QUERY_KEY, prev =>
@@ -103,9 +125,14 @@ export const useMarkAsRead = () => {
       return ok;
     };
 
-    const ticket = async (ticketId: number) => {
-      const call = once(`t${ticketId}`, () =>
-        new TicketsApi().markTicketAsRead({ ticketId }),
+    const ticket = async (
+      ticketId: number,
+      { force = false }: MarkAsReadOptions = {},
+    ) => {
+      const call = once(
+        `t${ticketId}`,
+        () => new TicketsApi().markTicketAsRead({ ticketId }),
+        force,
       );
       if (!call) return true;
       setTicketRead(client, ticketId);
