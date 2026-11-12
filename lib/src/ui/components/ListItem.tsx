@@ -108,10 +108,10 @@ export const ListItem = ({
   accessibilityState,
   ...rest
 }: ListItemProps) => {
-  const { colors } = useTheme();
+  const { colors, textVariants } = useTheme();
   const { t } = useTranslation();
   const styles = useStylesheet(createStyles);
-  const { isLarge } = useTextScale();
+  const { isLarge, scale } = useTextScale();
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
   const reportLeading = useContext(ListRowContext);
   const hasLeadingItem = !!leadingItem;
@@ -136,7 +136,17 @@ export const ListItem = ({
   const titleElement =
     typeof title === 'string' ? (
       <View style={styles.titleRow}>
-        {unread && <UnreadBadge />}
+        {/* The dot sits on the first line of a title that wraps */}
+        {unread && (
+          <View
+            style={[
+              styles.unreadLine,
+              { height: textVariants.title.lineHeight * scale },
+            ]}
+          >
+            <UnreadBadge />
+          </View>
+        )}
         <Text
           variant="title"
           weight={unread ? 'bold' : undefined}
@@ -303,8 +313,11 @@ const createStyles = ({ controls, layout, spacing }: Theme) =>
     },
     titleRow: {
       flexDirection: 'row',
-      alignItems: 'center',
+      alignItems: 'flex-start',
       gap: spacing[2],
+    },
+    unreadLine: {
+      justifyContent: 'center',
     },
     title: {
       flexShrink: 1,

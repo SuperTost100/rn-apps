@@ -92,7 +92,7 @@ export const SectionHeader = ({
   return (
     <View style={styles.container}>
       <View
-        style={styles.titleContainer}
+        style={[styles.titleContainer, isLarge && styles.titleContainerLarge]}
         accessible={groupTitle}
         accessibilityRole={groupTitle ? 'header' : undefined}
         accessibilityLabel={groupTitle ? accessibilityLabel : undefined}
@@ -104,6 +104,7 @@ export const SectionHeader = ({
             style={[styles.title, titleStyle]}
             accessibilityRole={groupTitle ? undefined : 'header'}
             accessibilityLabel={groupTitle ? undefined : accessibilityLabel}
+            keepWords
             {...ellipsis}
           >
             {title}
@@ -157,6 +158,11 @@ const createStyles = ({ spacing, colors, layout }: Theme) =>
     titleContainer: {
       flex: 1,
       minWidth: '33%',
+    },
+    // At large text a third is narrower than one long word, which would
+    // break mid-word: the link moves under the title sooner
+    titleContainerLarge: {
+      minWidth: '66%',
     },
     // The 48 px target reaches past the title line, so the label sits on it
     link: {

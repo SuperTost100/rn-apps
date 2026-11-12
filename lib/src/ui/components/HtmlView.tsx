@@ -325,7 +325,13 @@ export const HtmlView = ({ variant, props }: HtmlViewProps) => {
   const { colors, palettes, spacing, fontSizes } = useTheme();
   const { width } = useWindowDimensions();
   const styles = useStylesheet(createStyles);
-  const { isLarge } = useTextScale();
+  const { isLarge, scale } = useTextScale();
+  // Links and headings are drawn by the library, not by the renderers
+  // below, so they get the in-app text size here
+  const scaled = <T extends object>(style: T & { fontSize?: number }) => ({
+    ...style,
+    fontSize: (style.fontSize ?? fontSizes.md) * scale,
+  });
 
   const processedSource =
     variant === 'longProse' || (variant === 'cta' && isLarge)
@@ -374,13 +380,13 @@ export const HtmlView = ({ variant, props }: HtmlViewProps) => {
         p: styles.paragraph,
         b: styles.bold,
         img: styles.image,
-        a: styles.link,
-        h1: styles.h1,
-        h2: styles.h2,
-        h3: styles.h3,
-        h4: styles.h4,
-        h5: styles.h5,
-        h6: styles.h6,
+        a: scaled(styles.link),
+        h1: scaled(styles.h1),
+        h2: scaled(styles.h2),
+        h3: scaled(styles.h3),
+        h4: scaled(styles.h4),
+        h5: scaled(styles.h5),
+        h6: scaled(styles.h6),
       }}
       ignoredStyles={
         variant === 'onboarding'

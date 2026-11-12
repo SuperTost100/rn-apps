@@ -80,6 +80,18 @@ const PersonSkeleton = ({ label }: { label: string }) => {
   );
 };
 
+/**
+ * An address breaks only after the "@": the dots are joined to their
+ * neighbours (word joiners), so ".it" never ends up alone on a line. The
+ * row's accessibility label keeps the plain address.
+ */
+const emailForDisplay = (email: string) => {
+  const at = email.lastIndexOf('@');
+  const join = (part: string) => part.replace(/\./g, '\u2060.\u2060');
+  if (at < 0) return join(email);
+  return `${join(email.slice(0, at))}@\u200B${join(email.slice(at + 1))}`;
+};
+
 export const PersonScreen = ({
   route,
   navigation,
@@ -224,7 +236,7 @@ export const PersonScreen = ({
                   <ListItem
                     isAction
                     leadingItem={icon('mail')}
-                    title={person.email}
+                    title={emailForDisplay(person.email)}
                     titleProps={{ numberOfLines: 3 }}
                     subtitle={t('common.email')}
                     accessibilityLabel={t('serviceInfo.person.write', {

@@ -16,8 +16,9 @@ interface Props {
  * to render at once: the first row has the card's top corners and the space
  * above a card, the last one its bottom corners and the space below, and a
  * divider runs between rows as in List. In dark mode the hairline border
- * goes round the whole card. Light mode has no shadow here: a shadow per
- * row would show at every join.
+ * goes round the whole card. Light mode has no shadow here, because a
+ * shadow per row would show at every join: a hairline in the divider colour
+ * draws the card's edge instead, where a Card has its soft shadow.
  */
 export const CardRow = ({
   index,
@@ -28,8 +29,8 @@ export const CardRow = ({
   const { colors, shapes, layout, controls, spacing } = useTheme();
   const first = index === 0;
   const last = index === count - 1;
-  const border =
-    colors.cardBorder === 'transparent' ? 0 : StyleSheet.hairlineWidth;
+  const lightMode = colors.cardBorder === 'transparent';
+  const border = StyleSheet.hairlineWidth;
   return (
     <View
       style={{
@@ -37,7 +38,7 @@ export const CardRow = ({
         marginTop: first ? spacing[2] : 0,
         marginBottom: last ? spacing[2] : 0,
         backgroundColor: colors.surface,
-        borderColor: colors.cardBorder,
+        borderColor: lightMode ? colors.divider : colors.cardBorder,
         borderLeftWidth: border,
         borderRightWidth: border,
         borderTopWidth: first ? border : 0,
