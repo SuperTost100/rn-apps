@@ -158,7 +158,7 @@
     "emptyWeek": "You have no events available during this week",
     "newBooking": "New booking",
     "sectionTitle": "Active",
-    "title": "Bookings"
+    "title": "Room bookings"
   },
   "colors": {
     "amber": "Amber",
@@ -714,10 +714,10 @@
     "failedLost": "No answer came from the server, and the ticket is not in your list. Check your connection and send it again: what you wrote is still here."
   },
   "degreeCourseScreen": {
-    "classroomExercise": "Classroom excercise",
+    "classroomExercise": "Classroom exercise",
     "examMode": "Exam mode",
     "hours": "{{hours}} hours",
-    "labExercise": "Lab excercise",
+    "labExercise": "Lab exercise",
     "lecture": "Lecture",
     "noStaff": "No teacher is associated to this course",
     "period": "Period",
@@ -910,7 +910,7 @@
     "location": "Company location: ",
     "requirements": "Requirements",
     "salary": "Salary: ",
-    "title": "Job offers",
+    "title": "Job offer",
     "url": "Website: "
   },
   "jobOffersScreen": {

@@ -159,7 +159,7 @@
     "emptyWeek": "Non hai eventi disponibili in questa settimana",
     "newBooking": "Nuova prenotazione",
     "sectionTitle": "Attive",
-    "title": "Prenotazioni"
+    "title": "Prenotazione aule"
   },
   "colors": {
     "amber": "Ambra",
@@ -920,7 +920,7 @@
     "location": "Sede di lavoro: ",
     "requirements": "Requisiti",
     "salary": "Retribuzione: ",
-    "title": "Offerte di lavoro",
+    "title": "Offerta di lavoro",
     "url": "Sito web: "
   },
   "jobOffersScreen": {

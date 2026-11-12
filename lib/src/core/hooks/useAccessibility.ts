@@ -10,7 +10,8 @@ export const useAccessibility = () => {
         count: index + 1,
         total: total,
       });
-      return `${text}. ${extraText ?? ''}`;
+      // Callers join it with the row's text: no trailing full stop then
+      return extraText ? `${text}. ${extraText}` : text;
     },
     [t],
   );

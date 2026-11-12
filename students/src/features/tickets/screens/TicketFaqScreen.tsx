@@ -33,7 +33,10 @@ export const TicketFaqScreen = ({ route, navigation }: Props) => {
         {getHtmlTextContent(faq.question)}
       </Text>
       <Card padded>
-        <HtmlView props={{ source: { html: faq.answer } }} variant="prose" />
+        <HtmlView
+          props={{ source: { html: faq.answer }, baseStyle: { padding: 0 } }}
+          variant="prose"
+        />
       </Card>
       <View style={styles.pad}>
         <Text variant="secondaryText" style={styles.notFound}>

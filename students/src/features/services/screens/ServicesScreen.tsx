@@ -114,9 +114,14 @@ export const ServicesScreen = () => {
   ]);
 
   const groups = useMemo(() => {
-    const unreadReplies = (ticketsQuery.data ?? []).reduce(
-      (sum, ticket) => sum + (ticket.unreadCount ?? 0),
-      0,
+    // The tickets say how many replies are unread; a push that arrived
+    // before the list was fetched again counts too
+    const unreadReplies = Math.max(
+      (ticketsQuery.data ?? []).reduce(
+        (sum, ticket) => sum + (ticket.unreadCount ?? 0),
+        0,
+      ),
+      getUnreadsCount(['services', 'tickets']) ?? 0,
     );
     const now = Date.now();
     const upcomingBookings = bookingsQuery.data?.filter(
@@ -168,7 +173,7 @@ export const ServicesScreen = () => {
       },
       {
         id: 'news',
-        name: t('newsScreen.title'),
+        name: t('serviceInfo.news.title'),
         icon: 'news',
         linkTo: { screen: 'News' },
         unread: unreadNews,
@@ -186,7 +191,7 @@ export const ServicesScreen = () => {
       },
       {
         id: 'offering',
-        name: t('offeringScreen.title'),
+        name: t('serviceInfo.catalogue.title'),
         icon: 'bookopen',
         linkTo: { screen: 'Offering' },
       },

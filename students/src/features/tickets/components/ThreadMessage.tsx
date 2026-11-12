@@ -83,7 +83,7 @@ export const ThreadMessage = ({
         </View>
         {attachments}
         <Text
-          variant="caption"
+          variant="secondaryText"
           style={[
             styles.time,
             {

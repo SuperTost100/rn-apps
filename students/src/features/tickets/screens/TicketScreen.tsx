@@ -121,6 +121,7 @@ export const TicketScreen = ({ route, navigation }: Props) => {
   const [draft, setDraft] = useState('');
   const [draftAttachment, setDraftAttachment] = useState<Attachment>();
   const [localReplies, setLocalReplies] = useState<LocalReply[]>([]);
+  const listRef = useRef<FlatList<ThreadEntry>>(null);
 
   // Runs again whenever the notifications refresh; useMarkAsRead sends each
   // read call once, so a server that still reports the notification unread
@@ -248,6 +249,8 @@ export const TicketScreen = ({ route, navigation }: Props) => {
       state: 'pending',
     };
     setLocalReplies(list => [...list, local]);
+    // The list is inverted: offset 0 is the newest message
+    listRef.current?.scrollToOffset({ offset: 0, animated: true });
     setDraft('');
     setDraftAttachment(undefined);
     send(local);
@@ -473,6 +476,7 @@ export const TicketScreen = ({ route, navigation }: Props) => {
   return (
     <Animated.View style={[GlobalStyles.grow, animatedBottomPadding]}>
       <FlatList
+        ref={listRef}
         style={GlobalStyles.grow}
         inverted
         keyboardShouldPersistTaps="handled"
@@ -567,7 +571,10 @@ export const TicketScreen = ({ route, navigation }: Props) => {
 
 const createStyles = ({ spacing }: Theme) =>
   StyleSheet.create({
+    // Inverted: flex-end keeps a short thread under the header
     thread: {
+      flexGrow: 1,
+      justifyContent: 'flex-end',
       paddingBottom: spacing[4],
       gap: spacing[3],
     },

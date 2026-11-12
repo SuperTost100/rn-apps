@@ -73,7 +73,10 @@ export const FaqSuggestions = ({ faqs, onOpen }: Props) => {
                 {isOpen && (
                   <View style={styles.answer}>
                     <HtmlView
-                      props={{ source: { html: faq.answer } }}
+                      props={{
+                        source: { html: faq.answer },
+                        baseStyle: { padding: 0 },
+                      }}
                       variant="prose"
                     />
                     <TextButton onPress={() => onOpen(faq)} style={styles.open}>
