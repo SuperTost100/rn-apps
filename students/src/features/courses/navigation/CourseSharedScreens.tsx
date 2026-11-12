@@ -10,7 +10,6 @@ import { CourseAssignmentUploadScreen } from '../screens/CourseAssignmentUploadS
 import { CourseColorPickerScreen } from '../screens/CourseColorPickerScreen';
 import { CourseGuideScreen } from '../screens/CourseGuideScreen';
 import { CourseHideEventScreen } from '../screens/CourseHideEventScreen';
-import { CourseIconPickerScreen } from '../screens/CourseIconPickerScreen';
 import { CourseNoAssignmentScreen } from '../screens/CourseNoAssignmentScreen';
 import { CoursePreferencesScreen } from '../screens/CoursePreferencesScreen';
 import { CourseVideolectureScreen } from '../screens/CourseVideolectureScreen';
@@ -56,7 +55,6 @@ export interface CourseSharedScreensParamList extends ParamListBase {
   CourseAssignmentPdfCreation: { courseId: number; firstImageUri: string };
   CourseAssignmentUpload: { courseId: number };
   CourseAssignmentUploadConfirmation: { courseId: number; file: Assignment };
-  CourseIconPicker: { courseId: number; uniqueShortcode: string };
   CourseColorPicker: { courseId: number; uniqueShortcode: string };
   CourseHideEvent: { courseId: number; uniqueShortcode: string };
 }
@@ -103,7 +101,7 @@ export const CourseSharedScreens = () => {
         }
         options={{
           headerBackTitle: t('common.course'),
-          headerTitle: t('common.notice'),
+          headerTitle: t('course.announcements.one'),
         }}
       />
       <Stack.Screen
@@ -112,15 +110,6 @@ export const CourseSharedScreens = () => {
         getId={({ params }: { params: any }) => `${params.courseId}`}
         options={{
           title: t('navigation.courseSettings'),
-        }}
-      />
-      <Stack.Screen
-        name="CourseIconPicker"
-        component={CourseIconPickerScreen}
-        getId={({ params }: { params: any }) => `${params.courseId}`}
-        options={{
-          title: t('courseIconPickerScreen.title'),
-          headerSearchBarOptions: {},
         }}
       />
       <Stack.Screen
@@ -194,7 +183,7 @@ export const CourseSharedScreens = () => {
         component={CourseColorPickerScreen}
         getId={({ params }) => `${params.courseId}`}
         options={{
-          title: t('courseColorPickerScreen.title'),
+          title: t('course.settings.customColour'),
         }}
       />
     </>
