@@ -68,7 +68,7 @@ export const UserQrModal = ({
   );
 };
 
-const createStyles = ({ dark, spacing, fontSizes, palettes }: Theme) =>
+const createStyles = ({ colors, spacing, fontSizes }: Theme) =>
   StyleSheet.create({
     name: {
       paddingRight: spacing[8],
@@ -80,7 +80,7 @@ const createStyles = ({ dark, spacing, fontSizes, palettes }: Theme) =>
       marginTop: spacing[1],
       fontFamily: 'Montserrat-SemiBold',
       fontSize: fontSizes.xs,
-      color: palettes.gray[dark ? 400 : 600],
+      color: colors.secondaryText,
     },
     qrColumn: {
       alignSelf: 'center',

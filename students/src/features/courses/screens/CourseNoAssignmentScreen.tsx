@@ -54,7 +54,7 @@ export const CourseNoAssignmentScreen = ({ route }: Props) => {
   } = route.params;
   const { t } = useTranslation();
   const styles = useStylesheet(createStyles);
-  const { colors, fontSizes, spacing, palettes, dark } = useTheme();
+  const { colors, fontSizes, spacing } = useTheme();
   const coursesQuery = useGetCourses();
   const [isExpanded, setIsExpanded] = useState(false);
   const expanded = useSharedValue(false);
@@ -165,10 +165,7 @@ export const CourseNoAssignmentScreen = ({ route }: Props) => {
                 accessibilityState={{ expanded: isExpanded }}
                 trailingItem={
                   <Animated.View style={animatedChevron}>
-                    <Icon
-                      icon={faChevronDown}
-                      color={dark ? palettes.gray[400] : colors.secondaryText}
-                    />
+                    <Icon icon={faChevronDown} color={colors.secondaryText} />
                   </Animated.View>
                 }
               />
@@ -238,14 +235,7 @@ export const CourseNoAssignmentScreen = ({ route }: Props) => {
   );
 };
 
-const createStyles = ({
-  spacing,
-  colors,
-  palettes,
-  dark,
-  fontSizes,
-  fontFamilies,
-}: Theme) =>
+const createStyles = ({ spacing, colors, fontSizes, fontFamilies }: Theme) =>
   StyleSheet.create({
     card: {
       display: 'flex',
@@ -275,6 +265,6 @@ const createStyles = ({
     editionsList: {
       overflow: 'hidden',
       borderRadius: spacing[2],
-      backgroundColor: dark ? colors.background : palettes.gray[100],
+      backgroundColor: colors.surfaceSunken,
     },
   });

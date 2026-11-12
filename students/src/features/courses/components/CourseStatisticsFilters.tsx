@@ -133,7 +133,7 @@ export const CourseStatisticsFilters = ({
   );
 };
 
-const createStyles = ({ spacing, palettes }: Theme) =>
+const createStyles = ({ spacing, colors }: Theme) =>
   StyleSheet.create({
     metricsCard: {
       flexDirection: 'row',
@@ -155,7 +155,7 @@ const createStyles = ({ spacing, palettes }: Theme) =>
       marginRight: spacing[2],
     },
     periodDropdownIcon: {
-      color: palettes.secondary['500'],
+      color: colors.link,
     },
     periodDropdownChevron: {
       marginTop: spacing[4],

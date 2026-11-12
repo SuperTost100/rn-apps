@@ -61,7 +61,7 @@ export const CareerScreenModal = ({
   );
 };
 
-const createStyles = ({ dark, fontSizes, colors, spacing }: Theme) =>
+const createStyles = ({ fontSizes, colors, spacing }: Theme) =>
   StyleSheet.create({
     container: {
       backgroundColor: colors.surface,
@@ -69,7 +69,7 @@ const createStyles = ({ dark, fontSizes, colors, spacing }: Theme) =>
     header: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: dark ? colors.surfaceDark : colors.background,
+      backgroundColor: colors.surfaceSunken,
       paddingVertical: spacing[2],
     },
     headerTitle: {

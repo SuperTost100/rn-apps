@@ -45,7 +45,7 @@ interface CourseSection {
 
 const HiddenEventItem = ({ item, onToggle }: HiddenEventItemProps) => {
   const styles = useStylesheet(createStyles);
-  const { palettes, dark } = useTheme();
+  const { colors } = useTheme();
   const { t } = useTranslation();
   const { data: place, isLoading: placeLoading } = useGetPlace(item.room);
 
@@ -61,7 +61,6 @@ const HiddenEventItem = ({ item, onToggle }: HiddenEventItemProps) => {
         onPress={() => onToggle(item)}
         isChecked={item.restoreVisibility}
         containerStyle={styles.checkbox}
-        iconColor={palettes.navy[dark ? '50' : '400']}
         accessibilityLabel={
           item.type === 'recurrence'
             ? `${getLongDayTime(item.day)} ${item.start}-${item.end}`
@@ -78,12 +77,8 @@ const HiddenEventItem = ({ item, onToggle }: HiddenEventItemProps) => {
           {item.type === 'recurrence' && (
             <Badge
               text={t('common.series')}
-              backgroundColor={
-                !dark ? palettes.lightBlue[50] : palettes.navy[600]
-              }
-              foregroundColor={
-                !dark ? palettes.lightBlue[600] : palettes.lightBlue[300]
-              }
+              backgroundColor={colors.infoBg}
+              foregroundColor={colors.infoText}
               icon={faRepeat}
               style={{ borderRadius: 6 }}
             />
@@ -302,7 +297,7 @@ export const HiddenEventsScreen = ({ navigation }: Props) => {
   );
 };
 
-const createStyles = ({ spacing, fontSizes, palettes, dark }: Theme) =>
+const createStyles = ({ spacing, fontSizes, colors }: Theme) =>
   StyleSheet.create({
     emptyContainer: {
       flex: 1,
@@ -312,7 +307,7 @@ const createStyles = ({ spacing, fontSizes, palettes, dark }: Theme) =>
     },
     emptyText: {
       textAlign: 'center',
-      color: palettes.navy[dark ? '400' : '600'],
+      color: colors.secondaryText,
     },
     sectionHeader: {
       paddingHorizontal: spacing[4],
@@ -350,6 +345,6 @@ const createStyles = ({ spacing, fontSizes, palettes, dark }: Theme) =>
       marginBottom: spacing[1.5],
     },
     textSmallCheckbox: {
-      color: palettes.navy[dark ? '50' : '800'],
+      color: colors.heading,
     },
   });

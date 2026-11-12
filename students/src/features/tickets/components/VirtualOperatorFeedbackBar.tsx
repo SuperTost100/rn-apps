@@ -30,7 +30,7 @@ export const VirtualOperatorFeedbackBar = ({
 }: VirtualOperatorFeedbackBarProps) => {
   const { t } = useTranslation();
   const styles = useStylesheet(createStyles);
-  const { colors, palettes } = useTheme();
+  const { colors } = useTheme();
   const { mutateAsync: giveFeedback, isPending } = useGiveTicketReplyFeedback(
     ticketId,
     replyId,
@@ -73,7 +73,7 @@ export const VirtualOperatorFeedbackBar = ({
             accessibilityLabel={t('ticketScreen.feedbackNo')}
             onPress={() => handleFeedback(false)}
             disabled={isPending}
-            color={palettes.danger[600]}
+            color={colors.dangerText}
             size={20}
             noPadding
             style={styles.thumbsDownButton}
@@ -83,7 +83,7 @@ export const VirtualOperatorFeedbackBar = ({
             accessibilityLabel={t('ticketScreen.feedbackYes')}
             onPress={() => handleFeedback(true)}
             disabled={isPending}
-            color={colors.white}
+            color={colors.onPrimary}
             size={20}
             noPadding
             style={styles.thumbsUpButton}
@@ -94,28 +94,28 @@ export const VirtualOperatorFeedbackBar = ({
   );
 };
 
-const createStyles = ({ spacing, palettes }: Theme) =>
+const createStyles = ({ spacing, colors }: Theme) =>
   StyleSheet.create({
     container: {
-      backgroundColor: palettes.gray[100],
+      backgroundColor: colors.surfaceSunken,
       paddingHorizontal: spacing[4],
       paddingTop: spacing[2],
       paddingBottom: spacing[4],
       gap: spacing[3],
     },
     title: {
-      color: palettes.primary[700],
+      color: colors.heading,
       fontSize: 14,
       fontWeight: '600',
     },
     description: {
       fontSize: 12,
       lineHeight: 18,
-      color: palettes.gray[600],
+      color: colors.secondaryText,
     },
     question: {
       flex: 1,
-      color: palettes.primary[700],
+      color: colors.heading,
       fontSize: 14,
       fontWeight: '600',
     },
@@ -127,9 +127,9 @@ const createStyles = ({ spacing, palettes }: Theme) =>
       gap: spacing[3],
     },
     thumbsDownButton: {
-      backgroundColor: palettes.danger[50],
+      backgroundColor: colors.dangerBg,
       borderWidth: 1,
-      borderColor: palettes.danger[600],
+      borderColor: colors.dangerText,
       width: 77.5,
       height: 45,
       borderRadius: 12,
@@ -138,7 +138,7 @@ const createStyles = ({ spacing, palettes }: Theme) =>
       justifyContent: 'center',
     },
     thumbsUpButton: {
-      backgroundColor: palettes.primary[500],
+      backgroundColor: colors.primary,
       width: 77.5,
       height: 45,
       borderRadius: 12,

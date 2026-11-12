@@ -49,7 +49,7 @@ const enum CheckboxState {
 
 const HideEventCard = ({ item, updateItemVisibility }: HideEventProps) => {
   const styles = useStylesheet(createStyles);
-  const { palettes, dark } = useTheme();
+  const { colors } = useTheme();
   const { t } = useTranslation();
   const { data: place, isLoading: placeLoading } = useGetPlace(item.room);
 
@@ -69,7 +69,6 @@ const HideEventCard = ({ item, updateItemVisibility }: HideEventProps) => {
         onPress={() => handleVisibilityChange()}
         isChecked={item.restoreVisibility}
         containerStyle={styles.checkbox}
-        iconColor={palettes.navy[dark ? '50' : '400']}
         accessibilityLabel={
           item.type === 'recurrence'
             ? `${getLongDayTime(item.day)} ${item.start}-${item.end}`
@@ -86,12 +85,8 @@ const HideEventCard = ({ item, updateItemVisibility }: HideEventProps) => {
           {item.type === 'recurrence' && (
             <Badge
               text={t('common.series')}
-              backgroundColor={
-                !dark ? palettes.lightBlue[50] : palettes.navy[600]
-              }
-              foregroundColor={
-                !dark ? palettes.lightBlue[600] : palettes.lightBlue[300]
-              }
+              backgroundColor={colors.infoBg}
+              foregroundColor={colors.infoText}
               icon={faRepeat}
               style={{ borderRadius: 6 }}
             />
@@ -110,7 +105,6 @@ const HideEventCard = ({ item, updateItemVisibility }: HideEventProps) => {
 export const CourseHideEventScreen = ({ navigation, route }: Props) => {
   const styles = useStylesheet(createStyles);
   const { t } = useTranslation();
-  const { palettes, dark } = useTheme();
   const { courses: coursesPrefs, updatePreference } =
     usePreferencesContext<AppPreferences>();
   const coursePrefs = useMemo(() => {
@@ -270,7 +264,6 @@ export const CourseHideEventScreen = ({ navigation, route }: Props) => {
                 ? faSquareMinus
                 : undefined
             }
-            iconColor={palettes.navy[dark ? '50' : '400']}
           />
           <OverviewList>
             {items.map((item, index) => (
@@ -294,7 +287,7 @@ export const CourseHideEventScreen = ({ navigation, route }: Props) => {
   );
 };
 
-const createStyles = ({ spacing, fontSizes, palettes, dark }: Theme) =>
+const createStyles = ({ spacing, fontSizes, colors }: Theme) =>
   StyleSheet.create({
     card: {
       flex: 1,
@@ -320,7 +313,7 @@ const createStyles = ({ spacing, fontSizes, palettes, dark }: Theme) =>
       marginBottom: spacing[1.5],
     },
     textSmallCheckbox: {
-      color: palettes.navy[dark ? '50' : '800'],
+      color: colors.heading,
     },
     checkbox: { marginHorizontal: 0 },
   });

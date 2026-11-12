@@ -35,7 +35,7 @@ interface DegreeTabsParamList extends ParamListBase {
 }
 const TopTabs = createMaterialTopTabNavigator<DegreeTabsParamList>();
 export const DegreeTopTabsNavigator = ({ route, navigation }: Props) => {
-  const { palettes, spacing, dark } = useTheme();
+  const { colors, spacing } = useTheme();
   const { t } = useTranslation();
   const { id: degreeId, year: initialYear } = route.params;
   const [year, setYear] = useState(initialYear);
@@ -98,7 +98,7 @@ export const DegreeTopTabsNavigator = ({ route, navigation }: Props) => {
                 <Icon
                   style={{ marginLeft: spacing[1] }}
                   icon={faAngleDown}
-                  color={dark ? palettes.text[300] : palettes.primary[600]}
+                  color={colors.link}
                   size={12}
                 />
               )}
@@ -113,9 +113,7 @@ export const DegreeTopTabsNavigator = ({ route, navigation }: Props) => {
     degreeQuery,
     displayYear,
     t,
-    dark,
-    palettes.primary,
-    palettes.text,
+    colors.link,
     yearOptions,
     accessibility?.fontSize,
   ]);

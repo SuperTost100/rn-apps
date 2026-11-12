@@ -161,7 +161,7 @@ export const RequestESCScreen = ({ navigation, ...rest }: Props) => {
   );
 };
 
-const createStyles = ({ dark, palettes, spacing, fontWeights }: Theme) =>
+const createStyles = ({ colors, spacing, fontWeights }: Theme) =>
   StyleSheet.create({
     container: {
       padding: spacing[5],
@@ -169,11 +169,11 @@ const createStyles = ({ dark, palettes, spacing, fontWeights }: Theme) =>
     card: {
       borderStyle: 'solid',
       borderWidth: 1,
-      borderColor: palettes.orange[dark ? 500 : 600],
+      borderColor: colors.warningText,
       justifyContent: 'center',
     },
     cardText: {
-      color: palettes.orange[dark ? 500 : 700],
+      color: colors.warningText,
     },
     screenTitle: {
       marginBottom: spacing[7],

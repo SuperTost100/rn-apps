@@ -81,7 +81,7 @@ export const SmartCardQrModal = ({
   );
 };
 
-const createStyles = ({ dark, spacing, fontSizes, palettes }: Theme) =>
+const createStyles = ({ colors, spacing, fontSizes }: Theme) =>
   StyleSheet.create({
     name: {
       paddingRight: spacing[8],
@@ -93,7 +93,7 @@ const createStyles = ({ dark, spacing, fontSizes, palettes }: Theme) =>
       marginTop: spacing[1],
       fontFamily: 'Montserrat-SemiBold',
       fontSize: fontSizes.xs,
-      color: palettes.gray[dark ? 400 : 600],
+      color: colors.secondaryText,
     },
     qrColumn: {
       alignSelf: 'center',
@@ -112,6 +112,6 @@ const createStyles = ({ dark, spacing, fontSizes, palettes }: Theme) =>
       fontSize: fontSizes['2xs'],
       lineHeight: fontSizes['2xs'] * 1.25,
       textTransform: 'none',
-      color: dark ? palettes.warning[500] : palettes.warning[700],
+      color: colors.warningText,
     },
   });

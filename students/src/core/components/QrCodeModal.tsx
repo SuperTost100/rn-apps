@@ -11,8 +11,6 @@ import {
   useTheme,
 } from '@polito/lib/ui';
 
-const BACKDROP_COLOR = 'rgba(0, 0, 0, 0.5)';
-
 type Props = PropsWithChildren<{
   visible?: boolean;
   onClose: () => void;
@@ -81,7 +79,7 @@ const createStyles = ({ spacing, colors }: Theme) =>
   StyleSheet.create({
     backdrop: {
       flex: 1,
-      backgroundColor: BACKDROP_COLOR,
+      backgroundColor: colors.scrim,
       justifyContent: 'center',
       alignItems: 'center',
       paddingHorizontal: spacing[5],

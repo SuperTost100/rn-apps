@@ -22,12 +22,12 @@ export const EnrolledExamChart = ({
   statistics: undefined | CourseStatistics;
   noOfSections?: number;
 }) => {
-  const { dark, palettes, colors, fontSizes, spacing } = useTheme();
+  const { palettes, colors, fontSizes, spacing } = useTheme();
   const { t } = useTranslation();
   const styles = useStylesheet(createStyles);
   const { fontWeights } = useTheme();
 
-  const selectedSwitchColor = dark ? palettes.primary[600] : colors.surface;
+  const selectedSwitchColor = colors.tabIndicator;
   const chartColors = [palettes.green[500], palettes.red[500]];
   const topLabelSpacing = spacing['1'];
   const barRadius = spacing[1];
@@ -223,6 +223,8 @@ export const EnrolledExamChart = ({
         <View style={styles.buttonSwitch}>
           <Text
             onPress={() => onChangeVisualizationMode('single')}
+            accessibilityRole="button"
+            accessibilityState={{ selected: mode === 'single' }}
             accessibilityLabel={t(
               'courseStatisticsScreen.enrolledExamVisualization.single',
             )}
@@ -237,6 +239,8 @@ export const EnrolledExamChart = ({
           </Text>
           <Text
             onPress={() => onChangeVisualizationMode('compare')}
+            accessibilityRole="button"
+            accessibilityState={{ selected: mode === 'compare' }}
             accessibilityLabel={t(
               'courseStatisticsScreen.enrolledExamVisualization.compare',
             )}
@@ -286,13 +290,7 @@ export const EnrolledExamChart = ({
   );
 };
 
-const createStyles = ({
-  dark,
-  spacing,
-  colors,
-  fontSizes,
-  fontWeights,
-}: Theme) =>
+const createStyles = ({ spacing, colors, fontSizes, fontWeights }: Theme) =>
   StyleSheet.create({
     buttonSwitchLabel: {
       fontSize: fontSizes.xs,
@@ -309,7 +307,7 @@ const createStyles = ({
     buttonSwitch: {
       flexDirection: 'row',
       alignSelf: 'flex-end',
-      backgroundColor: dark ? colors.surfaceDark : colors.background,
+      backgroundColor: colors.surfaceSunken,
       padding: spacing[1],
       borderRadius: spacing[1.5],
       gap: spacing[1],

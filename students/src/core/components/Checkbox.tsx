@@ -85,7 +85,7 @@ export const Checkbox = ({
   );
 };
 
-const createStyles = ({ palettes, spacing, fontSizes, dark }: Theme) =>
+const createStyles = ({ colors, spacing, fontSizes }: Theme) =>
   StyleSheet.create({
     container: {
       flexDirection: 'row',
@@ -100,7 +100,7 @@ const createStyles = ({ palettes, spacing, fontSizes, dark }: Theme) =>
       alignItems: 'center',
     },
     checkboxIcon: {
-      color: palettes.navy[dark ? '50' : '600'],
+      color: colors.primary,
     },
     text: {
       fontSize: fontSizes.sm,

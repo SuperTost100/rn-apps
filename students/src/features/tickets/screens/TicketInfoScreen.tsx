@@ -65,7 +65,7 @@ export const TicketInfoScreen = ({ route, navigation }: Props) => {
   const { id } = route.params;
   const { t } = useTranslation();
   const styles = useStylesheet(createStyles);
-  const { palettes } = useTheme();
+  const { colors } = useTheme();
   const ticketQuery = useGetTicket(id);
   const ticket = ticketQuery.data;
   const refetchTicket = ticketQuery.refetch;
@@ -181,7 +181,7 @@ export const TicketInfoScreen = ({ route, navigation }: Props) => {
         <Icon
           icon={faCircleInfo}
           size={INFO_ICON_SIZE}
-          color={palettes.info[700]}
+          color={colors.infoText}
           style={styles.infoMessageIcon}
         />
         <Text style={styles.infoMessageText}>
@@ -203,7 +203,6 @@ const createStyles = ({
   fontWeights,
   fontFamilies,
   colors,
-  palettes,
   shapes,
 }: Theme) =>
   StyleSheet.create({
@@ -221,11 +220,10 @@ const createStyles = ({
       fontSize: fontSizes.md,
       fontWeight: fontWeights.medium,
       letterSpacing: 0.16,
-      color: palettes.primary[500],
+      color: colors.link,
     },
-    // eslint-disable-next-line react-native/no-color-literals
     markResolvedDisabled: {
-      color: '#90A1B9',
+      color: colors.onDisabled,
     },
     title: {
       fontSize: fontSizes.xl,
@@ -266,9 +264,9 @@ const createStyles = ({
       flexDirection: 'row',
       gap: spacing[4],
       alignItems: 'flex-start',
-      backgroundColor: palettes.info[50],
+      backgroundColor: colors.infoBg,
       borderWidth: 1,
-      borderColor: palettes.info[600],
+      borderColor: colors.infoText,
       borderRadius: shapes.lg,
       paddingHorizontal: 20,
       paddingVertical: spacing[3],
@@ -282,6 +280,6 @@ const createStyles = ({
       fontSize: fontSizes.xs,
       fontWeight: fontWeights.medium,
       lineHeight: 16,
-      color: palettes.info[700],
+      color: colors.infoText,
     },
   });

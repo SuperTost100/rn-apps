@@ -29,7 +29,7 @@ type Props = PropsWithChildren<
 
 export const EscInfoBottomModal = ({ onClose, scrollTo, ...rest }: Props) => {
   const { t } = useTranslation();
-  const { palettes, dark } = useTheme();
+  const { colors } = useTheme();
   const style = useStylesheet(createStyle);
   const deviceOrientation = useDeviceOrientation();
   const { mutateAsync: deleteEsc, isPending: mutationsLoading } =
@@ -80,12 +80,12 @@ export const EscInfoBottomModal = ({ onClose, scrollTo, ...rest }: Props) => {
             <View style={style.iconContainer}>
               <Icon
                 icon={faInfoCircle}
-                color={palettes.orange[dark ? 400 : 600]}
+                color={colors.warningText}
                 style={style.icon}
               />
             </View>
             <View style={style.textContainer}>
-              <Text style={{ color: palettes.orange[dark ? 500 : 700] }}>
+              <Text style={{ color: colors.warningText }}>
                 {t('escModalInfo.text')}
               </Text>
             </View>
@@ -104,12 +104,12 @@ export const EscInfoBottomModal = ({ onClose, scrollTo, ...rest }: Props) => {
   );
 };
 
-const createStyle = ({ palettes, dark }: Theme) =>
+const createStyle = ({ colors }: Theme) =>
   StyleSheet.create({
     card: {
       borderStyle: 'solid',
       borderWidth: 1,
-      borderColor: palettes.orange[dark ? 400 : 600],
+      borderColor: colors.warningText,
       justifyContent: 'center',
     },
     firstRow: {

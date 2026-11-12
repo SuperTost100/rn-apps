@@ -302,7 +302,7 @@ export const GraduationCodeScreen = ({ navigation, route }: Props) => {
   );
 };
 
-const createStyles = ({ dark, spacing, fontSizes, palettes }: Theme) =>
+const createStyles = ({ colors, spacing, fontSizes }: Theme) =>
   StyleSheet.create({
     name: {
       paddingRight: spacing[8],
@@ -314,7 +314,7 @@ const createStyles = ({ dark, spacing, fontSizes, palettes }: Theme) =>
       textAlign: 'center',
       lineHeight: fontSizes.sm * 1.5,
       textTransform: 'none',
-      color: dark ? palettes.warning[500] : palettes.warning[700],
+      color: colors.warningText,
     },
     qrContainer: {
       alignSelf: 'center',
