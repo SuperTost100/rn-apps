@@ -2,22 +2,24 @@ import { Platform, Switch as RNSwitch, SwitchProps } from 'react-native';
 
 import { useTheme } from '../hooks/useTheme';
 
+/**
+ * A switch in the theme's colours: the primary track when on, and when off
+ * a track whose edge has 3:1 contrast with the surface
+ */
 export const Switch = ({ children, ...rest }: SwitchProps) => {
-  const { dark, palettes } = useTheme();
+  const { colors } = useTheme();
+  const on = !!rest.value;
   return (
     <RNSwitch
       trackColor={{
-        true: Platform.select({
-          ios: palettes.primary[dark ? 400 : 500],
-          android: palettes.primary[400],
-        }),
-        false:
-          Platform.OS === 'android' && !dark ? palettes.muted[200] : undefined,
+        true: colors.primary,
+        // On iOS this colours the edge of the off track, on Android the track
+        false: colors.controlBorder,
       }}
+      ios_backgroundColor={colors.surfaceSunken}
       thumbColor={Platform.select({
-        android: palettes.primary[500],
+        android: on ? colors.onPrimary : colors.surface,
       })}
-      style={{ opacity: 1 }}
       {...rest}
     >
       {children}

@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
 import { faChevronDown } from '@fortawesome/free-solid-svg-icons';
 
-import { IS_ANDROID } from '../../core/constants';
+import { useTheme } from '../hooks/useTheme';
 import { Icon } from './Icon';
 import { ListItem } from './ListItem';
 import { StatefulMenuView } from './StatefulMenuView';
@@ -37,15 +37,16 @@ export const Select = ({
   disabled,
   hideChevron,
 }: Props) => {
+  const { colors } = useTheme();
   const displayedValue = useMemo(() => {
     return options?.find(opt => opt?.id === value)?.title;
   }, [options, value]);
 
+  // One element for screen readers: the row, named by the label and the
+  // chosen value. The menu opens from it.
+  const name = accessibilityLabel || label;
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel || label}
-    >
+    <View>
       <StatefulMenuView
         style={{ width: '100%' }}
         title={label}
@@ -59,15 +60,24 @@ export const Select = ({
           disabled={disabled}
           title={displayedValue || label}
           subtitle={description}
+          accessibilityRole="button"
+          accessibilityLabel={
+            displayedValue ? `${name}: ${displayedValue}` : name
+          }
+          accessibilityHint={description || undefined}
           trailingItem={
             hideChevron ? (
               <View />
-            ) : IS_ANDROID ? (
-              <Icon icon={faChevronDown} />
-            ) : undefined
+            ) : (
+              <Icon
+                icon={faChevronDown}
+                size={14}
+                color={colors.secondaryText}
+              />
+            )
           }
         />
       </StatefulMenuView>
-    </Pressable>
+    </View>
   );
 };

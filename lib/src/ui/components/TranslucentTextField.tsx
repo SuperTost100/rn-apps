@@ -36,14 +36,16 @@ export const TranslucentTextField = ({
     <Row
       style={[styles.container, containerStyle]}
       align="center"
-      gap={2}
+      gap={3}
       mh={3}
-      ph={3}
+      ph={4}
     >
       {isLoading ? (
         <ActivityIndicator />
       ) : (
-        leadingIcon && <Icon icon={leadingIcon} style={styles.icon} />
+        leadingIcon && (
+          <Icon icon={leadingIcon} size={20} color={styles.icon.color} />
+        )
       )}
       <TextField
         clearButtonMode="never"
@@ -56,7 +58,7 @@ export const TranslucentTextField = ({
           noPadding
           onPress={onClear}
           icon={faTimesCircle}
-          color={styles.cancelIcon.color}
+          color={styles.icon.color}
           accessibilityRole="button"
           accessibilityLabel={onClearLabel}
         />
@@ -65,19 +67,20 @@ export const TranslucentTextField = ({
   );
 };
 
-const createStyles = ({ colors, dark, palettes, spacing }: Theme) =>
+// The sunken search field: 48 px, the card radius, a 20 px icon
+const createStyles = ({ colors, controls, shapes, spacing }: Theme) =>
   StyleSheet.create({
     container: {
-      backgroundColor: colors.translucentSurface,
-      borderRadius: 12,
+      backgroundColor: colors.surfaceSunken,
+      borderRadius: shapes.lg,
+      minHeight: controls.inputHeight,
     },
     textField: {
       flex: 1,
       paddingVertical: 0,
     },
     icon: {
-      opacity: 0.8,
-      marginRight: spacing[1],
+      color: colors.secondaryText,
     },
     input: {
       margin: 0,
@@ -85,8 +88,5 @@ const createStyles = ({ colors, dark, palettes, spacing }: Theme) =>
       paddingRight: spacing[2],
       borderBottomWidth: 0,
       paddingVertical: spacing[Platform.OS === 'ios' ? 2 : 1],
-    },
-    cancelIcon: {
-      color: dark ? palettes.gray[400] : palettes.gray[500],
     },
   });
