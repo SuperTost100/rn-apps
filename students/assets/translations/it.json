@@ -1067,7 +1067,8 @@
       "requested": "Richiesto",
       "unavailable": "Chiuso",
       "deadline": "Scadenza"
-    }
+    },
+    "finalAverage": "Media per l'ammissione alla prova finale"
   },
   "todayList": {
     "title": "Oggi · {{date}}",

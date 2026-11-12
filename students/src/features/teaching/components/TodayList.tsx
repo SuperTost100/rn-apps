@@ -60,7 +60,7 @@ import {
 } from '../utils/todayList';
 
 /** Every type, whatever the agenda's own filters hide */
-const ALL_TYPES: AgendaTypesFilterState = {
+export const TODAY_TYPES: AgendaTypesFilterState = {
   booking: true,
   deadline: true,
   exam: true,
@@ -208,7 +208,7 @@ export const TodayList = ({ quiet = false }: Props) => {
   const { t } = useTranslation();
   const styles = useStylesheet(createStyles);
   const { colors } = useTheme();
-  const { percent } = useTextScale();
+  const { percent, isLarge } = useTextScale();
   const { language } = usePreferencesContext<AppPreferences>();
   const openAgenda = useOpenAgenda();
   const now = useMinuteClock();
@@ -217,7 +217,7 @@ export const TodayList = ({ quiet = false }: Props) => {
     () => DateTime.fromISO(today, { zone: APP_TIMEZONE }).startOf('week'),
     [today],
   );
-  const { weekQuery, sourceQueries } = useGetAgendaWeek(monday, ALL_TYPES);
+  const { weekQuery, sourceQueries } = useGetAgendaWeek(monday, TODAY_TYPES);
   const states = useQueryStates(weekQuery.data ? weekQuery : sourceQueries, {
     isEmpty: () => false,
   });
@@ -228,13 +228,18 @@ export const TodayList = ({ quiet = false }: Props) => {
   );
 
   const head = (
-    <View style={styles.head}>
-      <Text variant="label" style={styles.muted} accessibilityRole="header">
+    <View style={[styles.head, isLarge && styles.headLarge]}>
+      <Text
+        variant="label"
+        style={[styles.muted, styles.headTitle]}
+        accessibilityRole="header"
+      >
         {t('todayList.title', { date: formatDay(now, language) })}
       </Text>
       <TextButton
         onPress={() => openAgenda(today)}
         underlayColor={colors.headerSunken}
+        style={isLarge && styles.leftButton}
       >
         <Text variant="label" style={styles.onHeader}>
           {t('todayList.openAgenda')}
@@ -369,7 +374,7 @@ const NextDay = ({ entry }: { entry: TodayEntry | null }) => {
 
 /** Looks for the next teaching day in next week, when this one has none */
 const NextWeekFirst = ({ monday }: { monday: DateTime }) => {
-  const { weekQuery } = useGetAgendaWeek(monday, ALL_TYPES);
+  const { weekQuery } = useGetAgendaWeek(monday, TODAY_TYPES);
   const entries = useEntries(weekQuery.data);
   if (!weekQuery.data) return null;
   return (
@@ -534,28 +539,32 @@ const TodayRowView = ({
           variant={isMain ? 'cardTitle' : 'title'}
           weight={isMain ? 'bold' : 'semibold'}
           style={styles.onHeader}
+          numberOfLines={isLarge ? 3 : 2}
+          ellipsizeMode="tail"
         >
           {item.title}
         </Text>
-        <View style={styles.meta}>
-          {stateWord && (
+        {/* One Text for the state word and the room: separate texts in a
+            wrapping row lose their last word on Android */}
+        <View style={[styles.meta, isLarge && styles.metaLarge]}>
+          {stateWord || meta ? (
             <Text
               variant="secondaryText"
-              weight="bold"
-              style={{
-                color: state === 'now' ? colors.heroAccent : colors.onHeader,
-              }}
+              style={[styles.muted, styles.metaText]}
             >
-              {stateWord}
-            </Text>
-          )}
-          {stateWord && meta ? (
-            <Text variant="secondaryText" style={styles.muted}>
-              ·
-            </Text>
-          ) : null}
-          {meta ? (
-            <Text variant="secondaryText" style={styles.muted}>
+              {stateWord ? (
+                <Text
+                  variant="secondaryText"
+                  weight="bold"
+                  style={{
+                    color:
+                      state === 'now' ? colors.heroAccent : colors.onHeader,
+                  }}
+                >
+                  {stateWord}
+                </Text>
+              ) : null}
+              {stateWord && meta ? '  ·  ' : ''}
               {meta}
             </Text>
           ) : null}
@@ -684,12 +693,20 @@ const createStyles = ({ colors, layout, spacing }: Theme) =>
     },
     head: {
       flexDirection: 'row',
-      flexWrap: 'wrap',
       alignItems: 'center',
       justifyContent: 'space-between',
       columnGap: spacing[3],
       minHeight: 48,
       paddingHorizontal: layout.gutter,
+    },
+    // At large text "Open agenda" goes under the date
+    headLarge: {
+      flexDirection: 'column',
+      alignItems: 'flex-start',
+      paddingTop: spacing[2],
+    },
+    headTitle: {
+      flexShrink: 1,
     },
     list: {
       paddingTop: spacing[1],
@@ -780,9 +797,15 @@ const createStyles = ({ colors, layout, spacing }: Theme) =>
     },
     meta: {
       flexDirection: 'row',
-      flexWrap: 'wrap',
       alignItems: 'center',
       columnGap: spacing[2],
+    },
+    metaLarge: {
+      flexDirection: 'column',
+      alignItems: 'flex-start',
+    },
+    metaText: {
+      flexShrink: 1,
     },
     count: {
       flexDirection: 'row',
@@ -791,7 +814,6 @@ const createStyles = ({ colors, layout, spacing }: Theme) =>
     },
     countLarge: {
       marginLeft: 0,
-      flexBasis: '100%',
     },
     countNumber: {
       color: colors.heroAccent,

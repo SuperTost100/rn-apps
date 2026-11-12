@@ -65,13 +65,14 @@ import {
   useGetSurveyCategories,
 } from '../../../core/queries/surveysHooks';
 import { Exam } from '../../../core/types/api';
+import { useGetAgendaWeek } from '../../agenda/queries/agendaHooks';
 import { DeadlineItem } from '../../agenda/types/AgendaItem';
 import { CourseListItem } from '../../courses/components/CourseListItem';
 import { CreditsRing } from '../components/CreditsRing';
 import { ExamListItem } from '../components/ExamListItem';
 import { GraduationSessionSection } from '../components/GraduationSessionSection';
 import { TeachingStackParamList } from '../components/TeachingNavigator';
-import { TodayList } from '../components/TodayList';
+import { TODAY_TYPES, TodayList } from '../components/TodayList';
 
 type Props = NativeStackScreenProps<TeachingStackParamList, 'Home'>;
 
@@ -105,6 +106,11 @@ export const TeachingScreen = ({ navigation }: Props) => {
   const eventAdmissionsQuery = useGetEventAdmissions();
   const mondays = useMemo(deadlineMondays, []);
   const deadlinesQueries = useGetDeadlineWeeks(mondays);
+  // Pulling to refresh reloads today's lectures too
+  const { sourceQueries: todayQueries } = useGetAgendaWeek(
+    mondays[0],
+    TODAY_TYPES,
+  );
   // These parts appear only when they have something to show
   useQuietQueryErrors([eventAdmissionsQuery, ...deadlinesQueries.queries]);
 
@@ -227,6 +233,7 @@ export const TeachingScreen = ({ navigation }: Props) => {
             studentQuery,
             eventAdmissionsQuery,
             ...deadlinesQueries.queries,
+            ...todayQueries,
           ]}
           manual
         />
@@ -550,7 +557,7 @@ const TranscriptCard = ({ onPress }: { onPress: () => void }) => {
               scale={30}
             />
             <Average
-              label={t('transcriptMetricsScreen.averageLabel')}
+              label={t('teachingScreen.finalAverage')}
               value={hideGrades ? null : student?.estimatedFinalGrade}
               scale={110}
             />

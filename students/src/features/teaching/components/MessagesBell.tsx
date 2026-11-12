@@ -54,9 +54,10 @@ export const MessagesBell = ({ color }: Props) => {
 };
 
 const styles = StyleSheet.create({
+  // Over the bell's top right corner, clear of the glyph's centre
   badge: {
     position: 'absolute',
-    top: 4,
-    right: 2,
+    top: 0,
+    right: -6,
   },
 });
