@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
 import {
+  AppHeaderBackButton,
   OutlineIcon,
   Text,
   TextButton,
@@ -11,7 +12,6 @@ import {
   useStylesheet,
   useTheme,
 } from '@polito/lib/ui';
-import { HeaderBackButton } from '@react-navigation/elements';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
@@ -164,10 +164,9 @@ export const CourseNavigator = ({ route, navigation }: Props) => {
       headerLeft:
         headerOverride?.kind === 'back'
           ? ({ tintColor }) => (
-              <HeaderBackButton
+              <AppHeaderBackButton
                 tintColor={tintColor}
                 onPress={headerOverride.onBack}
-                displayMode="minimal"
                 accessibilityLabel={headerOverride.label}
                 style={styles.back}
               />

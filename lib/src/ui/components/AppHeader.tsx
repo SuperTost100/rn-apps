@@ -1,14 +1,17 @@
-import { createContext, useEffect } from 'react';
+import { ComponentProps, createContext, useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SystemBars, SystemBarsEntry } from 'react-native-edge-to-edge';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import { HeaderBackButton, getHeaderTitle } from '@react-navigation/elements';
 import { NativeStackHeaderProps } from '@react-navigation/native-stack';
 
+import { IS_IOS } from '../../core/constants';
 import { useStylesheet } from '../hooks/useStylesheet';
 import { useTheme } from '../hooks/useTheme';
 import { Theme } from '../types/Theme';
+import { Icon } from './Icon';
 import { Text } from './Text';
 
 /**
@@ -72,10 +75,9 @@ export const AppHeader = ({
           {headerLeft
             ? headerLeft({ tintColor: foreground, canGoBack: !!back })
             : back && (
-                <HeaderBackButton
+                <AppHeaderBackButton
                   tintColor={foreground}
                   onPress={navigation.goBack}
-                  displayMode="minimal"
                   style={styles.back}
                 />
               )}
@@ -104,6 +106,40 @@ export const AppHeader = ({
     </View>
   );
 };
+
+/**
+ * The back arrow of the headers drawn in JS. On iOS the library's own arrow,
+ * a tinted PNG, drew nothing in release builds and kept a 22 pt gap after
+ * it, which cut long titles short: the app's chevron takes its place there.
+ */
+export const AppHeaderBackButton = (
+  props: Omit<ComponentProps<typeof HeaderBackButton>, 'displayMode'>,
+) => (
+  <HeaderBackButton
+    {...props}
+    displayMode="minimal"
+    backImage={
+      IS_IOS
+        ? ({ tintColor }) => (
+            <View style={chevronStyles.box}>
+              <Icon icon={faChevronLeft} size={20} color={tintColor} />
+            </View>
+          )
+        : undefined
+    }
+  />
+);
+
+const chevronStyles = StyleSheet.create({
+  // The 24 px glyph box of the Android arrow, with the margin around it
+  box: {
+    width: 24,
+    height: 24,
+    margin: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});
 
 /**
  * Light status bar content while the screen is focused: tab switches and
