@@ -1,6 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 
 import { faEyeSlash } from '@fortawesome/free-regular-svg-icons';
+import { faBookOpen } from '@fortawesome/free-solid-svg-icons';
 
 import { courseColors, courseIcons } from '../../features/courses/constants';
 import { useStylesheet } from '../hooks/useStylesheet';
@@ -41,11 +42,13 @@ export const CourseTile = ({ color, icon, isHidden = false }: Props) => {
     : color
       ? courseTileColor(color)
       : colors.neutralChipBg;
+  // A course whose icon was never picked shows an open book, the same
+  // for every course: the name next to it tells them apart
   const glyph = isHidden
     ? faEyeSlash
     : icon && icon in courseIcons
       ? courseIcons[icon]
-      : undefined;
+      : faBookOpen;
 
   return (
     <View
@@ -53,13 +56,11 @@ export const CourseTile = ({ color, icon, isHidden = false }: Props) => {
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
     >
-      {glyph && (
-        <Icon
-          icon={glyph}
-          size={TILE_ICON_SIZE}
-          color={isHidden || !color ? colors.neutralChipText : colors.white}
-        />
-      )}
+      <Icon
+        icon={glyph}
+        size={TILE_ICON_SIZE}
+        color={isHidden || !color ? colors.neutralChipText : colors.white}
+      />
     </View>
   );
 };
