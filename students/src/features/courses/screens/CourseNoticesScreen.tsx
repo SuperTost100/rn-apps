@@ -1,111 +1,154 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 import {
-  APP_TIMEZONE,
-  formatDate,
   getHtmlTextContent,
+  usePreferencesContext,
   useQueryStates,
 } from '@polito/lib/core';
-import { useAccessibility } from '@polito/lib/core';
 import {
   BottomBarSpacer,
-  GlobalStyles,
-  IndentedDivider,
+  Card,
+  List,
   ListItem,
+  OutlineIcon,
   QueryStateView,
   RefreshControl,
-  useSafeAreaSpacing,
+  Theme,
+  useStylesheet,
   useTheme,
 } from '@polito/lib/ui';
-
-import { DateTime } from 'luxon';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { useNotifications } from '../../../core/hooks/useNotifications';
 import { useOnLeaveScreen } from '../../../core/hooks/useOnLeaveScreen';
-import { useGetCourseNotices } from '../../../core/queries/courseHooks';
+import {
+  useGetCourseNotices,
+  useGetCourses,
+} from '../../../core/queries/courseHooks';
+import { AppPreferences } from '../../../core/types/preferences';
+import { TeachingStackParamList } from '../../teaching/components/TeachingNavigator';
 import { useCourseContext } from '../contexts/CourseContext';
+import { uniqueShortcodeOf } from '../utils/courses';
+import { useNoticeWhen } from '../utils/noticeWhen';
 
+/**
+ * The course's announcements in one card, newest first: the megaphone, the
+ * text's start as the title on up to two lines, and when it was posted.
+ * Unread ones have a bold title and the unread dot.
+ */
 export const CourseNoticesScreen = () => {
   const { t } = useTranslation();
-  const { spacing } = useTheme();
+  const styles = useStylesheet(createStyles);
+  const { colors } = useTheme();
   const courseId = useCourseContext();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<TeachingStackParamList>>();
   const noticesQuery = useGetCourseNotices(courseId);
-  const { accessibilityListLabel } = useAccessibility();
-  const { getUnreadsCount, clearNotificationScope } = useNotifications();
-  const { paddingHorizontal } = useSafeAreaSpacing();
+  const { data: courses } = useGetCourses();
   const states = useQueryStates(noticesQuery);
+  const { getUnreadsCount, clearNotificationScope } = useNotifications();
+  const { language } = usePreferencesContext<AppPreferences>();
+  const when = useNoticeWhen(language);
+
   const notices = useMemo(
     () =>
-      noticesQuery.data?.map(notice => ({
-        ...notice,
-        title: getHtmlTextContent(notice.content),
-      })) ?? [],
+      [...(noticesQuery.data ?? [])]
+        .sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime())
+        .map(notice => ({
+          ...notice,
+          text: getHtmlTextContent(notice.content).replace(/\s+/g, ' ').trim(),
+        })),
     [noticesQuery.data],
   );
-  const noticesNotificationScope = useMemo(
+  const scope = useMemo(
     () => ['teaching', 'courses', `${courseId}`, 'notices'] as const,
     [courseId],
   );
 
   useOnLeaveScreen(() => {
-    clearNotificationScope(noticesNotificationScope);
+    clearNotificationScope(scope);
   });
 
   return (
-    <FlatList
+    <ScrollView
       contentInsetAdjustmentBehavior="automatic"
-      initialNumToRender={15}
-      style={GlobalStyles.grow}
-      contentContainerStyle={paddingHorizontal}
       refreshControl={<RefreshControl manual queries={[noticesQuery]} />}
-      data={notices}
-      keyExtractor={item => item.id.toString()}
-      renderItem={({ item: notice, index }) => (
-        <ListItem
-          title={notice.title}
-          accessibilityLabel={`${t(
-            accessibilityListLabel(index, notices?.length || 0),
-          )}. ${DateTime.fromJSDate(notice.publishedAt, {
-            zone: APP_TIMEZONE,
-          }).toFormat('dd/MM/yyyy')}, ${notice.title}`}
-          subtitle={formatDate(notice.publishedAt)}
-          linkTo={{
-            screen: 'Notice',
-            params: {
-              noticeId: notice.id,
-              courseId,
-              date: formatDate(notice.publishedAt),
-            },
-          }}
-          unread={
-            !!getUnreadsCount([...noticesNotificationScope, `${notice.id}`])
-          }
-        />
-      )}
-      ListFooterComponent={<BottomBarSpacer />}
-      ItemSeparatorComponent={() => <IndentedDivider indent={spacing[5]} />}
-      ListEmptyComponent={
+    >
+      <View style={styles.first}>
         <QueryStateView
           states={states}
           skeleton={{
-            count: 6,
-            card: false,
+            count: 5,
+            leading: 'icon',
+            trailing: 'none',
+            titleLines: 2,
             label: t('states.notices.loading'),
           }}
           emptyState={{
             title: t('states.notices.emptyTitle'),
-            text: t('states.notices.emptyText'),
+            text: t('course.announcements.emptyText'),
+            action: {
+              label: t('navigation.courseSettings'),
+              onPress: () =>
+                navigation.navigate('CoursePreferences', {
+                  courseId,
+                  uniqueShortcode: uniqueShortcodeOf(courseId, courses),
+                }),
+            },
           }}
           errorState={{
             title: t('states.notices.failedTitle'),
             text: t('states.notices.failedText'),
           }}
         >
-          {null}
+          <Card>
+            <List>
+              {notices.map(notice => {
+                const unread = !!getUnreadsCount([...scope, `${notice.id}`]);
+                const posted = when(notice.publishedAt);
+                return (
+                  <ListItem
+                    key={notice.id}
+                    title={notice.text}
+                    titleProps={{ numberOfLines: 2 }}
+                    subtitle={posted}
+                    unread={unread}
+                    leadingItem={
+                      <OutlineIcon
+                        name="megaphone"
+                        color={unread ? colors.title : colors.secondaryText}
+                      />
+                    }
+                    accessibilityLabel={[
+                      unread ? t('primitives.unread') : undefined,
+                      notice.text.slice(0, 160),
+                      posted,
+                    ]
+                      .filter(Boolean)
+                      .join(', ')}
+                    linkTo={{
+                      screen: 'Notice',
+                      params: { noticeId: notice.id, courseId },
+                    }}
+                  />
+                );
+              })}
+            </List>
+          </Card>
         </QueryStateView>
-      }
-    />
+      </View>
+      <BottomBarSpacer />
+    </ScrollView>
   );
 };
+
+const createStyles = ({ spacing }: Theme) =>
+  StyleSheet.create({
+    // The first card sits 16 px under the tab row (8 here, 8 its own)
+    first: {
+      marginTop: spacing[2],
+    },
+  });

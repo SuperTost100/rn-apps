@@ -1,38 +1,32 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  Platform,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 
-import { faAngleDown } from '@fortawesome/free-solid-svg-icons';
-import { faLink } from '@fortawesome/free-solid-svg-icons';
-import { faCircle } from '@fortawesome/free-solid-svg-icons';
-import { useQueryStates } from '@polito/lib/core';
-import { useOpenInAppLink } from '@polito/lib/core';
+import { faAngleDown, faCircle } from '@fortawesome/free-solid-svg-icons';
+import {
+  APP_TIMEZONE,
+  useOpenInAppLink,
+  useQueryStates,
+} from '@polito/lib/core';
 import { useGetPersons } from '@polito/lib/features/people';
 import {
   BottomBarSpacer,
   Card,
-  Col,
-  GlobalStyles,
-  Grid,
   Icon,
+  List,
   ListItem,
-  Metric,
+  OutlineIcon,
   OverviewList,
   PersonListItem,
   QueryStateView,
   RefreshControl,
-  Row,
-  Section,
   SectionHeader,
   SkeletonDetail,
+  SkeletonRows,
+  StateBlock,
   StatefulMenuView,
   Text,
+  TextButton,
   Theme,
   useStylesheet,
   useTheme,
@@ -42,43 +36,50 @@ import { MenuAction } from '@react-native-menu/menu';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
+import { DateTime } from 'luxon';
+
 import { useNotifications } from '../../../core/hooks/useNotifications';
 import {
   useGetCourse,
   useGetCourseEditions,
   useGetCourseExams,
+  useGetCourses,
 } from '../../../core/queries/courseHooks';
-import { useGetCourses } from '../../../core/queries/courseHooks';
-import { LectureCard } from '../../agenda/components/LectureCard';
-import { useGetNextLecture } from '../../agenda/queries/lectureHooks';
+import { useMinuteClock } from '../../agenda/hooks/useMinuteClock';
 import { ExamListItem } from '../../teaching/components/ExamListItem';
 import { TeachingStackParamList } from '../../teaching/components/TeachingNavigator';
-import { CourseHeading } from '../components/CourseHeading';
+import { CourseLectureRow } from '../components/CourseLectureRow';
 import { CourseStatisticsFilterType } from '../components/CourseStatisticsFilters.tsx';
 import { useCourseContext } from '../contexts/CourseContext';
+import { useCourseNextLectures } from '../hooks/useCourseNextLectures';
 import { CourseTabsParamList } from '../navigation/CourseNavigator';
+import { formatAcademicYear, uniqueShortcodeOf } from '../utils/courses';
 
 type StaffMember = Person & { courseRole: 'roleHolder' | 'roleCollaborator' };
 
+/** How many coming lectures "Course in agenda" lists */
+const NEXT_LECTURES = 2;
+
+/**
+ * The course's Info tab: code, credits and period (with the switch to other
+ * editions), the next lectures, staff, exam calls, useful links, the guide
+ * and statistics, and a labelled way to the course settings
+ */
 export const CourseInfoScreen = () => {
   const { t } = useTranslation();
   const courseId = useCourseContext();
   const styles = useStylesheet(createStyles);
-  const { spacing, palettes } = useTheme();
+  const { colors } = useTheme();
   const { getUnreadsCount, getUnreadsCountPerCourse } = useNotifications();
-  const { fontSizes } = useTheme();
   const { data: editions } = useGetCourseEditions(courseId);
   const courseQuery = useGetCourse(courseId);
   const states = useQueryStates(courseQuery);
   const coursesQuery = useGetCourses();
-  const {
-    nextLecture,
-    dayOfMonth,
-    weekDay,
-    monthOfYear,
-    isLoadingNextLecture,
-  } = useGetNextLecture(courseId);
+  const now = useMinuteClock();
+  const nextLectures = useCourseNextLectures(courseId, NEXT_LECTURES);
   const openInAppLink = useOpenInAppLink();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<TeachingStackParamList>>();
   const courseExamsQuery = useGetCourseExams(
     courseId,
     courseQuery.data?.shortcode,
@@ -86,6 +87,10 @@ export const CourseInfoScreen = () => {
   const { queries: staffQueries, isLoading: isStaffLoading } = useGetPersons(
     courseQuery.data?.staff.map(s => s.id),
   );
+  const { params } =
+    useRoute<RouteProp<CourseTabsParamList, 'CourseInfoScreen'>>();
+  const lockEdition = params?.lockEdition ?? false;
+  const course = courseQuery.data;
 
   const unreadsCurrentYear = getUnreadsCount([
     'teaching',
@@ -95,68 +100,84 @@ export const CourseInfoScreen = () => {
   const unreadsPrevEditions =
     (getUnreadsCountPerCourse(null, editions) ?? 0) - (unreadsCurrentYear ?? 0);
 
-  const isModule = useMemo(() => {
-    if (!coursesQuery.data) return false;
-    return coursesQuery.data.some(
-      course =>
-        course.modules?.some(module => module.id === courseId) ||
-        course.modules?.some(module =>
-          module.previousEditions.some(e => +e.id === courseId),
+  const parentCourse = useMemo(
+    () =>
+      coursesQuery.data?.find(c =>
+        c.modules?.some(
+          m =>
+            m.id === courseId ||
+            m.previousEditions.some(e => +e.id === courseId),
         ),
-    );
-  }, [coursesQuery.data, courseId]);
+      ),
+    [coursesQuery.data, courseId],
+  );
 
-  const parentCourse = useMemo(() => {
-    if (!coursesQuery.data || !isModule) return null;
-    return coursesQuery.data.find(
-      course =>
-        course.modules?.some(module => module.id === courseId) ||
-        course.modules?.some(module =>
-          module.previousEditions.some(e => +e.id === courseId),
-        ),
-    );
-  }, [coursesQuery.data, courseId, isModule]);
-
-  const { getParent } = useNavigation();
-  const { params } =
-    useRoute<RouteProp<CourseTabsParamList, 'CourseInfoScreen'>>();
-  const lockEdition = params?.lockEdition ?? false;
-
-  const menuActions = useMemo(() => {
+  const editionActions = useMemo(() => {
     if (!editions || lockEdition) return [];
     return editions.map(e => {
-      const editionsCount = getUnreadsCount(['teaching', 'courses', `${e.id}`]);
+      const count = getUnreadsCount(['teaching', 'courses', `${e.id}`]);
       return {
         id: `${e.id}`,
         title: e.year.toString(),
         state: courseId === +e.id ? 'on' : undefined,
-        image: editionsCount
+        image: count
           ? Platform.select({ ios: 'circle.fill', android: 'circle' })
           : undefined,
-        imageColor: editionsCount ? palettes.rose[600] : undefined,
+        imageColor: count ? colors.badge : undefined,
       } as MenuAction;
     });
-  }, [editions, lockEdition, courseId, palettes, getUnreadsCount]);
+  }, [editions, lockEdition, courseId, colors.badge, getUnreadsCount]);
+  const canSwitchEdition = editionActions.length > 0;
+
   const staff = useMemo(() => {
-    if (!courseQuery.data || isStaffLoading) return [];
-    const staffData: StaffMember[] = [];
-
-    staffQueries.forEach((staffQuery, index) => {
-      if (!staffQuery.data) return;
-
-      staffData.push({
-        ...staffQuery.data,
+    if (!course || isStaffLoading) return [];
+    const members: StaffMember[] = [];
+    staffQueries.forEach((query, index) => {
+      if (!query.data) return;
+      members.push({
+        ...query.data,
         courseRole:
-          courseQuery.data.staff[index].role === 'Titolare'
+          course.staff[index].role === 'Titolare'
             ? 'roleHolder'
             : 'roleCollaborator',
       });
     });
+    return members;
+  }, [course, isStaffLoading, staffQueries]);
 
-    return staffData;
-  }, [courseQuery.data, isStaffLoading, staffQueries]);
+  const openAgenda = () => {
+    const first = nextLectures.entries[0]?.item.start;
+    const date = (first ?? DateTime.now().setZone(APP_TIMEZONE)).toISODate();
+    navigation.navigate('AgendaTab' as any, {
+      screen: 'Agenda',
+      params: { date, requestedAt: Date.now() },
+      pop: true,
+    });
+  };
 
-  const isStatisticsDisabled = !courseQuery.data?.shortcode;
+  const openSettings = () =>
+    navigation.navigate('CoursePreferences', {
+      courseId,
+      uniqueShortcode: uniqueShortcodeOf(courseId, coursesQuery.data),
+    });
+
+  const period = `${course?.teachingPeriod ?? '--'} - ${course?.year ?? '--'}`;
+  const periodBlock = (
+    <View style={styles.fact}>
+      <Text variant="secondaryText">{t('common.period')}</Text>
+      <View style={styles.factValue}>
+        <Text variant="title" weight="bold">
+          {period}
+        </Text>
+        {canSwitchEdition && (
+          <Icon icon={faAngleDown} size={14} color={colors.link} />
+        )}
+        {canSwitchEdition && unreadsPrevEditions > 0 && (
+          <Icon icon={faCircle} size={8} color={colors.badge} />
+        )}
+      </View>
+    </View>
+  );
 
   return (
     <ScrollView
@@ -168,128 +189,108 @@ export const CourseInfoScreen = () => {
         />
       }
     >
-      <SafeAreaView>
-        {states.status === 'ready' ? (
-          <>
-            <CourseHeading
-              name={courseQuery.data?.name}
-              shortcode={courseQuery.data?.shortcode}
-              cfu={courseQuery.data?.cfu}
-              parentCourseName={isModule ? parentCourse?.name : undefined}
-              showName={false}
-            />
-            <Card style={styles.metricsCard} accessible={true}>
-              <Grid>
-                <View
-                  style={GlobalStyles.grow}
-                  importantForAccessibility="yes"
-                  accessibilityRole={lockEdition ? undefined : 'button'}
-                  accessible={true}
+      {states.status === 'ready' && course ? (
+        <>
+          <Card padded style={styles.headCard}>
+            <Text variant="cardTitle" style={styles.title}>
+              {course.name}
+            </Text>
+            <Text variant="secondaryText">
+              {[
+                course.shortcode,
+                t('course.info.credits', { count: course.cfu }),
+              ]
+                .filter(Boolean)
+                .join(' · ')}
+            </Text>
+            {parentCourse && (
+              <Text variant="secondaryText">
+                {t('course.info.moduleOf', { name: parentCourse.name })}
+              </Text>
+            )}
+            <View style={styles.facts}>
+              {canSwitchEdition ? (
+                <StatefulMenuView
+                  actions={editionActions}
+                  onPressAction={({ nativeEvent: { event } }) => {
+                    navigation.replace('Course', {
+                      id: +event,
+                      animated: false,
+                    });
+                  }}
                 >
-                  <StatefulMenuView
-                    actions={menuActions}
-                    onPressAction={async ({ nativeEvent: { event } }) => {
-                      // replace current screen with same screen with event id as param
-                      (
-                        getParent()! as NativeStackNavigationProp<
-                          TeachingStackParamList,
-                          'Course'
-                        >
-                      ).replace('Course', {
-                        id: +event,
-                        animated: false,
-                      });
-                    }}
+                  <View
+                    accessible
+                    accessibilityRole="button"
+                    accessibilityLabel={t('course.info.periodLabel', {
+                      period,
+                    })}
+                    accessibilityHint={t('course.info.editionsHint')}
                   >
-                    <Row justify="flex-start" align="center">
-                      <Metric
-                        title={t('common.period')}
-                        value={`${courseQuery.data?.teachingPeriod ?? '--'} - ${
-                          courseQuery.data?.year ?? '--'
-                        }`}
-                        accessibilityLabel={`${t('degreeCourseScreen.period')}: ${
-                          courseQuery.data?.teachingPeriod ?? '--'
-                        } - ${courseQuery.data?.year ?? '--'}`}
-                        style={styles.periodMetric}
-                      />
-                      <Col align="center">
-                        {!lockEdition && unreadsPrevEditions > 0 && (
-                          <Icon
-                            icon={faCircle}
-                            size={8}
-                            color={styles.dotIcon.color}
-                            style={styles.dotIcon}
-                          />
-                        )}
-                        {!lockEdition && (editions?.length ?? 0) > 0 && (
-                          <Icon
-                            icon={faAngleDown}
-                            size={14}
-                            style={{
-                              marginTop: unreadsPrevEditions
-                                ? undefined
-                                : spacing[4],
-                            }}
-                            color={styles.periodDropdownIcon.color}
-                          />
-                        )}
-                      </Col>
-                    </Row>
-                  </StatefulMenuView>
+                    {periodBlock}
+                  </View>
+                </StatefulMenuView>
+              ) : (
+                <View
+                  accessible
+                  accessibilityLabel={t('course.info.periodText', { period })}
+                >
+                  {periodBlock}
                 </View>
-              </Grid>
-            </Card>
-            <Section>
-              <SectionHeader title={t('courseInfoTab.nextLectureLabel')} />
-              <OverviewList
-                indented
-                loading={isLoadingNextLecture}
-                skeleton={{ count: 1, leading: 'tile', subtitleLines: 2 }}
-                emptyStateText={t('courseInfoTab.nextLectureEmptyState')}
-              >
-                {nextLecture && (
-                  <Row style={styles.nextLectureBox}>
-                    <Col style={styles.dayColumn} align="stretch">
-                      <View style={[styles.dayBox, styles.nextLecBox]}>
-                        <Text
-                          variant="heading"
-                          style={[styles.nextLec, styles.secondaryDay]}
-                        >
-                          {weekDay}
-                        </Text>
-                        <Text variant="heading" style={styles.nextLec}>
-                          {dayOfMonth}
-                        </Text>
-                        {monthOfYear && (
-                          <Text variant="heading" style={styles.nextLec}>
-                            {monthOfYear}
-                          </Text>
-                        )}
-                      </View>
-                    </Col>
-                    <Col flex={1}>
-                      {nextLecture && (
-                        <LectureCard
-                          item={nextLecture}
-                          nextLecture
-                          nextDate={`${weekDay}/${dayOfMonth}/${monthOfYear}`}
-                        />
-                      )}
-                    </Col>
-                  </Row>
-                )}
-              </OverviewList>
-            </Section>
+              )}
+              {!!course.year && (
+                <View style={styles.fact} accessible>
+                  <Text variant="secondaryText">
+                    {t('course.info.academicYear')}
+                  </Text>
+                  <Text variant="title" weight="bold">
+                    {formatAcademicYear(course.year)}
+                  </Text>
+                </View>
+              )}
+            </View>
+          </Card>
 
-            <Section>
+          <View style={styles.section}>
+            <SectionHeader
+              title={t('course.info.inAgenda')}
+              trailingItem={
+                <TextButton onPress={openAgenda} style={styles.headerLink}>
+                  {t('course.info.openAgenda')}
+                </TextButton>
+              }
+            />
+            {nextLectures.isLoading ? (
+              <SkeletonRows count={1} leading="tile" trailing="none" />
+            ) : nextLectures.entries.length ? (
+              <Card>
+                <List>
+                  {nextLectures.entries.map(entry => (
+                    <CourseLectureRow
+                      key={entry.item.key}
+                      entry={entry}
+                      now={now}
+                    />
+                  ))}
+                </List>
+              </Card>
+            ) : (
+              <StateBlock
+                card
+                title={t('course.info.noLecturesTitle')}
+                text={t('course.info.noLecturesText')}
+              />
+            )}
+          </View>
+
+          {course.staff.length > 0 && (
+            <View style={styles.section}>
               <SectionHeader title={t('courseInfoTab.staffSectionTitle')} />
               <OverviewList
                 indented
-                loading={
-                  (courseQuery.data?.staff?.length ?? 0) > 0 && isStaffLoading
-                }
+                loading={isStaffLoading}
                 skeleton={{
-                  count: courseQuery.data?.staff?.length ?? 1,
+                  count: course.staff.length,
                   leading: 'avatar',
                 }}
               >
@@ -301,79 +302,110 @@ export const CourseInfoScreen = () => {
                   />
                 ))}
               </OverviewList>
-            </Section>
-            <Section>
-              <SectionHeader title={t('examsScreen.title')} />
-              <OverviewList
-                queries={courseExamsQuery}
-                indented
-                skeleton={{ count: 1, leading: 'tile', trailing: 'chip' }}
-                emptyState={{
-                  title: t('states.exams.emptyTitle'),
-                  text: t('states.exams.emptyText'),
-                }}
-                errorState={{ title: t('states.exams.failedTitle') }}
-              >
-                {courseExamsQuery.data?.map(exam => (
-                  <ExamListItem
-                    key={`${exam.id}` + exam.moduleNumber}
-                    exam={exam}
-                  />
-                ))}
-              </OverviewList>
-            </Section>
+            </View>
+          )}
 
-            <Section>
+          <View style={styles.section}>
+            <SectionHeader title={t('course.info.examCalls')} />
+            <OverviewList
+              queries={courseExamsQuery}
+              indented
+              skeleton={{ count: 1, leading: 'tile', trailing: 'chip' }}
+              emptyState={{
+                title: t('course.info.noExamCallsTitle'),
+                text: t('course.info.noExamCallsText'),
+              }}
+              errorState={{ title: t('states.exams.failedTitle') }}
+            >
+              {courseExamsQuery.data?.map(exam => (
+                <ExamListItem
+                  key={`${exam.id}${exam.moduleNumber}`}
+                  exam={exam}
+                />
+              ))}
+            </OverviewList>
+          </View>
+
+          {course.links.length > 0 && (
+            <View style={styles.section}>
               <SectionHeader title={t('courseInfoTab.linksSectionTitle')} />
-              <OverviewList
-                indented
-                emptyStateText={t('courseInfoTab.linksSectionEmptyState')}
-              >
-                {courseQuery.data?.links.map((link, index) => (
-                  <ListItem
-                    key={index}
-                    leadingItem={<Icon icon={faLink} size={fontSizes.xl} />}
-                    title={
-                      link.description ?? t('courseInfoTab.linkDefaultTitle')
-                    }
-                    subtitle={link.url}
-                    onPress={() => openInAppLink(link.url)}
-                  />
-                ))}
-              </OverviewList>
-            </Section>
+              <Card>
+                <List>
+                  {course.links.map((link, index) => (
+                    <ListItem
+                      key={index}
+                      leadingItem={
+                        <OutlineIcon name="link" color={colors.secondaryText} />
+                      }
+                      title={
+                        link.description ?? t('courseInfoTab.linkDefaultTitle')
+                      }
+                      subtitle={link.url}
+                      accessibilityHint={t('course.info.opensInBrowser')}
+                      onPress={() => openInAppLink(link.url)}
+                    />
+                  ))}
+                </List>
+              </Card>
+            </View>
+          )}
 
-            <Section>
-              <SectionHeader title={t('courseInfoTab.moreSectionTitle')} />
-              <OverviewList>
+          <View style={styles.section}>
+            <SectionHeader title={t('courseInfoTab.moreSectionTitle')} />
+            <Card>
+              <List>
                 <ListItem
+                  leadingItem={
+                    <OutlineIcon name="bookopen" color={colors.secondaryText} />
+                  }
                   title={t('courseGuideScreen.title')}
+                  subtitle={t('course.info.guideText')}
                   linkTo={{ screen: 'CourseGuide', params: { courseId } }}
                 />
                 <ListItem
+                  leadingItem={
+                    <OutlineIcon name="chart" color={colors.secondaryText} />
+                  }
                   title={t('courseStatisticsScreen.title')}
-                  subtitle={t('courseStatisticsScreen.subtitle')}
+                  subtitle={t('course.info.statisticsText')}
                   linkTo={{
                     screen: 'CourseStatistics',
                     params: {
-                      courseShortcode: courseQuery.data?.shortcode,
-                      year: courseQuery.data?.year,
-                      teacherId: courseQuery.data?.teacherId,
+                      courseShortcode: course.shortcode,
+                      year: course.year,
+                      teacherId: course.teacherId,
                       filter: CourseStatisticsFilterType.YEAR,
-                      nameCourse: courseQuery.data?.name,
+                      nameCourse: course.name,
                     },
                   }}
-                  disabled={isStatisticsDisabled}
+                  disabled={!course.shortcode}
                 />
-              </OverviewList>
-            </Section>
-          </>
-        ) : (
+              </List>
+            </Card>
+          </View>
+
+          <View style={styles.section}>
+            <SectionHeader title={t('course.info.settingsSection')} />
+            <Card>
+              <ListItem
+                leadingItem={
+                  <OutlineIcon name="gear" color={colors.secondaryText} />
+                }
+                title={t('navigation.courseSettings')}
+                subtitle={t('course.info.settingsText')}
+                isAction
+                onPress={openSettings}
+              />
+            </Card>
+          </View>
+        </>
+      ) : (
+        <View style={styles.firstBlock}>
           <QueryStateView
             states={states}
             skeleton={
               <SkeletonDetail
-                cards={[88, 104, 120]}
+                cards={[120, 88, 160]}
                 label={t('states.courseInfo.loading')}
               />
             }
@@ -381,65 +413,44 @@ export const CourseInfoScreen = () => {
           >
             {null}
           </QueryStateView>
-        )}
-        <BottomBarSpacer />
-      </SafeAreaView>
+        </View>
+      )}
+      <BottomBarSpacer />
     </ScrollView>
   );
 };
 
-const createStyles = ({
-  palettes,
-  spacing,
-  colors,
-  fontWeights,
-  shapes,
-}: Theme) =>
+const createStyles = ({ layout, spacing }: Theme) =>
   StyleSheet.create({
-    metricsCard: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      paddingHorizontal: spacing[5],
-      paddingVertical: spacing[4],
-      marginTop: 0,
-      marginBottom: spacing[7],
+    // The first card sits 16 px under the tab row
+    headCard: {
+      marginTop: spacing[4],
+      gap: spacing[1],
     },
-    periodMetric: {
-      marginRight: spacing[2],
-    },
-    periodDropdownIcon: {
-      color: palettes.secondary['500'],
-    },
-    dotIcon: {
-      marginBottom: spacing[2],
-      color: palettes.rose['600'],
-    },
-    dayColumn: {
-      width: '15%',
-      maxWidth: 200,
-    },
-    secondaryDay: {
-      textTransform: 'capitalize',
-      fontWeight: fontWeights.medium,
-    },
-    dayBox: {
-      display: 'flex',
-      alignItems: 'center',
-      paddingVertical: spacing[2],
-    },
-    nextLecBox: {
-      display: 'flex',
-      backgroundColor: colors.heading,
-      borderRadius: shapes.lg,
-      marginLeft: spacing[1],
+    firstBlock: {
       marginTop: spacing[2],
     },
-    nextLec: {
-      color: colors.surface,
+    title: {
+      marginBottom: spacing[1],
     },
-    nextLectureBox: {
-      gap: spacing[4],
-      paddingHorizontal: spacing[4],
-      paddingVertical: spacing[2],
+    facts: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing[6],
+      marginTop: spacing[3],
+    },
+    fact: {
+      gap: spacing[0.5],
+    },
+    factValue: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing[2],
+    },
+    section: {
+      marginTop: layout.sectionGap,
+    },
+    headerLink: {
+      marginBottom: -spacing[3],
     },
   });

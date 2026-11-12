@@ -1,8 +1,6 @@
 import {
-  VideoLecture,
   VirtualClassroomLive,
   VirtualClassroomRecording,
-  instanceOfVideoLecture,
   instanceOfVirtualClassroomLive,
   instanceOfVirtualClassroomRecording,
 } from '@polito/student-api-client';
@@ -15,6 +13,3 @@ export const isLiveVC = (l: CourseLecture): l is VirtualClassroomLive =>
 export const isRecordedVC = (
   l: CourseLecture,
 ): l is VirtualClassroomRecording => instanceOfVirtualClassroomRecording(l);
-
-export const isVideoLecture = (l: CourseLecture): l is VideoLecture =>
-  instanceOfVideoLecture(l);

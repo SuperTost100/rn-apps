@@ -14,3 +14,27 @@ export const isCourseDetailed = (course: CourseOverview) => {
   if (course.previousEditions.some(edition => edition.id !== null)) return true;
   return false;
 };
+
+/**
+ * The key of the course's preferences: a module's is its parent's code
+ * with the module's position after it, as the course header computes it
+ */
+export const uniqueShortcodeOf = (
+  courseId: number,
+  courses: CourseOverview[] | undefined,
+) => {
+  const isEdition = (list: { id: number | string }[]) =>
+    list.some(e => +e.id === courseId);
+  const course = courses?.find(
+    c => c.id === courseId || isEdition(c.previousEditions),
+  );
+  if (course) return course.uniqueShortcode;
+  const parent = courses?.find(c =>
+    c.modules?.some(m => m.id === courseId || isEdition(m.previousEditions)),
+  );
+  const index =
+    parent?.modules?.findIndex(
+      m => m.id === courseId || isEdition(m.previousEditions),
+    ) ?? -1;
+  return parent && index >= 0 ? `${parent.uniqueShortcode}${index + 1}` : '';
+};

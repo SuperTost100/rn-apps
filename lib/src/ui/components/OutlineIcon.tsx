@@ -96,6 +96,13 @@ const glyphs = {
       <Path d="M16 10.5L21.5 8v8L16 13.5" />
     </>
   ),
+  monitor: (
+    <>
+      <Rect x={2.5} y={3.5} width={19} height={13} rx={2} />
+      <Path d="M8 20.5h8M12 16.5v4" />
+      <Path d="M10 7.5l4.5 2.5-4.5 2.5z" />
+    </>
+  ),
   live: (
     <>
       <Circle cx={12} cy={12} r={2} />

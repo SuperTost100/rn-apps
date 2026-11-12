@@ -1,65 +1,72 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  Animated,
-  Platform,
-  Pressable,
-  SectionList,
-  SectionListData,
-  StyleSheet,
-  View,
-} from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 import {
-  faChalkboardTeacher,
-  faChevronDown,
-  faChevronUp,
-  faVideo,
-} from '@fortawesome/free-solid-svg-icons';
-import {
-  formatDate,
+  APP_TIMEZONE,
   useOfflineDisabled,
+  usePreferencesContext,
   useQueryStates,
 } from '@polito/lib/core';
 import { useGetPerson } from '@polito/lib/features/people';
 import {
   BottomBarSpacer,
-  Icon,
-  IndentedDivider,
+  Card,
+  List,
   ListItem,
+  OutlineIcon,
   QueryStateView,
   RefreshControl,
   SectionHeader,
-  TranslucentView,
-  useSafeAreaSpacing,
+  SkeletonRows,
+  StatusChip,
+  TextButton,
+  Theme,
+  useStylesheet,
   useTheme,
 } from '@polito/lib/ui';
 import { useFocusEffect } from '@react-navigation/native';
 
+import { DateTime } from 'luxon';
+
 import { useNotifications } from '../../../core/hooks/useNotifications';
 import { useGetCourseLectures } from '../../../core/queries/courseHooks';
+import { AppPreferences } from '../../../core/types/preferences';
+import { useMinuteClock } from '../../agenda/hooks/useMinuteClock';
+import { CourseLectureRow } from '../components/CourseLectureRow';
 import { useCourseContext } from '../contexts/CourseContext';
+import { useCourseNextLectures } from '../hooks/useCourseNextLectures';
 import {
   CourseLecture,
   CourseLectureSection,
 } from '../types/CourseLectureSections';
-import { isRecordedVC, isVideoLecture } from '../utils/lectures';
+import { isLiveVC } from '../utils/lectures';
 
+/** How many coming lectures the tab lists */
+const NEXT_LECTURES = 4;
+/** Rows a section of another year or course shows before "Show all" */
+const FOLDED_ROWS = 3;
+
+/**
+ * The course's Lectures tab: the next lectures in the timetable, then the
+ * recordings the teacher published, a section per kind as today (virtual
+ * classrooms with their live classes, video lectures, other years and
+ * related courses), each in a card
+ */
 export const CourseLecturesScreen = () => {
   const { t } = useTranslation();
-  const safeAreaInsets = useSafeAreaInsets();
+  const styles = useStylesheet(createStyles);
   const courseId = useCourseContext();
-  const { spacing, colors } = useTheme();
-  const scrollPosition = useRef(new Animated.Value(0));
+  const now = useMinuteClock();
   const courseLecturesQuery = useGetCourseLectures(courseId);
+  const next = useCourseNextLectures(courseId, NEXT_LECTURES);
   const { clearNotificationScope } = useNotifications();
-  const [lectures, setLectures] = useState<CourseLectureSection[]>([]);
-  const sectionListRef =
-    useRef<SectionList<CourseLecture, CourseLectureSection>>(null);
+  const sections = courseLecturesQuery.data ?? [];
   const states = useQueryStates(courseLecturesQuery.queries, {
-    isEmpty: () => (courseLecturesQuery.data?.length ?? 0) === 0,
+    isEmpty: () => sections.length === 0 && next.entries.length === 0,
   });
+  // Sections of other years and courses start folded
+  const [unfolded, setUnfolded] = useState<Record<string, boolean>>({});
 
   useFocusEffect(
     useCallback(() => {
@@ -73,191 +80,180 @@ export const CourseLecturesScreen = () => {
     }, []),
   );
 
-  useEffect(() => {
-    if (!courseLecturesQuery.data) return;
-
-    const nextLectures = [...courseLecturesQuery.data];
-    setLectures(prev => {
-      const isFirstRender = !prev.length;
-      return nextLectures.map((section, index) => {
-        if (isFirstRender) {
-          if (index === 0) {
-            return { ...section, isExpanded: true };
-          }
-        } else if (prev?.[index]?.isExpanded) {
-          return { ...section, isExpanded: true };
-        }
-
-        return { ...section, isExpanded: false, data: [] };
-      });
-    });
-  }, [courseLecturesQuery.isLoading, courseLecturesQuery.data]);
-
-  const toggleSection = (sectionTitle: string) => {
-    setLectures(oldS => {
-      return oldS.map((section, index) => {
-        let isExpanded = false;
-        let data: unknown = [];
-        if (section.title === sectionTitle) {
-          isExpanded = !section.isExpanded;
-        }
-
-        if (isExpanded && !section.data.length) {
-          data = courseLecturesQuery.data?.[index].data ?? [];
-        }
-
-        return {
-          ...section,
-          isExpanded,
-          data,
-        } as CourseLectureSection;
-      });
-    });
-  };
+  const nextBlock = next.isLoading ? (
+    <SkeletonRows count={2} leading="tile" trailing="none" />
+  ) : next.entries.length ? (
+    <Card>
+      <List>
+        {next.entries.map(entry => (
+          <CourseLectureRow key={entry.item.key} entry={entry} now={now} />
+        ))}
+      </List>
+    </Card>
+  ) : null;
 
   return (
-    <SectionList
-      ref={sectionListRef}
+    <ScrollView
       contentInsetAdjustmentBehavior="automatic"
-      sections={lectures}
-      refreshControl={<RefreshControl queries={courseLecturesQuery.queries} />}
-      stickySectionHeadersEnabled={true}
-      ListEmptyComponent={
+      refreshControl={
+        <RefreshControl
+          manual
+          queries={[...courseLecturesQuery.queries, ...next.queries]}
+        />
+      }
+    >
+      <View style={styles.first}>
         <QueryStateView
           states={states}
-          skeleton={{
-            count: 4,
-            leading: 'icon',
-            label: t('states.lectures.loading'),
-          }}
+          skeleton={
+            <View>
+              <SkeletonRows count={2} leading="tile" trailing="none" />
+              <View style={styles.section}>
+                <SkeletonRows
+                  count={4}
+                  leading="icon"
+                  label={t('states.lectures.loading')}
+                />
+              </View>
+            </View>
+          }
           emptyState={{
             title: t('states.lectures.emptyTitle'),
-            text: t('states.lectures.emptyText'),
+            text: t('course.lectures.emptyText'),
           }}
           errorState={{ title: t('states.lectures.failedTitle') }}
         >
-          {null}
+          {nextBlock && (
+            <View>
+              <SectionHeader title={t('course.lectures.next')} />
+              {nextBlock}
+            </View>
+          )}
+          {sections.map((section, index) => {
+            const isRelated = section.courseId !== courseId;
+            const key = `${section.courseId}-${section.type}-${index}`;
+            const folded =
+              isRelated && !unfolded[key] && section.data.length > FOLDED_ROWS;
+            const rows = folded
+              ? section.data.slice(0, FOLDED_ROWS)
+              : section.data;
+            return (
+              <View
+                key={key}
+                style={(index > 0 || !!nextBlock) && styles.section}
+              >
+                <SectionHeader title={section.title} />
+                <Card>
+                  <List>
+                    {rows.map(lecture => (
+                      <LectureRow
+                        key={lecture.id}
+                        section={section}
+                        lecture={lecture}
+                      />
+                    ))}
+                  </List>
+                  {folded && (
+                    <TextButton
+                      style={styles.showAll}
+                      onPress={() =>
+                        setUnfolded(prev => ({ ...prev, [key]: true }))
+                      }
+                    >
+                      {t('course.lectures.showAll', {
+                        count: section.data.length,
+                      })}
+                    </TextButton>
+                  )}
+                </Card>
+              </View>
+            );
+          })}
         </QueryStateView>
-      }
-      onScroll={Animated.event(
-        [{ nativeEvent: { contentOffset: { y: scrollPosition.current } } }],
-        { useNativeDriver: false },
-      )}
-      ItemSeparatorComponent={Platform.select({
-        ios: () => (
-          <IndentedDivider
-            indent={safeAreaInsets.left + 56}
-            style={{ marginRight: safeAreaInsets.right }}
-          />
-        ),
-      })}
-      renderSectionHeader={({ section: { title, isExpanded } }) => (
-        <Pressable
-          onPress={() => toggleSection(title)}
-          accessibilityLabel={`${title}. ${t(
-            `common.openedStatus.${isExpanded}`,
-          )}. ${t(`common.openedStatusAction.${isExpanded}`)}`}
-        >
-          <View
-            style={{
-              paddingLeft: safeAreaInsets.left,
-              paddingRight: safeAreaInsets.right,
-              paddingVertical: spacing[3],
-              borderBottomWidth: StyleSheet.hairlineWidth,
-              borderColor: colors.divider,
-              borderTopWidth: StyleSheet.hairlineWidth,
-            }}
-          >
-            <TranslucentView />
-            <SectionHeader
-              title={title}
-              separator={false}
-              trailingItem={
-                <Icon
-                  icon={isExpanded ? faChevronUp : faChevronDown}
-                  color={colors.secondaryText}
-                />
-              }
-            />
-          </View>
-        </Pressable>
-      )}
-      renderItem={({ section, item: lecture }) => {
-        return (
-          <CourseLectureListItem
-            courseId={section.courseId}
-            section={section}
-            lecture={lecture}
-          />
-        );
-      }}
-      ListFooterComponent={<BottomBarSpacer />}
-    />
+      </View>
+      <BottomBarSpacer />
+    </ScrollView>
   );
 };
 
-type CourseLectureListItemProps = {
-  courseId: number;
-  section: SectionListData<CourseLecture, CourseLectureSection>;
+interface LectureRowProps {
+  section: CourseLectureSection;
   lecture: CourseLecture;
-};
+}
 
-const CourseLectureListItem = ({
-  courseId,
-  section,
-  lecture,
-}: CourseLectureListItemProps) => {
+/**
+ * A recording or a live class: an icon per kind, the title, the day, the
+ * length and the teacher. It opens the player or the live class, which
+ * need a connection.
+ */
+const LectureRow = ({ section, lecture }: LectureRowProps) => {
+  const { t } = useTranslation();
+  const { colors } = useTheme();
+  const { language } = usePreferencesContext<AppPreferences>();
   const isDisabled = useOfflineDisabled();
   const { data: teacher } = useGetPerson(lecture.teacherId);
-  const { marginHorizontal } = useSafeAreaSpacing();
-  const { fontSizes } = useTheme();
-  const { t } = useTranslation();
-
-  let duration = null;
-  if (isRecordedVC(lecture) || isVideoLecture(lecture)) {
-    duration = lecture.duration;
-  }
+  const isVideo = section.type === 'VideoLecture';
+  const isLive = !isVideo && isLiveVC(lecture);
+  const duration = 'duration' in lecture ? lecture.duration : undefined;
+  const day = DateTime.fromJSDate(lecture.createdAt, { zone: APP_TIMEZONE })
+    .setLocale(language)
+    .toFormat('ccc d LLL yyyy');
+  const teacherName = teacher
+    ? `${teacher.firstName} ${teacher.lastName}`
+    : undefined;
+  const kind = isVideo
+    ? t('course.lectures.videoLecture')
+    : isLive
+      ? t('course.lectures.liveClass')
+      : t('course.lectures.recording');
 
   return (
     <ListItem
       title={lecture.title}
-      subtitle={[
-        formatDate(lecture.createdAt),
-        duration,
-        teacher && `${teacher.firstName} ${teacher.lastName}`,
-      ]
-        .filter(i => !!i)
-        .join(' - ')}
-      accessibilityLabel={[
-        lecture.title,
-        duration
-          ?.replace('m', t('common.minutes'))
-          ?.replace('h', t('common.hours')),
-        teacher && `${teacher.firstName} ${teacher.lastName}`,
-      ]
-        .filter(i => !!i)
-        .join(' - ')}
+      titleProps={{ numberOfLines: 2 }}
+      subtitle={[day, duration, teacherName].filter(Boolean).join(' · ')}
       leadingItem={
-        <Icon
-          icon={section.type === 'VideoLecture' ? faVideo : faChalkboardTeacher}
-          size={fontSizes['2xl']}
+        <OutlineIcon
+          name={isVideo ? 'video' : isLive ? 'live' : 'monitor'}
+          color={isLive ? colors.nowText : colors.secondaryText}
         />
       }
+      chip={
+        isLive ? (
+          <StatusChip label={t('course.lectures.live')} tone="warning" />
+        ) : undefined
+      }
+      chipLabel={isLive ? t('course.lectures.live') : undefined}
+      accessibilityLabel={[kind, lecture.title, day, duration, teacherName]
+        .filter(Boolean)
+        .join(', ')}
       linkTo={{
-        screen:
-          section.type === 'VideoLecture'
-            ? 'CourseVideolecture'
-            : 'CourseVirtualClassroom',
+        screen: isVideo ? 'CourseVideolecture' : 'CourseVirtualClassroom',
         params: {
-          courseId,
+          courseId: section.courseId,
           lectureId: lecture.id,
           teacherId: lecture.teacherId,
         },
       }}
-      containerStyle={marginHorizontal}
       // Recordings and live classes stream: they need the network
       disabled={isDisabled}
       accessibilityHint={isDisabled ? t('states.needsConnection') : undefined}
     />
   );
 };
+
+const createStyles = ({ layout, spacing }: Theme) =>
+  StyleSheet.create({
+    // The first block sits 16 px under the tab row
+    first: {
+      marginTop: spacing[4],
+    },
+    section: {
+      marginTop: layout.sectionGap,
+    },
+    showAll: {
+      alignSelf: 'flex-start',
+      marginLeft: layout.cardPadding - spacing[3],
+      marginRight: 0,
+    },
+  });
