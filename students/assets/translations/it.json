@@ -819,6 +819,10 @@
     "takePhoto": "Acquisisci con la fotocamera",
     "takePhotoHint": "Scatta una o più foto e genera un file"
   },
+  "navigation": {
+    "courseSettings": "Impostazioni del corso",
+    "unreadCount": "{{count}} da leggere"
+  },
   "newsScreen": {
     "createdAt": "Pubblicato il ",
     "eventStartTime": "Inizio evento",

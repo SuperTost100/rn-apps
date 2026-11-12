@@ -1,5 +1,4 @@
 import { useTranslation } from 'react-i18next';
-import { Platform } from 'react-native';
 
 import { TeachingNavigatorID } from '@polito/lib/core';
 import {
@@ -7,10 +6,11 @@ import {
   type PlacesStackParamList,
 } from '@polito/lib/features/places';
 import {
-  HeaderLogoNoProps,
   offlineScreenLayout,
-  useTheme,
-  useTitlesStyles,
+  useInnerHeaderOptions,
+  useInnerTitleOptions,
+  useTabRootHeaderOptions,
+  withoutHeaderHairline,
 } from '@polito/lib/ui';
 import { ExamGrade } from '@polito/student-api-client';
 import { NavigatorScreenParams } from '@react-navigation/native';
@@ -64,27 +64,20 @@ const Stack = createNativeStackNavigator<
 
 export const TeachingNavigator = () => {
   const { t } = useTranslation();
-  const theme = useTheme();
-  const { colors } = theme;
+  const rootOptions = useTabRootHeaderOptions();
+  const placesHeaderOptions = { inner: useInnerTitleOptions() };
 
   return (
     <Stack.Navigator
       screenLayout={offlineScreenLayout}
       id={TeachingNavigatorID}
-      screenOptions={{
-        headerLargeTitle: true,
-        headerTransparent: Platform.select({ ios: true }),
-        headerLargeStyle: {
-          backgroundColor: colors.background,
-        },
-        ...useTitlesStyles(theme),
-      }}
+      screenOptions={useInnerHeaderOptions()}
     >
       <Stack.Screen
         name="Home"
         component={TeachingScreen}
         options={{
-          headerLeft: HeaderLogoNoProps,
+          ...rootOptions,
           headerTitle: t('teachingScreen.title'),
         }}
       />
@@ -107,7 +100,6 @@ export const TeachingNavigator = () => {
         component={ExamScreen}
         getId={({ params }) => `${params.id}`}
         options={{
-          headerLargeTitle: false,
           headerTitle: t('common.examCall'),
         }}
       />
@@ -116,7 +108,6 @@ export const TeachingNavigator = () => {
         component={ExamQuestionScreen}
         getId={({ params }) => `${params.id}`}
         options={{
-          headerLargeTitle: false,
           headerTitle: t('common.examCall'),
         }}
       />
@@ -125,7 +116,6 @@ export const TeachingNavigator = () => {
         component={ExamRequestScreen}
         getId={({ params }) => `${params.id}`}
         options={{
-          headerLargeTitle: false,
           headerTitle: t('common.examCall'),
         }}
       />
@@ -134,7 +124,6 @@ export const TeachingNavigator = () => {
         component={ExamRescheduleScreen}
         getId={({ params }) => `${params.id}`}
         options={{
-          headerLargeTitle: false,
           headerTitle: t('examRescheduleScreen.screenTitle'),
         }}
       />
@@ -143,13 +132,7 @@ export const TeachingNavigator = () => {
         component={TranscriptTopTabsNavigator}
         options={{
           headerTitle: t('common.transcript'),
-          headerLargeTitle: false,
-          headerTransparent: false,
-          headerShadowVisible: false,
-          headerBackButtonDisplayMode: 'minimal',
-          headerLargeStyle: {
-            backgroundColor: colors.headersBackground,
-          },
+          ...withoutHeaderHairline,
         }}
       />
       <Stack.Screen
@@ -157,8 +140,6 @@ export const TeachingNavigator = () => {
         component={ProvisionalGradeScreen}
         options={{
           headerTitle: t('transcriptGradeScreen.title'),
-          headerLargeTitle: false,
-          headerBackButtonDisplayMode: 'minimal',
         }}
       />
       <Stack.Screen
@@ -166,8 +147,6 @@ export const TeachingNavigator = () => {
         component={RecordedGradeScreen}
         options={{
           headerTitle: t('recordedGradeScreen.recordedGradeTitle'),
-          headerLargeTitle: false,
-          headerBackButtonDisplayMode: 'minimal',
         }}
       />
       <Stack.Screen
@@ -177,15 +156,18 @@ export const TeachingNavigator = () => {
           headerShown: false,
         }}
       >
-        {() => <PlacesNavigator unreadMessagesModal={UnreadMessagesModal} />}
+        {() => (
+          <PlacesNavigator
+            unreadMessagesModal={UnreadMessagesModal}
+            headerOptions={placesHeaderOptions}
+          />
+        )}
       </Stack.Screen>
       <Stack.Screen
         name="CpdSurveys"
         component={CpdSurveysScreen}
         options={{
           title: t('teachingScreen.cpdTitle'),
-          headerLargeTitle: false,
-          headerBackButtonDisplayMode: 'minimal',
         }}
       />
       <Stack.Screen

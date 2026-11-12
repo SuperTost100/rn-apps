@@ -10,11 +10,12 @@ import {
   type PlacesStackParamList,
 } from '@polito/lib/features/places';
 import {
-  HeaderLogo,
   createHeaderCloseButton,
   offlineScreenLayout,
-  useTheme,
-  useTitlesStyles,
+  useInnerHeaderOptions,
+  useInnerTitleOptions,
+  useTabRootHeaderOptions,
+  withoutHeaderHairline,
 } from '@polito/lib/ui';
 import { TicketFAQ } from '@polito/student-api-client';
 import { NavigatorScreenParams } from '@react-navigation/native';
@@ -108,8 +109,8 @@ const Stack = createNativeStackNavigator<ServiceStackParamList>();
 
 export const ServicesNavigator = () => {
   const { t } = useTranslation();
-  const theme = useTheme();
-  const { colors } = theme;
+  const rootOptions = useTabRootHeaderOptions();
+  const placesHeaderOptions = { inner: useInnerTitleOptions() };
   const ContactsScreen = () => (
     <LibContactsScreen
       usefulContacts={studentsUsefulContactsList}
@@ -120,21 +121,13 @@ export const ServicesNavigator = () => {
   return (
     <Stack.Navigator
       screenLayout={offlineScreenLayout}
-      screenOptions={{
-        headerLargeTitle: true,
-        headerTransparent: Platform.select({ ios: true }),
-        headerLargeStyle: {
-          backgroundColor: colors.background,
-        },
-        headerBlurEffect: 'systemUltraThinMaterial',
-        ...useTitlesStyles(theme),
-      }}
+      screenOptions={useInnerHeaderOptions()}
     >
       <Stack.Screen
         name="Services"
         component={ServicesScreen}
         options={{
-          headerLeft: () => <HeaderLogo />,
+          ...rootOptions,
           headerTitle: t('servicesScreen.title'),
         }}
       />
@@ -150,10 +143,6 @@ export const ServicesNavigator = () => {
         component={TicketScreen}
         getId={({ params: { id } }) => id.toString()}
         options={{
-          headerLargeTitle: false,
-          headerTransparent: false,
-          headerShadowVisible: false,
-          headerStyle: { backgroundColor: colors.surface },
           headerTitle: '',
           headerBackTitle: t('ticketScreen.headerBackTitle'), // TODO wrong with direct navigation
         }}
@@ -163,7 +152,6 @@ export const ServicesNavigator = () => {
         component={TicketInfoScreen}
         getId={({ params: { id } }) => id.toString()}
         options={{
-          headerLargeTitle: false,
           headerTitle: '',
           headerBackTitle: t('ticketScreen.title'),
         }}
@@ -172,25 +160,20 @@ export const ServicesNavigator = () => {
         name="TicketResolved"
         component={TicketResolvedScreen}
         options={({ route }) => ({
-          headerLargeTitle: false,
           headerTitle: `${t('ticketScreen.title')} ${route.params.ticketId}`,
-          headerBackButtonDisplayMode: 'minimal',
         })}
       />
       <Stack.Screen
         name="TicketAutoResolved"
         component={TicketAutoResolvedScreen}
         options={{
-          headerLargeTitle: false,
           headerTitle: '',
-          headerBackButtonDisplayMode: 'minimal',
         }}
       />
       <Stack.Screen
         name="CreateTicket"
         component={CreateTicketScreen}
         options={{
-          headerLargeTitle: false,
           headerTitle: t('createTicketScreen.title'),
         }}
       />
@@ -198,7 +181,6 @@ export const ServicesNavigator = () => {
         name="TicketFaqs"
         component={TicketFaqsScreen}
         options={{
-          headerLargeTitle: false,
           headerTitle: t('ticketFaqsScreen.title'),
         }}
       />
@@ -206,7 +188,6 @@ export const ServicesNavigator = () => {
         name="TicketFaq"
         component={TicketFaqScreen}
         options={{
-          headerLargeTitle: false,
           headerTitle: t('ticketFaqScreen.title'),
         }}
       />
@@ -222,9 +203,7 @@ export const ServicesNavigator = () => {
         component={JobOfferScreen}
         getId={({ params: { id } }) => id.toString()}
         options={{
-          headerLargeTitle: false,
           headerTitle: t('jobOfferScreen.title'),
-          headerBackButtonDisplayMode: 'minimal',
         }}
       />
       <Stack.Screen
@@ -240,8 +219,6 @@ export const ServicesNavigator = () => {
         getId={({ params: { id } }) => id.toString()}
         options={{
           headerTitle: t('newsScreen.title'),
-          headerLargeTitle: false,
-          headerBackButtonDisplayMode: 'minimal',
         }}
       />
       <Stack.Screen
@@ -249,12 +226,7 @@ export const ServicesNavigator = () => {
         component={OfferingTopTabsNavigator}
         options={{
           headerTitle: t('offeringScreen.title'),
-          headerLargeTitle: false,
-          headerTransparent: false,
-          headerShadowVisible: false,
-          headerLargeStyle: {
-            backgroundColor: colors.headersBackground,
-          },
+          ...withoutHeaderHairline,
         }}
       />
       <Stack.Screen
@@ -263,13 +235,7 @@ export const ServicesNavigator = () => {
         getId={({ params: { id, year } }) => id + (year ?? '0')}
         options={{
           headerTitle: t('degreeScreen.title'),
-          headerLargeTitle: false,
-          headerTransparent: false,
-          headerShadowVisible: false,
-          headerBackButtonDisplayMode: 'minimal',
-          headerLargeStyle: {
-            backgroundColor: colors.headersBackground,
-          },
+          ...withoutHeaderHairline,
         }}
       />
       <Stack.Screen
@@ -277,12 +243,6 @@ export const ServicesNavigator = () => {
         component={ContactsScreen}
         options={{
           headerTitle: t('contactsScreen.title'),
-          headerLargeStyle: {
-            backgroundColor: colors.headersBackground,
-          },
-          headerTransparent: false,
-          headerLargeTitle: false,
-          headerShadowVisible: false,
         }}
       />
       <Stack.Screen
@@ -290,7 +250,6 @@ export const ServicesNavigator = () => {
         component={BookingsScreen}
         options={{
           headerTitle: t('bookingsScreen.title'),
-          headerLargeTitle: false,
         }}
       />
       <Stack.Screen
@@ -299,8 +258,6 @@ export const ServicesNavigator = () => {
         getId={({ params: { id } }) => id.toString()}
         options={{
           headerTitle: t('common.booking'),
-          headerLargeTitle: false,
-          headerBackButtonDisplayMode: 'minimal',
         }}
       />
       <Stack.Screen
@@ -308,8 +265,6 @@ export const ServicesNavigator = () => {
         component={BookingTopicScreen}
         options={{
           headerTitle: t('bookingsScreen.newBooking'),
-          headerLargeTitle: false,
-          headerBackButtonDisplayMode: 'minimal',
         }}
       />
       <Stack.Screen
@@ -317,13 +272,6 @@ export const ServicesNavigator = () => {
         component={BookingSlotScreen}
         options={({ route }) => ({
           headerTitle: route.params.topicName,
-          headerLargeTitle: false,
-          headerBackButtonDisplayMode: 'minimal',
-          headerTransparent: false,
-          headerShadowVisible: false,
-          headerLargeStyle: {
-            backgroundColor: colors.headersBackground,
-          },
         })}
       />
       <Stack.Screen
@@ -338,9 +286,6 @@ export const ServicesNavigator = () => {
               }
             : {}),
           headerTitle: t('common.legend'),
-          headerLargeTitle: false,
-          headerTransparent: false,
-          headerShadowVisible: false,
           headerRight: createHeaderCloseButton(navigation),
         })}
       />
@@ -348,8 +293,6 @@ export const ServicesNavigator = () => {
         name="BookingSeatSelection"
         component={BookingSeatSelectionScreen}
         options={{
-          headerLargeTitle: false,
-          headerBackButtonDisplayMode: 'minimal',
           headerTitle: t('bookingSeatScreen.title'),
         }}
       />
@@ -357,8 +300,6 @@ export const ServicesNavigator = () => {
         name="BookingSeat"
         component={BookingSeatScreen}
         options={{
-          headerLargeTitle: false,
-          headerBackButtonDisplayMode: 'minimal',
           headerTitle: t('common.seat'),
         }}
       />
@@ -367,7 +308,6 @@ export const ServicesNavigator = () => {
         component={GuidesScreen}
         options={{
           headerTitle: t('guidesScreen.title'),
-          headerLargeTitle: false,
         }}
       />
       <Stack.Screen
@@ -375,8 +315,6 @@ export const ServicesNavigator = () => {
         component={GuideScreen}
         options={{
           headerTitle: t('guideScreen.title'),
-          headerLargeTitle: false,
-          headerBackButtonDisplayMode: 'minimal',
         }}
       />
       <Stack.Screen
@@ -384,7 +322,6 @@ export const ServicesNavigator = () => {
         component={SurveysScreen}
         options={{
           headerTitle: t('surveysScreen.title'),
-          headerLargeTitle: false,
         }}
       />
       <Stack.Screen
@@ -392,8 +329,6 @@ export const ServicesNavigator = () => {
         component={SurveyListScreen}
         options={{
           headerTitle: t('surveysScreen.compiledTitle'),
-          headerLargeTitle: false,
-          headerBackButtonDisplayMode: 'minimal',
         }}
       />
       <Stack.Screen
@@ -403,7 +338,12 @@ export const ServicesNavigator = () => {
           headerShown: false,
         }}
       >
-        {() => <PlacesNavigator unreadMessagesModal={UnreadMessagesModal} />}
+        {() => (
+          <PlacesNavigator
+            unreadMessagesModal={UnreadMessagesModal}
+            headerOptions={placesHeaderOptions}
+          />
+        )}
       </Stack.Screen>
       {SharedScreens()}
     </Stack.Navigator>

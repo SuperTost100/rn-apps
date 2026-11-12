@@ -255,8 +255,8 @@
     "noValue": "No value",
     "notFound": "Not found",
     "notes": "Notes",
-    "notice": "News",
-    "notice_plural": "News",
+    "notice": "Announcement",
+    "notice_plural": "Announcements",
     "notifications": "Notifications",
     "now": "Now",
     "objectives": "Objectives",
@@ -554,8 +554,8 @@
     "ititle": "Details not available yet"
   },
   "courseNoticesTab": {
-    "emptyState": "There are no news here",
-    "title": "News"
+    "emptyState": "There are no announcements here",
+    "title": "Announcements"
   },
   "coursePreferencesScreen": {
     "cleanCacheConfirmMessage": "You'll have to re-download the files in order to view them",
@@ -801,6 +801,10 @@
     "pickPhotoHint": "From your library",
     "takePhoto": "Take photo",
     "takePhotoHint": "Take one or more photos and generate a file"
+  },
+  "navigation": {
+    "courseSettings": "Course settings",
+    "unreadCount": "{{count}} unread"
   },
   "newsScreen": {
     "createdAt": "Published on ",

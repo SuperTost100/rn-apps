@@ -14,6 +14,8 @@ interface Props {
   shortcode?: string;
   cfu?: number | null;
   parentCourseName?: string | null;
+  /** Off where the header already carries the name */
+  showName?: boolean;
 }
 
 export const CourseHeading = ({
@@ -21,13 +23,14 @@ export const CourseHeading = ({
   shortcode,
   cfu,
   parentCourseName,
+  showName = true,
 }: Props) => {
   const { t } = useTranslation();
   const styles = useStylesheet(createStyles);
 
   return (
     <Section style={styles.heading}>
-      <ScreenTitle title={name} />
+      {showName && <ScreenTitle title={name} />}
       <Text variant="caption">
         {shortcode ?? ' '}
         {parentCourseName && ` - ${parentCourseName}`}

@@ -1,5 +1,4 @@
 import { useTranslation } from 'react-i18next';
-import { Platform } from 'react-native';
 
 import { AgendaNavigatorID, usePreferencesContext } from '@polito/lib/core';
 import {
@@ -7,10 +6,10 @@ import {
   type PlacesStackParamList,
 } from '@polito/lib/features/places';
 import {
-  HeaderLogo,
   offlineScreenLayout,
-  useTheme,
-  useTitlesStyles,
+  useInnerHeaderOptions,
+  useInnerTitleOptions,
+  useTabRootHeaderOptions,
 } from '@polito/lib/ui';
 import { NavigatorScreenParams } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -62,9 +61,9 @@ const Stack = createNativeStackNavigator<
 >();
 
 export const AgendaNavigator = () => {
-  const theme = useTheme();
-  const { colors } = theme;
   const { t } = useTranslation();
+  const rootOptions = useTabRootHeaderOptions();
+  const placesHeaderOptions = { inner: useInnerTitleOptions() };
   const {
     agendaScreen: { layout },
   } = usePreferencesContext<AppPreferences>();
@@ -73,28 +72,15 @@ export const AgendaNavigator = () => {
     <Stack.Navigator
       screenLayout={offlineScreenLayout}
       id={AgendaNavigatorID}
-      screenOptions={{
-        headerTransparent: Platform.select({ ios: true }),
-        headerLargeStyle: {
-          backgroundColor: colors.background,
-        },
-        ...useTitlesStyles(theme),
-      }}
+      screenOptions={useInnerHeaderOptions()}
       initialRouteName={layout === 'daily' ? 'Agenda' : 'AgendaWeek'}
     >
       <Stack.Screen
         name="Agenda"
         component={AgendaScreen}
         options={({ route: { params } }) => ({
-          headerLargeTitle: false,
-          headerLeft: () => <HeaderLogo />,
+          ...rootOptions,
           headerTitle: t('agendaScreen.title'),
-          headerTransparent: false,
-          headerShadowVisible: false,
-          headerBackButtonDisplayMode: 'minimal',
-          headerLargeStyle: {
-            backgroundColor: colors.headersBackground,
-          },
           animation: (params?.animated ?? true) ? 'default' : 'none',
         })}
       />
@@ -102,15 +88,8 @@ export const AgendaNavigator = () => {
         name="AgendaWeek"
         component={AgendaWeekScreen}
         options={{
-          headerLargeTitle: false,
-          headerLeft: () => <HeaderLogo />,
+          ...rootOptions,
           headerTitle: t('agendaScreen.title'),
-          headerTransparent: false,
-          headerShadowVisible: false,
-          headerBackButtonDisplayMode: 'minimal',
-          headerLargeStyle: {
-            backgroundColor: colors.headersBackground,
-          },
         }}
       />
       <Stack.Screen
@@ -118,7 +97,6 @@ export const AgendaNavigator = () => {
         component={LectureScreen}
         getId={({ params }) => `${params.item.courseId}${params.item.id}`}
         options={{
-          headerLargeTitle: false,
           headerTitle: t('common.lecture'),
         }}
       />
@@ -127,7 +105,6 @@ export const AgendaNavigator = () => {
         component={ExamScreen}
         getId={({ params }) => `${params.id}`}
         options={{
-          headerLargeTitle: false,
           headerTitle: t('common.examCall'),
         }}
       />
@@ -136,7 +113,6 @@ export const AgendaNavigator = () => {
         component={BookingScreen}
         getId={({ params }) => `${params.id}`}
         options={{
-          headerLargeTitle: false,
           headerTitle: t('common.booking'),
         }}
       />
@@ -144,8 +120,6 @@ export const AgendaNavigator = () => {
         name="BookingSeat"
         component={BookingSeatScreen}
         options={{
-          headerLargeTitle: false,
-          headerBackButtonDisplayMode: 'minimal',
           headerTitle: t('common.seat'),
         }}
       />
@@ -154,7 +128,6 @@ export const AgendaNavigator = () => {
         component={DeadlineScreen}
         getId={({ params }) => `${params.item.id}`}
         options={{
-          headerLargeTitle: false,
           headerTitle: t('common.deadline'),
         }}
       />
@@ -165,7 +138,12 @@ export const AgendaNavigator = () => {
           headerShown: false,
         }}
       >
-        {() => <PlacesNavigator unreadMessagesModal={UnreadMessagesModal} />}
+        {() => (
+          <PlacesNavigator
+            unreadMessagesModal={UnreadMessagesModal}
+            headerOptions={placesHeaderOptions}
+          />
+        )}
       </Stack.Screen>
       <Stack.Screen
         name="AgendaPreferences"

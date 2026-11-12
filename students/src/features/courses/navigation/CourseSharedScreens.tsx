@@ -1,7 +1,11 @@
 import { useTranslation } from 'react-i18next';
 import { Platform } from 'react-native';
 
-import { createHeaderCloseButton, useTheme } from '@polito/lib/ui';
+import {
+  AppHeader,
+  createHeaderCloseButton,
+  withoutHeaderHairline,
+} from '@polito/lib/ui';
 import { ParamListBase } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
@@ -76,7 +80,6 @@ const Stack = createNativeStackNavigator<CourseSharedScreensParamList>();
 
 export const CourseSharedScreens = () => {
   const { t } = useTranslation();
-  const { colors } = useTheme();
 
   return (
     <>
@@ -85,13 +88,17 @@ export const CourseSharedScreens = () => {
         component={CourseNavigator}
         getId={({ params }: { params: any }) => `${params.id}`}
         options={({ route: { params } }: { route: { params: any } }) => ({
-          headerLargeStyle: {
-            backgroundColor: colors.headersBackground,
-          },
-          headerTransparent: false,
-          headerLargeTitle: false,
-          headerShadowVisible: false,
-          headerBackButtonDisplayMode: 'minimal',
+          // The course name takes two lines and grows with the text size,
+          // which the native header cannot do; the tab row draws the line
+          header: props => (
+            <AppHeader
+              {...props}
+              variant="inner"
+              titleLines={2}
+              hairline={false}
+            />
+          ),
+          ...withoutHeaderHairline,
           animation: (params?.animated ?? true) ? 'default' : 'none',
         })}
       />
@@ -101,9 +108,6 @@ export const CourseSharedScreens = () => {
         getId={({ params }: { params: any }) => `${params.uniqueShortcode}`}
         options={{
           headerTitle: '',
-          headerLargeTitle: false,
-          headerShadowVisible: false,
-          headerBackButtonDisplayMode: 'minimal',
         }}
       />
       <Stack.Screen
@@ -123,7 +127,6 @@ export const CourseSharedScreens = () => {
         getId={({ params }: { params: any }) => `${params.courseId}`}
         options={{
           title: t('common.preferences'),
-          headerLargeTitle: false,
           headerBackTitle: t('common.course'),
         }}
       />
@@ -133,7 +136,6 @@ export const CourseSharedScreens = () => {
         getId={({ params }: { params: any }) => `${params.courseId}`}
         options={{
           title: t('courseIconPickerScreen.title'),
-          headerLargeTitle: false,
           headerSearchBarOptions: {},
         }}
       />
@@ -141,10 +143,7 @@ export const CourseSharedScreens = () => {
         name="CourseDirectory"
         component={CourseDirectoryScreen}
         getId={({ params }: { params: any }) => `${params?.directoryId}`}
-        options={{
-          headerBackButtonDisplayMode: 'minimal',
-          headerLargeTitle: false,
-        }}
+        options={{}}
       />
       <Stack.Screen
         name="CourseHideEvent"
@@ -152,7 +151,6 @@ export const CourseSharedScreens = () => {
         getId={({ params }: { params: any }) => `${params.courseId}`}
         options={{
           title: t('common.hiddenEvents'),
-          headerLargeTitle: false,
         }}
       />
       <Stack.Screen
@@ -172,7 +170,6 @@ export const CourseSharedScreens = () => {
           `${params.courseId}${params.lectureId}`
         }
         options={{
-          headerLargeTitle: false,
           headerBackTitle: t('common.course'),
           title: t('common.videoLecture'),
         }}
@@ -184,7 +181,6 @@ export const CourseSharedScreens = () => {
           `${params.courseId}${params.lectureId}`
         }
         options={{
-          headerLargeTitle: false,
           headerBackTitle: t('common.course'),
           title: t('courseVirtualClassroomScreen.title'),
         }}
@@ -194,10 +190,7 @@ export const CourseSharedScreens = () => {
         component={CourseAssignmentPdfCreationScreen}
         getId={({ params }: { params: any }) => `${params.courseId}`}
         options={{
-          headerBackButtonDisplayMode: 'minimal',
           headerTitle: t('courseAssignmentPdfCreationScreen.title'),
-          headerLargeTitle: false,
-          headerTransparent: false,
         }}
       />
       <Stack.Screen
@@ -207,7 +200,6 @@ export const CourseSharedScreens = () => {
         options={{
           headerBackTitle: t('common.course'),
           headerTitle: t('courseAssignmentUploadScreen.title'),
-          headerLargeTitle: false,
         }}
       />
       <Stack.Screen
@@ -217,12 +209,6 @@ export const CourseSharedScreens = () => {
         options={{
           headerBackTitle: t('courseAssignmentUploadScreen.backTitle'),
           headerTitle: t('courseAssignmentUploadScreen.title'),
-          headerLargeStyle: {
-            backgroundColor: colors.headersBackground,
-          },
-          headerTransparent: false,
-          headerLargeTitle: false,
-          headerShadowVisible: false,
         }}
       />
       <Stack.Screen
@@ -231,7 +217,6 @@ export const CourseSharedScreens = () => {
         getId={({ params }) => `${params.courseId}`}
         options={{
           title: t('courseColorPickerScreen.title'),
-          headerLargeTitle: false,
         }}
       />
       <Stack.Screen
@@ -240,8 +225,6 @@ export const CourseSharedScreens = () => {
         options={({ navigation }) => ({
           presentation: 'modal',
           headerShown: Platform.OS === 'android' ? true : false,
-          headerLargeTitle: false,
-          headerTransparent: false,
           title: t('courseDirectoryScreen.selectFiles'),
           headerLeft: () => null,
           headerRight:

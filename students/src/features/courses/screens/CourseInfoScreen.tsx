@@ -176,6 +176,7 @@ export const CourseInfoScreen = () => {
               shortcode={courseQuery.data?.shortcode}
               cfu={courseQuery.data?.cfu}
               parentCourseName={isModule ? parentCourse?.name : undefined}
+              showName={false}
             />
             <Card style={styles.metricsCard} accessible={true}>
               <Grid>

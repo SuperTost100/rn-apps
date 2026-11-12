@@ -62,7 +62,7 @@ export const AgendaWeekScreen = ({ navigation, route }: Props) => {
     usePreferencesContext<AppPreferences>();
 
   const { t } = useTranslation();
-  const { palettes, fontSizes } = useTheme();
+  const { fontSizes } = useTheme();
 
   const { colors } = useTheme();
 
@@ -203,11 +203,12 @@ export const AgendaWeekScreen = ({ navigation, route }: Props) => {
     };
 
     navigation.setOptions({
-      headerRight: () => (
+      // On the navy header: the header's foreground colour
+      headerRight: ({ tintColor }) => (
         <>
           <IconButton
             icon={faCalendarDay}
-            color={palettes.primary[400]}
+            color={tintColor}
             size={fontSizes.lg}
             adjustSpacing="left"
             accessibilityLabel={t('agendaScreen.selectDate')}
@@ -216,7 +217,7 @@ export const AgendaWeekScreen = ({ navigation, route }: Props) => {
           <MenuView actions={screenOptions} onPressAction={onPressOption}>
             <IconButton
               icon={faEllipsisVertical}
-              color={palettes.primary[400]}
+              color={tintColor}
               size={fontSizes.lg}
               adjustSpacing="right"
               accessibilityLabel={t('common.options')}
@@ -226,7 +227,6 @@ export const AgendaWeekScreen = ({ navigation, route }: Props) => {
       ),
     });
   }, [
-    palettes.primary,
     fontSizes.lg,
     navigation,
     t,

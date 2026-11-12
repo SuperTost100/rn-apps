@@ -1,14 +1,14 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useWindowDimensions } from 'react-native';
+import { StyleSheet, TouchableOpacity } from 'react-native';
 
-import { faCog } from '@fortawesome/free-solid-svg-icons';
 import {
-  IconButton,
+  OutlineIcon,
   Text,
+  Theme,
   TopTabBar,
+  useStylesheet,
   useTheme,
-  useTitlesStyles,
 } from '@polito/lib/ui';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -33,15 +33,28 @@ export interface CourseTabsParamList extends TeachingStackParamList {
   CourseAssignmentsScreen: undefined;
 }
 
+type CourseTab = Extract<
+  keyof CourseTabsParamList,
+  | 'CourseInfoScreen'
+  | 'CourseNoticesScreen'
+  | 'CourseFilesScreen'
+  | 'CourseLecturesScreen'
+  | 'CourseAssignmentsScreen'
+>;
+
+/**
+ * The tab each course was last left on, for this session: a course opens on
+ * Info the first time and on the tab used last afterwards
+ */
+const lastTabByCourse = new Map<number, CourseTab>();
+
 const TopTabs = createMaterialTopTabNavigator<CourseTabsParamList>();
 
 export const CourseNavigator = ({ route, navigation }: Props) => {
   const { t } = useTranslation();
-  const theme = useTheme();
-  const { palettes, fontSizes } = theme;
-  const { width } = useWindowDimensions();
+  const { colors } = useTheme();
+  const styles = useStylesheet(createStyles);
   const { getUnreadsCount } = useNotifications();
-  const titleStyles = useTitlesStyles(theme);
 
   const {
     id,
@@ -52,94 +65,69 @@ export const CourseNavigator = ({ route, navigation }: Props) => {
   const coursesQuery = useGetCourses();
 
   useEffect(() => {
-    if (!coursesQuery.data) return;
-    const course = coursesQuery.data.find(c => {
-      return (
-        c.id === id ||
-        c.previousEditions.some(e => +e.id === id) ||
-        c.modules?.some(module => module.id === id) ||
-        c.modules?.some(module =>
-          module.previousEditions.some(e => +e.id === id),
-        )
-      );
-    });
-
-    const isModule = coursesQuery.data.some(
-      c =>
-        c.modules?.some(module => module.id === id) ||
-        c.modules?.some(module =>
-          module.previousEditions.some(e => +e.id === id),
-        ),
+    const courses = coursesQuery.data ?? [];
+    const isEdition = (editions: { id: number | string }[]) =>
+      editions.some(e => +e.id === id);
+    const course = courses.find(
+      c => c.id === id || isEdition(c.previousEditions),
+    );
+    const parentCourse = courses.find(c =>
+      c.modules?.some(m => m.id === id || isEdition(m.previousEditions)),
+    );
+    const module = parentCourse?.modules?.find(
+      m => m.id === id || isEdition(m.previousEditions),
     );
 
     let correctUniqueShortcode =
       course?.uniqueShortcode || paramUniqueShortcode || '';
-    if (isModule) {
-      const parentCourse = coursesQuery.data.find(c =>
-        c.modules?.some(module => module.id === id),
-      );
-      if (parentCourse) {
-        const moduleIndex = parentCourse.modules?.findIndex(
-          module => module.id === id,
-        );
-        if (moduleIndex !== undefined && moduleIndex >= 0) {
-          correctUniqueShortcode = `${parentCourse.uniqueShortcode}${moduleIndex + 1}`;
-        }
+    if (parentCourse) {
+      const moduleIndex =
+        parentCourse.modules?.findIndex(m => m.id === id) ?? -1;
+      if (moduleIndex >= 0) {
+        correctUniqueShortcode = `${parentCourse.uniqueShortcode}${moduleIndex + 1}`;
       }
     }
 
-    const displayTitle = course?.name || title;
-
-    if (!displayTitle) return;
+    // The header carries the name of the course, or of the module
+    const displayTitle = module?.name ?? course?.name ?? title;
 
     navigation.setOptions({
-      headerTitleAlign: 'center',
-      headerTitle: () => (
-        <Text
-          variant="title"
-          style={[
-            titleStyles.headerTitleStyle,
-            {
-              fontSize: 17,
-            },
-          ]}
-          numberOfLines={1}
-        >
-          {isModule ? t('common.module') : t('common.course')}
-        </Text>
-      ),
-      headerRight: () => (
-        <IconButton
-          icon={faCog}
-          color={palettes.primary[400]}
-          size={fontSizes.lg}
+      title: displayTitle ?? '',
+      headerRight: ({ tintColor }) => (
+        <TouchableOpacity
           accessibilityRole="button"
-          accessibilityLabel={t('common.preferences')}
-          adjustSpacing="right"
+          accessibilityLabel={t('navigation.courseSettings')}
+          style={styles.gear}
           onPress={() => {
             navigation.navigate('CoursePreferences', {
               courseId: id,
               uniqueShortcode: correctUniqueShortcode,
             });
           }}
-        />
+        >
+          <OutlineIcon name="gear" color={tintColor ?? colors.title} />
+        </TouchableOpacity>
       ),
     });
   }, [
     coursesQuery.data,
-    fontSizes.lg,
+    colors.title,
     id,
     navigation,
-    palettes.primary,
+    styles.gear,
     t,
     title,
     paramUniqueShortcode,
-    titleStyles.headerTitleStyle,
-    width,
   ]);
   return (
     <CourseContext.Provider value={id}>
-      <TopTabs.Navigator tabBar={props => <TopTabBar {...props} />}>
+      <TopTabs.Navigator
+        tabBar={props => <TopTabBar {...props} />}
+        initialRouteName={lastTabByCourse.get(id) ?? 'CourseInfoScreen'}
+        screenListeners={({ route: tab }) => ({
+          focus: () => lastTabByCourse.set(id, tab.name as CourseTab),
+        })}
+      >
         <TopTabs.Screen
           name="CourseInfoScreen"
           component={CourseInfoScreen}
@@ -207,3 +195,13 @@ export const CourseNavigator = ({ route, navigation }: Props) => {
     </CourseContext.Provider>
   );
 };
+
+const createStyles = ({ controls }: Theme) =>
+  StyleSheet.create({
+    gear: {
+      width: controls.touchTarget,
+      height: controls.touchTarget,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+  });

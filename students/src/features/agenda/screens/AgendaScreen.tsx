@@ -32,6 +32,7 @@ import {
   useTheme,
 } from '@polito/lib/ui';
 import { MenuView, NativeActionEvent } from '@react-native-menu/menu';
+import { useScrollToTop } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQueryClient } from '@tanstack/react-query';
@@ -54,7 +55,7 @@ import { AgendaWeek } from '../types/AgendaWeek';
 type Props = NativeStackScreenProps<AgendaStackParamList, 'Agenda'>;
 
 export const AgendaScreen = ({ navigation, route }: Props) => {
-  const { palettes, fontSizes } = useTheme();
+  const { fontSizes } = useTheme();
   const { t } = useTranslation();
   const styles = useStylesheet(createStyles);
   const { updatePreference, agendaScreen, language } =
@@ -156,6 +157,18 @@ export const AgendaScreen = ({ navigation, route }: Props) => {
     [navigation],
   );
 
+  // Tapping the active tab again goes back to the day the agenda opened on
+  const selectedDayOffset = useRef(0);
+  selectedDayOffset.current = agendaState.dayOffsetOverall;
+  const scrollToTopTarget = useRef({
+    scrollToTop: () =>
+      flatListRef.current?.scrollToOffset({
+        offset: selectedDayOffset.current,
+        animated: true,
+      }),
+  });
+  useScrollToTop(scrollToTopTarget);
+
   const scrollToSelectedDay = useCallback(() => {
     setAgendaState(prevState => {
       if (prevState.dayOffsetOverall > 0) {
@@ -226,11 +239,12 @@ export const AgendaScreen = ({ navigation, route }: Props) => {
     };
 
     navigation.setOptions({
-      headerRight: () => (
+      // On the navy header: the header's foreground colour
+      headerRight: ({ tintColor }) => (
         <>
           <IconButton
             icon={faCalendarDay}
-            color={palettes.primary[400]}
+            color={tintColor}
             size={fontSizes.lg}
             adjustSpacing="left"
             accessibilityLabel={t('agendaScreen.selectDate')}
@@ -239,7 +253,7 @@ export const AgendaScreen = ({ navigation, route }: Props) => {
           <MenuView actions={screenOptions} onPressAction={onPressOption}>
             <IconButton
               icon={faEllipsisVertical}
-              color={palettes.primary[400]}
+              color={tintColor}
               size={fontSizes.lg}
               adjustSpacing="right"
               accessibilityLabel={t('common.options')}
@@ -249,7 +263,6 @@ export const AgendaScreen = ({ navigation, route }: Props) => {
       ),
     });
   }, [
-    palettes.primary,
     fontSizes.lg,
     navigation,
     t,

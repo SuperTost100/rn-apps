@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SafeAreaView, ScrollView, View } from 'react-native';
 
@@ -32,6 +32,7 @@ import {
   useTheme,
 } from '@polito/lib/ui';
 import { MenuAction, NativeActionEvent } from '@react-native-menu/menu';
+import { useScrollToTop } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import {
@@ -79,9 +80,12 @@ const UserDetails = ({ profile }: UserDetailsProps) => {
 const HeaderRightDropdown = ({
   profile,
   isOffline,
+  color,
 }: {
   profile?: AuthProfile;
   isOffline: boolean;
+  /** The header's foreground colour */
+  color?: string;
 }) => {
   const { mutate } = useSwitchCareer();
   const { t } = useTranslation();
@@ -120,10 +124,12 @@ const HeaderRightDropdown = ({
     >
       <StatefulMenuView actions={actions} onPressAction={onPressAction}>
         <Row>
-          <Text variant="link" style={{ marginRight: 5 }}>
+          <Text variant="link" style={{ marginRight: 5, color }}>
             {username}
           </Text>
-          {canSwitchCareer && <Icon icon={faAngleDown} color={colors.link} />}
+          {canSwitchCareer && (
+            <Icon icon={faAngleDown} color={color ?? colors.link} />
+          )}
         </Row>
       </StatefulMenuView>
     </View>
@@ -132,6 +138,9 @@ const HeaderRightDropdown = ({
 
 export const ProfileScreen = ({ navigation, route }: Props) => {
   const { t } = useTranslation();
+  // Tapping the active tab again scrolls back to the top
+  const scrollRef = useRef<ScrollView>(null);
+  useScrollToTop(scrollRef);
   const { firstRequest } = route.params;
   const { fontSizes, colors } = useTheme();
   const [isQrVisible, setIsQrVisible] = useState(false);
@@ -168,7 +177,13 @@ export const ProfileScreen = ({ navigation, route }: Props) => {
   const isOffline = useOfflineDisabled();
 
   const headerRight = useCallback(
-    () => <HeaderRightDropdown profile={profile} isOffline={isOffline} />,
+    ({ tintColor }: { tintColor?: string }) => (
+      <HeaderRightDropdown
+        profile={profile}
+        isOffline={isOffline}
+        color={tintColor}
+      />
+    ),
     [isOffline, profile],
   );
 
@@ -178,6 +193,7 @@ export const ProfileScreen = ({ navigation, route }: Props) => {
 
   return (
     <ScrollView
+      ref={scrollRef}
       contentInsetAdjustmentBehavior="automatic"
       refreshControl={
         <RefreshControl

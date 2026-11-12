@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 
 import { MfaChallenge } from '@polito/lib/core';
 import { PersonScreen, UsefulContactScreen } from '@polito/lib/features/people';
-import { HeaderLogoNoProps, createHeaderCloseButton } from '@polito/lib/ui';
+import { createHeaderCloseButton } from '@polito/lib/ui';
 import { OfferingCourseStaff } from '@polito/student-api-client';
 import { ParamListBase } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -70,9 +70,7 @@ export const SharedScreens = () => {
         name="Person"
         getId={({ params: { id } }) => id.toString()}
         options={{
-          headerLargeTitle: false,
           headerTitle: t('common.contact'),
-          headerBackButtonDisplayMode: 'minimal',
         }}
       >
         {props => <PersonScreen {...props} showPreferredContacts={false} />}
@@ -82,10 +80,8 @@ export const SharedScreens = () => {
         component={UsefulContactScreen}
         getId={({ params: { id } }) => id}
         options={{
-          headerLargeTitle: false,
           headerTitle: '',
           headerBackTitle: t('contactsScreen.title'),
-          headerBackButtonDisplayMode: 'minimal',
         }}
       />
       <Stack.Screen
@@ -96,8 +92,6 @@ export const SharedScreens = () => {
         }
         options={{
           headerTitle: t('degreeCourseScreen.title'),
-          headerLargeTitle: false,
-          headerBackButtonDisplayMode: 'minimal',
         }}
       />
       <Stack.Screen
@@ -108,7 +102,6 @@ export const SharedScreens = () => {
         }
         options={{
           headerTitle: t('courseGuideScreen.title'),
-          headerBackButtonDisplayMode: 'minimal',
         }}
       />
       <Stack.Screen
@@ -117,7 +110,6 @@ export const SharedScreens = () => {
         getId={({ params }) => `${params.courseId}${params.courseShortcode}`}
         options={{
           headerTitle: t('courseStatisticsScreen.title'),
-          headerTitleAlign: 'center',
           headerBackTitle: t('common.course'),
         }}
       />
@@ -126,9 +118,7 @@ export const SharedScreens = () => {
         component={UnreadMessagesModal}
         options={({ navigation }) => ({
           headerTitle: t('messagesScreen.title'),
-          headerLargeTitle: false,
           presentation: 'modal',
-          headerLeft: HeaderLogoNoProps,
           headerRight: createHeaderCloseButton(navigation),
         })}
       />
@@ -137,18 +127,14 @@ export const SharedScreens = () => {
         component={PolitoAuthenticatorScreen}
         options={{
           headerTitle: t('mfaScreen.headerTitle'),
-          headerLargeTitle: false,
           presentation: 'modal',
-          headerLeft: HeaderLogoNoProps,
         }}
       />
       <Stack.Screen
         name="ImageScreen"
         component={ImageScreen}
         options={{
-          headerLargeTitle: false,
           headerTitle: t('common.image'),
-          headerBackButtonDisplayMode: 'minimal',
         }}
       />
     </>
