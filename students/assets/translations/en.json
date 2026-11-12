@@ -854,9 +854,9 @@
     "maxViewLimitMessage": "Maximum display limit reached "
   },
   "grades": {
-    "absent": "Abs",
-    "fail": "Fail",
-    "pass": "Pass"
+    "absent": "Absent",
+    "fail": "Failed",
+    "pass": "Passed"
   },
   "guideScreen": {
     "copiedFieldFeedback": "{{field}} copied",
@@ -1033,7 +1033,35 @@
       "readMore": " more",
       "readLess": " less"
     },
-    "title": "Evaluation"
+    "title": "Evaluation",
+    "headerTitle": "Provisional grade",
+    "grade": "Grade",
+    "published": "Published",
+    "decideNote": "The grade is recorded automatically on {{date}} unless you reject it before {{time}}.",
+    "decideNoteNoDate": "The grade is recorded automatically unless you reject it.",
+    "waitNote": "You can't accept or reject this grade in the app yet. Write to the teacher if you have questions.",
+    "acceptedNote": "You accepted the grade. It is recorded in your transcript within a few days.",
+    "rejectedNote": "You rejected the grade. You can take the exam again in a later session.",
+    "accept": "Accept grade",
+    "reject": "Reject grade",
+    "acceptTitle": "Accept the grade of {{grade}}?",
+    "acceptTitleHidden": "Accept this grade?",
+    "acceptText": "{{course}}. It goes into your transcript and you can't reject it afterwards.",
+    "notNow": "Not now",
+    "rejectTitle": "Reject the grade of {{grade}}?",
+    "rejectTitleHidden": "Reject this grade?",
+    "rejectText": "{{course}}. You will need to take the exam again in a later session. You can't undo this.",
+    "keepGrade": "Keep the grade",
+    "acceptedFeedback": "Grade accepted.",
+    "rejectedFeedback": "Grade rejected.",
+    "acceptFailedTitle": "Couldn't accept the grade",
+    "rejectFailedTitle": "Couldn't reject the grade",
+    "lostAnswer": "The server didn't answer. The page now shows the state the server reports: if you can still accept or reject, try again.",
+    "fromTeacher": "From the teacher",
+    "credits": "Credits",
+    "notFoundTitle": "This grade is no longer listed",
+    "notFoundText": "It may have been recorded. Check the recorded grades.",
+    "failedTitle": "Couldn't load this grade"
   },
   "recordedGradeScreen": {
     "additionalPoint": "Additional Scores",
@@ -1042,7 +1070,10 @@
     "teacher": "Holder",
     "textModal": "Having taken the exam by the first useful session, you are awarded an additional score of 0.5, which will be added to your final grade.\nYou can consult your total on-time points on career.\nMore information is available in the Student Guide.",
     "titleOnTimePoint": "On-time Exam points",
-    "ctaButtonModal": "Access your career"
+    "ctaButtonModal": "Access your career",
+    "date": "Recorded",
+    "credits": "Credits",
+    "notCounted": "Not counted for the degree"
   },
   "sectionHeader": {
     "cta": "See all",
@@ -1313,7 +1344,22 @@
     "rejectedSubtitle": "Rejected on {{-date}} at {{-time}}",
     "rejectionCountdown": "Rejectable by:",
     "title": "Grades",
-    "total": "There are {{total}} grades"
+    "total": "There are {{total}} grades",
+    "publishedOn": "Published {{date}}",
+    "rejectUntil": "You can reject it until {{date}}",
+    "notCounted": "not counted for the degree",
+    "examsCount": "{{total}} exams",
+    "gradeHidden": "Grade hidden",
+    "gradeLabel": "Grade {{grade}}",
+    "provisionalChip": {
+      "decide": "Waiting for you",
+      "published": "Published",
+      "accepted": "Accepted",
+      "rejected": "Rejected"
+    },
+    "showGrades": "Show grades",
+    "hideGrades": "Hide grades",
+    "gradesHiddenLabel": "Grades are hidden"
   },
   "transcriptMetricsScreen": {
     "acquiredCreditsLabel": "Acquired credits",

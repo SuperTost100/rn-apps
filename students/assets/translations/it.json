@@ -869,9 +869,9 @@
     "maxViewLimitMessage": "Raggiunto il limite massimo di visulizzazione"
   },
   "grades": {
-    "absent": "Ass",
-    "fail": "Ins",
-    "pass": "Sup"
+    "absent": "Assente",
+    "fail": "Insufficiente",
+    "pass": "Superato"
   },
   "guideScreen": {
     "copiedFieldFeedback": "{{field}} copiato",
@@ -1050,7 +1050,35 @@
       "readMore": " altro",
       "readLess": " meno"
     },
-    "title": "Valutazione"
+    "title": "Valutazione",
+    "headerTitle": "Voto provvisorio",
+    "grade": "Voto",
+    "published": "Pubblicato",
+    "decideNote": "Il voto viene registrato in automatico il {{date}}, a meno che tu non lo rifiuti entro le {{time}}.",
+    "decideNoteNoDate": "Il voto viene registrato in automatico, a meno che tu non lo rifiuti.",
+    "waitNote": "Non puoi ancora accettare o rifiutare questo voto dall’app. Scrivi al docente se hai domande.",
+    "acceptedNote": "Hai accettato il voto. Comparirà nel libretto entro pochi giorni.",
+    "rejectedNote": "Hai rifiutato il voto. Potrai sostenere di nuovo l’esame in una sessione successiva.",
+    "accept": "Accetta voto",
+    "reject": "Rifiuta voto",
+    "acceptTitle": "Accettare il voto {{grade}}?",
+    "acceptTitleHidden": "Accettare questo voto?",
+    "acceptText": "{{course}}. Il voto entra nel libretto e dopo non potrai più rifiutarlo.",
+    "notNow": "Non ora",
+    "rejectTitle": "Rifiutare il voto {{grade}}?",
+    "rejectTitleHidden": "Rifiutare questo voto?",
+    "rejectText": "{{course}}. Dovrai sostenere di nuovo l’esame in una sessione successiva. Non si può annullare.",
+    "keepGrade": "Mantieni il voto",
+    "acceptedFeedback": "Voto accettato.",
+    "rejectedFeedback": "Voto rifiutato.",
+    "acceptFailedTitle": "Voto non accettato",
+    "rejectFailedTitle": "Voto non rifiutato",
+    "lostAnswer": "Il server non ha risposto. La pagina ora mostra lo stato indicato dal server: se puoi ancora accettare o rifiutare, riprova.",
+    "fromTeacher": "Dal docente",
+    "credits": "Crediti",
+    "notFoundTitle": "Questo voto non è più in elenco",
+    "notFoundText": "Potrebbe essere già stato registrato. Controlla i voti registrati.",
+    "failedTitle": "Impossibile caricare questo voto"
   },
   "recordedGradeScreen": {
     "additionalPoint": "Punteggi aggiuntivi",
@@ -1059,7 +1087,10 @@
     "teacher": "Titolare",
     "textModal": "Avendo sostenuto l’esame entro la prima sessione utile, ti viene riconosciuto un punteggio aggiuntivo di 0.5 che si sommerà al voto di laurea.\nPuoi consultare il totale dei tuoi punteggi on-time su carriera.\nMaggiori informazioni nella Guida Studenti",
     "titleOnTimePoint": "Punti Esame on-time",
-    "ctaButtonModal": "Accedi alla tua carriera"
+    "ctaButtonModal": "Accedi alla tua carriera",
+    "date": "Registrato",
+    "credits": "Crediti",
+    "notCounted": "Non conta per la laurea"
   },
   "sectionHeader": {
     "cta": "Vedi tutti",
@@ -1339,7 +1370,22 @@
     "rejectedSubtitle": "Rifiutato il {{-date}} alle {{-time}}",
     "rejectionCountdown": "Rifiutabile entro:",
     "title": "Valutazioni",
-    "total": "Sono presenti {{total}} valutazioni"
+    "total": "Sono presenti {{total}} valutazioni",
+    "publishedOn": "Pubblicato {{date}}",
+    "rejectUntil": "Puoi rifiutarlo fino a {{date}}",
+    "notCounted": "non conta per la laurea",
+    "examsCount": "{{total}} esami",
+    "gradeHidden": "Voto nascosto",
+    "gradeLabel": "Voto {{grade}}",
+    "provisionalChip": {
+      "decide": "Da decidere",
+      "published": "Pubblicato",
+      "accepted": "Accettato",
+      "rejected": "Rifiutato"
+    },
+    "showGrades": "Mostra voti",
+    "hideGrades": "Nascondi voti",
+    "gradesHiddenLabel": "I voti sono nascosti"
   },
   "transcriptMetricsScreen": {
     "acquiredCreditsLabel": "Crediti acquisiti",

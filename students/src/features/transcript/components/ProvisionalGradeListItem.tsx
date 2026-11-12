@@ -1,11 +1,16 @@
-import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { StyleSheet, View } from 'react-native';
 
-import { IS_IOS, dateFormatter, formatDate } from '@polito/lib/core';
 import {
-  DisclosureIndicator,
+  APP_TIMEZONE,
+  dateFormatter,
+  formatDate,
+  usePreferencesContext,
+} from '@polito/lib/core';
+import {
   ListItem,
-  Row,
+  StatusChip,
+  StatusChipTone,
   Text,
   type Theme,
   useStylesheet,
@@ -16,100 +21,137 @@ import {
   ProvisionalGradeStateEnum,
 } from '@polito/student-api-client';
 
-import { useGetRejectionTime } from '../hooks/useGetRejectionTime';
-import { ProvisionalGradeStatusBadge } from './ProvisionalGradeStatusBadge';
+import { DateTime } from 'luxon';
+
+import { AppPreferences } from '../../../core/types/preferences';
+import { useGradeMask } from './HideGradesButton';
 
 type Props = {
   grade: ProvisionalGrade;
 };
 
+export type ProvisionalStatus =
+  | 'decide'
+  | 'published'
+  | 'accepted'
+  | 'rejected';
+
+/**
+ * Where a provisional grade stands for the student: waiting for a decision
+ * when the server allows one, otherwise its state
+ */
+export const provisionalStatus = (
+  grade: ProvisionalGrade,
+): ProvisionalStatus => {
+  if (grade.state === ProvisionalGradeStateEnum.Rejected) return 'rejected';
+  if (grade.canBeAccepted || grade.canBeRejected) return 'decide';
+  if (grade.state === ProvisionalGradeStateEnum.Confirmed) return 'accepted';
+  return 'published';
+};
+
+export const PROVISIONAL_TONE: Record<ProvisionalStatus, StatusChipTone> = {
+  decide: 'warning',
+  published: 'info',
+  accepted: 'success',
+  rejected: 'neutral',
+};
+
+/** "Sun 15 Nov", in the app time zone and language */
+export const useShortDay = () => {
+  const { language } = usePreferencesContext<AppPreferences>();
+  return (date: Date) =>
+    DateTime.fromJSDate(date, { zone: APP_TIMEZONE })
+      .setLocale(language)
+      .toFormat('ccc d LLL');
+};
+
+/**
+ * A provisional grade: the course, when it was published, the deadline to
+ * decide and its state as a chip under the text, so the chip is never cut.
+ * The grade is the trailing figure.
+ */
 export const ProvisionalGradeListItem = ({ grade }: Props) => {
   const { t } = useTranslation();
-
+  const { colors } = useTheme();
   const styles = useStylesheet(createStyles);
-  const isRejected = grade.state === ProvisionalGradeStateEnum.Rejected;
-  const { fontWeights } = useTheme();
-
-  const rejectionTime = useGetRejectionTime({
-    rejectingExpiresAt: grade.rejectingExpiresAt,
-    isCompact: true,
-  });
-
+  const { hidden, mask } = useGradeMask();
+  const shortDay = useShortDay();
   const formatHHmm = dateFormatter('HH:mm');
-  const subtitle = useMemo(() => {
-    switch (grade.state) {
-      case ProvisionalGradeStateEnum.Confirmed:
-        if (grade.canBeRejected) {
-          return (
-            <Row>
-              <Text style={styles.rejectableSubtitle}>
-                {t('transcriptGradesScreen.rejectionCountdown')}
-                <Text
-                  style={[
-                    styles.rejectableSubtitle,
-                    { fontWeight: fontWeights.bold },
-                  ]}
-                >
-                  {rejectionTime}
-                </Text>
-              </Text>
-            </Row>
-          );
-        }
-        break;
-      case ProvisionalGradeStateEnum.Rejected:
-        return t('transcriptGradesScreen.rejectedSubtitle', {
-          date: formatDate(grade.rejectedAt!),
-          time: formatHHmm(grade.rejectedAt!),
-        });
-      default:
-        return undefined;
-    }
-  }, [
-    grade.state,
-    grade.canBeRejected,
-    grade.rejectedAt,
-    t,
-    formatHHmm,
-    styles.rejectableSubtitle,
-    fontWeights.bold,
-    rejectionTime,
-  ]);
+  const status = provisionalStatus(grade);
+  const chip = t(`transcriptGradesScreen.provisionalChip.${status}`);
+
+  const published = [
+    t('transcriptGradesScreen.publishedOn', {
+      date: shortDay(new Date(grade.date)),
+    }),
+    t('common.creditsWithUnit', { credits: grade.credits }),
+  ].join(' · ');
+  const deadline =
+    status === 'decide' && grade.canBeRejected && grade.rejectingExpiresAt
+      ? t('transcriptGradesScreen.rejectUntil', {
+          date: shortDay(grade.rejectingExpiresAt),
+        })
+      : status === 'rejected' && grade.rejectedAt
+        ? t('transcriptGradesScreen.rejectedSubtitle', {
+            date: formatDate(grade.rejectedAt),
+            time: formatHHmm(grade.rejectedAt),
+          })
+        : undefined;
+  const gradeText = status === 'rejected' ? '-' : mask(grade.grade);
 
   return (
     <ListItem
       title={grade.courseName}
-      subtitle={subtitle}
-      subtitleStyle={
-        grade.state === ProvisionalGradeStateEnum.Confirmed
-          ? styles.rejectableSubtitle
-          : styles.subtitle
-      }
-      disabled={isRejected}
-      linkTo={
-        isRejected
-          ? undefined
-          : {
-              screen: 'ProvisionalGrade',
-              params: { id: grade.id },
-            }
+      subtitle={
+        <View style={styles.lines}>
+          <Text variant="secondaryText">{published}</Text>
+          {deadline && (
+            <Text
+              variant="secondaryText"
+              weight={status === 'decide' ? 'semibold' : undefined}
+              style={status === 'decide' && { color: colors.warningText }}
+            >
+              {deadline}
+            </Text>
+          )}
+          <View style={styles.chip}>
+            <StatusChip label={chip} tone={PROVISIONAL_TONE[status]} />
+          </View>
+        </View>
       }
       trailingItem={
-        <Row align="center" pl={2}>
-          <ProvisionalGradeStatusBadge grade={grade} />
-          {IS_IOS && !isRejected ? <DisclosureIndicator /> : undefined}
-        </Row>
+        <Text variant="cardTitle" style={styles.grade}>
+          {gradeText}
+        </Text>
       }
+      showChevron
+      accessibilityLabel={[
+        grade.courseName,
+        hidden
+          ? t('transcriptGradesScreen.gradeHidden')
+          : t('transcriptGradesScreen.gradeLabel', { grade: gradeText }),
+        published,
+        deadline,
+        chip,
+      ]
+        .filter(Boolean)
+        .join(', ')}
+      linkTo={{ screen: 'ProvisionalGrade', params: { id: grade.id } }}
     />
   );
 };
 
-const createStyles = ({ colors, dark, palettes, fontSizes }: Theme) => ({
-  subtitle: {
-    color: colors.title,
-  },
-  rejectableSubtitle: {
-    fontSize: fontSizes.sm,
-    color: dark ? palettes.danger[300] : palettes.danger[700],
-  },
-});
+const createStyles = ({ colors, spacing }: Theme) =>
+  StyleSheet.create({
+    lines: {
+      gap: spacing[0.5],
+    },
+    chip: {
+      flexDirection: 'row',
+      marginTop: spacing[1],
+    },
+    grade: {
+      color: colors.title,
+      fontVariant: ['tabular-nums'],
+    },
+  });

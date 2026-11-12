@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { SafeAreaView, ScrollView, StyleSheet } from 'react-native';
+import { ScrollView, StyleSheet } from 'react-native';
 
 import {
   BottomBarSpacer,
@@ -7,6 +7,7 @@ import {
   RefreshControl,
   Section,
   SectionHeader,
+  Text,
   type Theme,
   useStylesheet,
 } from '@polito/lib/ui';
@@ -18,6 +19,10 @@ import {
 import { ProvisionalGradeListItem } from '../components/ProvisionalGradeListItem';
 import { RecordedGradeListItem } from '../components/RecordedGradeListItem';
 
+/**
+ * Provisional grades first, each with what the student can still do, then
+ * the recorded grades, newest first
+ */
 export const GradesScreen = () => {
   const { t } = useTranslation();
   const styles = useStylesheet(createStyles);
@@ -35,52 +40,57 @@ export const GradesScreen = () => {
         />
       }
     >
-      <SafeAreaView>
-        <Section>
-          <SectionHeader
-            title={t('transcriptGradesScreen.provisionalTitle')}
-            accessibilityLabel={`${t('common.transcript')} ${t(
-              'transcriptGradesScreen.total', // TODO SWITCH STRING TO PROVISIONAL
-              { total: provisionalGradesQuery.data?.length || 0 },
-            )}`}
-          />
-          <OverviewList
-            queries={provisionalGradesQuery}
-            skeleton={{ count: 1, trailing: 'value' }}
-            emptyState={{
-              title: t('transcriptGradesScreen.provisionalEmptyState'),
-            }}
-            errorState={{ title: t('states.grades.failedProvisionalTitle') }}
-          >
-            {provisionalGradesQuery.data?.map(grade => (
-              <ProvisionalGradeListItem key={grade.id} grade={grade} />
-            ))}
-          </OverviewList>
-        </Section>
-        <Section>
-          <SectionHeader
-            title={t('transcriptGradesScreen.recordedTitle')}
-            accessibilityLabel={`${t('common.transcript')} ${t(
-              'transcriptGradesScreen.total',
-              { total: gradesQuery.data?.length || 0 },
-            )}`}
-          />
-          <OverviewList
-            queries={gradesQuery}
-            skeleton={{ count: 8, trailing: 'value' }}
-            emptyState={{
-              title: t('states.grades.emptyTitle'),
-              text: t('states.grades.emptyText'),
-            }}
-            errorState={{ title: t('states.grades.failedTitle') }}
-          >
-            {gradesQuery.data?.map((grade, index) => (
-              <RecordedGradeListItem grade={grade} key={index} />
-            ))}
-          </OverviewList>
-        </Section>
-        <BottomBarSpacer />
-      </SafeAreaView>
+      <Section>
+        <SectionHeader title={t('transcriptGradesScreen.provisionalTitle')} />
+        <OverviewList
+          queries={provisionalGradesQuery}
+          skeleton={{
+            count: 1,
+            leading: 'none',
+            trailing: 'value',
+            subtitleLines: 2,
+          }}
+          emptyState={{
+            title: t('transcriptGradesScreen.provisionalEmptyState'),
+          }}
+          errorState={{ title: t('states.grades.failedProvisionalTitle') }}
+        >
+          {provisionalGradesQuery.data?.map(grade => (
+            <ProvisionalGradeListItem key={grade.id} grade={grade} />
+          ))}
+        </OverviewList>
+      </Section>
+      <Section>
+        <SectionHeader
+          title={t('transcriptGradesScreen.recordedTitle')}
+          trailingItem={
+            gradesQuery.data?.length ? (
+              <Text variant="secondaryText" style={styles.count}>
+                {t('transcriptGradesScreen.examsCount', {
+                  total: gradesQuery.data.length,
+                })}
+              </Text>
+            ) : undefined
+          }
+        />
+        <OverviewList
+          queries={gradesQuery}
+          skeleton={{ count: 8, leading: 'none', trailing: 'value' }}
+          emptyState={{
+            title: t('states.grades.emptyTitle'),
+            text: t('states.grades.emptyText'),
+          }}
+          errorState={{ title: t('states.grades.failedTitle') }}
+        >
+          {gradesQuery.data?.map((grade, index) => (
+            <RecordedGradeListItem
+              grade={grade}
+              key={`${grade.shortcode}-${index}`}
+            />
+          ))}
+        </OverviewList>
+      </Section>
+      <BottomBarSpacer />
     </ScrollView>
   );
 };
@@ -88,27 +98,9 @@ export const GradesScreen = () => {
 const createStyles = ({ spacing }: Theme) =>
   StyleSheet.create({
     container: {
-      paddingVertical: spacing[5],
+      paddingTop: spacing[4],
     },
-    chartCard: {
-      flex: 1,
-      flexDirection: 'row',
-      alignItems: 'center',
-      padding: spacing[4],
-      marginTop: spacing[2],
-      marginBottom: spacing[3],
-    },
-    metricsCard: {
-      padding: spacing[4],
-      marginTop: spacing[2],
-    },
-    spaceBottom: {
-      marginBottom: spacing[2],
-    },
-    additionalMetric: {
-      marginTop: spacing[4],
-    },
-    grade: {
-      marginLeft: spacing[2],
+    count: {
+      paddingBottom: spacing[3],
     },
   });

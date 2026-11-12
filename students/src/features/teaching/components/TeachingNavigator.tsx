@@ -35,6 +35,7 @@ import { CoursesScreen } from '../../courses/screens/CoursesScreen';
 import { InboxScreen } from '../../inbox/screens/InboxScreen';
 import { MessageScreen } from '../../inbox/screens/MessageScreen';
 import { CpdSurveysScreen } from '../../surveys/screens/CpdSurveysScreen';
+import { HideGradesButton } from '../../transcript/components/HideGradesButton';
 import { TranscriptTopTabsNavigator } from '../../transcript/navigation/TranscriptTopTabsNavigator';
 import { ProvisionalGradeScreen } from '../../transcript/screens/ProvisionalGradeScreen';
 import { RecordedGradeScreen } from '../../transcript/screens/RecordedGradeScreen';
@@ -155,6 +156,7 @@ export const TeachingNavigator = () => {
         component={TranscriptTopTabsNavigator}
         options={{
           headerTitle: t('common.transcript'),
+          headerRight: () => <HideGradesButton />,
           ...withoutHeaderHairline,
         }}
       />
@@ -162,7 +164,8 @@ export const TeachingNavigator = () => {
         name="ProvisionalGrade"
         component={ProvisionalGradeScreen}
         options={{
-          headerTitle: t('transcriptGradeScreen.title'),
+          headerTitle: t('provisionalGradeScreen.headerTitle'),
+          headerRight: () => <HideGradesButton />,
         }}
       />
       <Stack.Screen
@@ -170,6 +173,7 @@ export const TeachingNavigator = () => {
         component={RecordedGradeScreen}
         options={{
           headerTitle: t('recordedGradeScreen.recordedGradeTitle'),
+          headerRight: () => <HideGradesButton />,
         }}
       />
       <Stack.Screen

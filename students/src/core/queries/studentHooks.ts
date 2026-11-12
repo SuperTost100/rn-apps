@@ -14,7 +14,6 @@ import {
   ExamGrade,
   Message,
   MessageType,
-  ProvisionalGradeState,
   StudentApi,
   StudentCareer,
   UpdateDevicePreferencesRequest,
@@ -42,8 +41,7 @@ export const SMART_CARD_QUERY_KEY = ['smartCard'];
 const PROFILE_PICTURE_QUERY_KEY = ['profilePicture'];
 const SMART_CARD_QR_CODE_QUERY_KEY = ['smartCardQrCode'];
 const GRADES_QUERY_KEY = ['grades'];
-const PROVISIONAL_GRADES_QUERY_KEY = ['provisionalGrades'];
-const PROVISIONAL_GRADE_STATES_QUERY_KEY = ['provisionalGradeStates'];
+export const PROVISIONAL_GRADES_QUERY_KEY = ['provisionalGrades'];
 const MESSAGES_QUERY_PREFIX = 'messages';
 export const MESSAGES_QUERY_KEY = [MESSAGES_QUERY_PREFIX];
 export const NOTIFICATIONS_QUERY_KEY = ['notifications'];
@@ -172,32 +170,10 @@ export const useGetGrades = () => {
 
 export const useGetProvisionalGrades = () => {
   const studentClient = useStudentClient();
-  const queryClient = useQueryClient();
 
   return useQuery({
     queryKey: PROVISIONAL_GRADES_QUERY_KEY,
-    queryFn: () =>
-      studentClient
-        .getStudentProvisionalGrades()
-        .then(r => {
-          queryClient.setQueryData(
-            PROVISIONAL_GRADE_STATES_QUERY_KEY,
-            r.states,
-          );
-          return r;
-        })
-        .then(pluckData),
-  });
-};
-
-export const useGetProvisionalGradeStates = () => {
-  const provisionalGrades = useGetProvisionalGrades();
-
-  return useQuery<ProvisionalGradeState[]>({
-    queryKey: PROVISIONAL_GRADE_STATES_QUERY_KEY,
-    queryFn: () => [],
-    enabled: !!provisionalGrades.data,
-    staleTime: Infinity,
+    queryFn: () => studentClient.getStudentProvisionalGrades().then(pluckData),
   });
 };
 
@@ -208,6 +184,8 @@ export const useAcceptProvisionalGrade = () => {
   return useMutation({
     mutationFn: (id: number) =>
       studentClient.acceptProvisionalGrade({ provisionalGradeId: id }),
+    // The grade screen says when it fails
+    onError() {},
     onSuccess: () =>
       Promise.all([
         queryClient.invalidateQueries({
@@ -225,6 +203,8 @@ export const useRejectProvisionalGrade = () => {
   return useMutation({
     mutationFn: (id: number) =>
       studentClient.rejectProvisionalGrade({ provisionalGradeId: id }),
+    // The grade screen says when it fails
+    onError() {},
     onSuccess: () =>
       Promise.all([
         queryClient.invalidateQueries({

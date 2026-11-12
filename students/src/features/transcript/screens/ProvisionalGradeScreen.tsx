@@ -1,317 +1,332 @@
-import { useCallback, useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Platform, SafeAreaView, ScrollView, StyleSheet } from 'react-native';
+import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 
+import { faBookOpen } from '@fortawesome/free-solid-svg-icons';
 import {
-  formatDate,
-  formatDateWithTimeIfNotNull,
+  faCircleCheck,
+  faCircleInfo,
+  faClock,
+} from '@fortawesome/free-solid-svg-icons';
+import {
+  APP_TIMEZONE,
   useFeedbackContext,
-  useOfflineDisabled,
+  useIsOnline,
   usePreferencesContext,
+  useQueryStates,
 } from '@polito/lib/core';
+import { useGetPerson } from '@polito/lib/features/people';
 import {
-  ActivityIndicator,
   BottomBarSpacer,
-  Col,
+  Card,
   CtaButton,
-  CtaButtonContainer,
-  CtaButtonSpacer,
+  Icon,
+  InfoMessage,
+  ListItem,
+  OverviewList,
+  PersonListItem,
   RefreshControl,
-  Row,
-  ScreenTitle,
+  RegionStateBlock,
+  Section,
+  SectionHeader,
+  SkeletonDetail,
   Text,
   type Theme,
   useStylesheet,
   useTheme,
 } from '@polito/lib/ui';
-import { ProvisionalGradeStateEnum } from '@polito/student-api-client';
+import { ProvisionalGrade } from '@polito/student-api-client';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useQueryClient } from '@tanstack/react-query';
 
-import { AppPreferences } from '~/core/types/preferences.ts';
+import { DateTime } from 'luxon';
 
-import { useConfirmationDialog } from '../../../core/hooks/useConfirmationDialog';
+import { FailureNote } from '../../../core/components/FailureNote';
 import {
+  PROVISIONAL_GRADES_QUERY_KEY,
   useAcceptProvisionalGrade,
   useGetProvisionalGrades,
   useRejectProvisionalGrade,
 } from '../../../core/queries/studentHooks';
+import { AppPreferences } from '../../../core/types/preferences';
+import {
+  MutationFailure,
+  describeMutationFailure,
+} from '../../../utils/mutationFailure';
 import { TeachingStackParamList } from '../../teaching/components/TeachingNavigator';
-import { GradeStates } from '../components/GradeStates';
-import { TeacherMessage } from '../components/TeacherMessage.tsx';
-import { useGetRejectionTime } from '../hooks/useGetRejectionTime';
+import { GradeFigure } from '../components/GradeFigure';
+import { useGradeMask } from '../components/HideGradesButton';
+import {
+  provisionalStatus,
+  useShortDay,
+} from '../components/ProvisionalGradeListItem';
 
 type Props = NativeStackScreenProps<TeachingStackParamList, 'ProvisionalGrade'>;
 
-export const ProvisionalGradeScreen = ({ navigation, route }: Props) => {
+type Decision = 'accept' | 'reject';
+
+/**
+ * A provisional grade: the grade large at the top, what happens next, and
+ * Accept and Reject while the server allows them. Both ask once; the
+ * result shows in place with a short message.
+ */
+export const ProvisionalGradeScreen = ({ route }: Props) => {
   const { t } = useTranslation();
-  const styles = useStylesheet(createStyles);
-  const { setFeedback } = useFeedbackContext();
-  const { fontWeights } = useTheme();
-  const { accessibility } = usePreferencesContext<AppPreferences>();
-  const confirmAcceptance = useConfirmationDialog({
-    title: t('common.areYouSure?'),
-    message: t('provisionalGradeScreen.acceptGradeConfirmMessage'),
-  });
-
-  const confirmRejection = useConfirmationDialog({
-    title: t('common.areYouSure?'),
-    message: t('provisionalGradeScreen.rejectGradeConfirmMessage'),
-  });
-
+  const { spacing } = useTheme();
   const { id } = route.params;
-
   const gradesQuery = useGetProvisionalGrades();
   const grade = useMemo(
     () => gradesQuery.data?.find(g => g.id === id),
     [gradesQuery.data, id],
   );
-  const rejectionTime = useGetRejectionTime({
-    rejectingExpiresAt: grade?.rejectingExpiresAt,
-  });
-
-  const acceptGradeQuery = useAcceptProvisionalGrade();
-  const rejectGradeQuery = useRejectProvisionalGrade();
-
-  const isOffline = useOfflineDisabled();
-
-  const provideFeedback = useCallback(
-    (wasAccepted: boolean) => {
-      if (wasAccepted) {
-        setFeedback({
-          text: t('provisionalGradeScreen.acceptGradeFeedback'),
-          isPersistent: false,
-        });
-      } else {
-        setFeedback({
-          text: t('provisionalGradeScreen.rejectGradeFeedback'),
-          isPersistent: false,
-        });
-      }
-
-      navigation.goBack();
-    },
-    [navigation, setFeedback, t],
-  );
+  const states = useQueryStates(gradesQuery, { isEmpty: () => !grade });
+  const teacher = useGetPerson(grade?.teacherId ?? undefined).data;
 
   return (
-    <>
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        refreshControl={<RefreshControl queries={[gradesQuery]} manual />}
-      >
-        {grade === undefined ? (
-          <ActivityIndicator />
-        ) : (
-          <SafeAreaView>
-            <Row
-              pb={
-                grade.state === ProvisionalGradeStateEnum.Confirmed &&
-                (grade.canBeAccepted || grade.canBeRejected) &&
-                rejectionTime
-                  ? 0
-                  : 5
-              }
-              ph={5}
-              pt={5}
-              gap={2}
-            >
-              <Col flexGrow={1} flexShrink={1} gap={2}>
-                <ScreenTitle title={grade.courseName} />
-                <Text>{`${formatDate(new Date(grade.date))} ${
-                  accessibility?.fontSize && accessibility.fontSize < 150
-                    ? '-' +
-                      t('common.creditsWithUnit', {
-                        credits: grade.credits,
-                      })
-                    : ''
-                }`}</Text>
-                <Col
-                  flexGrow={1}
-                  flexShrink={1}
-                  gap={2}
-                  style={{ marginBottom: 20 }}
-                >
-                  <Text>
-                    {accessibility?.fontSize && accessibility.fontSize >= 150
-                      ? t('common.creditsWithUnit', {
-                          credits: grade.credits,
-                        })
-                      : ''}
-                  </Text>
-                </Col>
-              </Col>
-              <Col
-                align="center"
-                justify="center"
-                mt={2}
-                flexShrink={0}
-                style={[
-                  styles.grade,
-                  accessibility?.fontSize && accessibility.fontSize >= 150
-                    ? { padding: 0 }
-                    : {},
-                ]}
-              >
-                <Text
-                  style={[
-                    grade.grade.length < 3
-                      ? styles.gradeText
-                      : styles.longGradeText,
-                    grade.isFailure || grade.isWithdrawn
-                      ? styles.failureGradeText
-                      : undefined,
-                  ]}
-                  numberOfLines={1}
-                >
-                  {grade.grade}
-                </Text>
-              </Col>
-            </Row>
-            {grade.state === ProvisionalGradeStateEnum.Confirmed &&
-              grade.canBeAccepted &&
-              rejectionTime && (
-                <Row pl={5} pb={5}>
-                  <Text style={styles.autoRegistration}>
-                    {t('transcriptGradesScreen.autoRegistration')}
-                    <Text
-                      style={[
-                        styles.autoRegistration,
-                        { fontWeight: fontWeights.medium },
-                      ]}
-                    >
-                      {rejectionTime}
-                    </Text>
-                  </Text>
-                </Row>
-              )}
-            {grade.teacherMessage && (
-              <TeacherMessage message={grade.teacherMessage} />
-            )}
-
-            <GradeStates state={grade?.state} />
-            {grade?.state === ProvisionalGradeStateEnum.Confirmed && (
-              <CtaButtonSpacer />
-            )}
-            <CtaButtonSpacer />
-          </SafeAreaView>
-        )}
-        <BottomBarSpacer />
-      </ScrollView>
-      {grade?.state === ProvisionalGradeStateEnum.Published && (
-        <CtaButton
-          title={t('provisionalGradeScreen.contactProfessorCta')}
-          action={() => navigation.navigate('Person', { id: grade?.teacherId })}
-        />
+    <ScrollView
+      contentInsetAdjustmentBehavior="automatic"
+      refreshControl={<RefreshControl queries={[gradesQuery]} manual />}
+    >
+      {states.status === 'loading' && (
+        <SkeletonDetail title={false} cards={[260, 96, 120]} />
       )}
-      {grade?.state === ProvisionalGradeStateEnum.Confirmed && (
-        <CtaButtonContainer
-          absolute={true}
-          modal={Platform.select({ android: true })}
-        >
-          {grade?.canBeAccepted && (
-            <CtaButton
-              title={t('provisionalGradeScreen.acceptGradeCta')}
-              action={() =>
-                confirmAcceptance().then(ok => {
-                  if (ok) {
-                    acceptGradeQuery
-                      .mutateAsync(grade.id)
-                      .then(() => provideFeedback(true));
-                  }
-                })
-              }
-              absolute={false}
-              loading={acceptGradeQuery.isPending}
-              disabled={
-                isOffline ||
-                acceptGradeQuery.isPending ||
-                rejectGradeQuery.isPending
-              }
-              containerStyle={{ paddingVertical: 0 }}
-            />
+      <RegionStateBlock
+        states={states}
+        emptyState={{
+          title: t('provisionalGradeScreen.notFoundTitle'),
+          text: t('provisionalGradeScreen.notFoundText'),
+        }}
+        errorState={{ title: t('provisionalGradeScreen.failedTitle') }}
+        style={{ marginTop: spacing[4] }}
+      />
+      {states.status === 'ready' && grade && (
+        <>
+          <DecisionCard grade={grade} />
+          {!!grade.teacherMessage && (
+            <Section style={{ marginTop: spacing[6] }}>
+              <SectionHeader title={t('provisionalGradeScreen.fromTeacher')} />
+              <Card padded>
+                <Text>{grade.teacherMessage}</Text>
+              </Card>
+            </Section>
           )}
-          {grade?.canBeRejected && (
-            <CtaButton
-              title={t('provisionalGradeScreen.rejectGradeCta', {
-                date: formatDateWithTimeIfNotNull(grade.rejectingExpiresAt),
-              })}
-              action={() =>
-                confirmRejection().then(ok => {
-                  if (ok) {
-                    rejectGradeQuery
-                      .mutateAsync(grade.id)
-                      .then(() => provideFeedback(false));
-                  }
-                })
-              }
-              absolute={false}
-              loading={rejectGradeQuery.isPending}
-              variant="outlined"
-              disabled={
-                isOffline ||
-                acceptGradeQuery.isPending ||
-                rejectGradeQuery.isPending
-              }
-              containerStyle={{ paddingVertical: 0 }}
-              destructive
-              style={{ marginBottom: Platform.OS === 'android' ? 40 : 0 }}
+          <OverviewList indented style={{ marginTop: spacing[2] }}>
+            {teacher && (
+              <PersonListItem person={teacher} subtitle={t('common.teacher')} />
+            )}
+            <ListItem
+              leadingItem={<Icon icon={faBookOpen} size={20} />}
+              title={t('common.creditsWithUnit', { credits: grade.credits })}
+              subtitle={t('provisionalGradeScreen.credits')}
             />
-          )}
-        </CtaButtonContainer>
+          </OverviewList>
+        </>
       )}
-    </>
+      <View style={{ height: spacing[4] }} />
+      <BottomBarSpacer />
+    </ScrollView>
   );
 };
-const createStyles = ({
-  colors,
-  dark,
-  fontSizes,
-  palettes,
-  spacing,
-  fontWeights,
-}: Theme) =>
+
+const DecisionCard = ({ grade }: { grade: ProvisionalGrade }) => {
+  const { t } = useTranslation();
+  const { colors } = useTheme();
+  const styles = useStylesheet(createStyles);
+  const { language } = usePreferencesContext<AppPreferences>();
+  const { setFeedback } = useFeedbackContext();
+  const isOnline = useIsOnline();
+  const client = useQueryClient();
+  const { hidden, mask } = useGradeMask();
+  const shortDay = useShortDay();
+  const accept = useAcceptProvisionalGrade();
+  const reject = useRejectProvisionalGrade();
+  const [failure, setFailure] = useState<
+    MutationFailure & { decision: Decision }
+  >();
+
+  const status = provisionalStatus(grade);
+  const busy = accept.isPending || reject.isPending;
+  const gradeText = status === 'rejected' ? '-' : mask(grade.grade);
+  const deadline = grade.rejectingExpiresAt
+    ? DateTime.fromJSDate(grade.rejectingExpiresAt, {
+        zone: APP_TIMEZONE,
+      }).setLocale(language)
+    : undefined;
+
+  /** After a failure the card shows what the server now says */
+  const settle = async (decision: Decision, error: unknown) => {
+    const described = await describeMutationFailure(error);
+    await client.refetchQueries({ queryKey: PROVISIONAL_GRADES_QUERY_KEY });
+    const now = client
+      .getQueryData<ProvisionalGrade[]>(PROVISIONAL_GRADES_QUERY_KEY)
+      ?.find(g => g.id === grade.id);
+    if (now && provisionalStatus(now) !== 'decide') return;
+    setFailure({ decision, ...described });
+  };
+
+  const decide = (decision: Decision) => {
+    const isAccept = decision === 'accept';
+    Alert.alert(
+      hidden
+        ? t(`provisionalGradeScreen.${decision}TitleHidden`)
+        : t(`provisionalGradeScreen.${decision}Title`, { grade: grade.grade }),
+      t(`provisionalGradeScreen.${decision}Text`, { course: grade.courseName }),
+      [
+        {
+          text: isAccept
+            ? t('provisionalGradeScreen.notNow')
+            : t('provisionalGradeScreen.keepGrade'),
+          style: 'cancel',
+        },
+        {
+          text: t(`provisionalGradeScreen.${decision}`),
+          style: isAccept ? 'default' : 'destructive',
+          onPress: () => {
+            setFailure(undefined);
+            (isAccept ? accept : reject).mutateAsync(grade.id).then(
+              () =>
+                setFeedback({
+                  text: t(
+                    isAccept
+                      ? 'provisionalGradeScreen.acceptedFeedback'
+                      : 'provisionalGradeScreen.rejectedFeedback',
+                  ),
+                }),
+              error => settle(decision, error),
+            );
+          },
+        },
+      ],
+    );
+  };
+
+  let note;
+  if (status === 'decide') {
+    note = (
+      <InfoMessage variant="warning" icon={faClock}>
+        {deadline
+          ? t('provisionalGradeScreen.decideNote', {
+              date: shortDay(grade.rejectingExpiresAt!),
+              time: deadline.toFormat('HH:mm'),
+            })
+          : t('provisionalGradeScreen.decideNoteNoDate')}
+      </InfoMessage>
+    );
+  } else if (status === 'accepted') {
+    note = (
+      <InfoMessage
+        icon={faCircleCheck}
+        style={{ backgroundColor: colors.successBg }}
+      >
+        <Text variant="secondaryText" style={{ color: colors.successText }}>
+          {t('provisionalGradeScreen.acceptedNote')}
+        </Text>
+      </InfoMessage>
+    );
+  } else {
+    note = (
+      <InfoMessage icon={faCircleInfo}>
+        {status === 'rejected'
+          ? t('provisionalGradeScreen.rejectedNote')
+          : t('provisionalGradeScreen.waitNote')}
+      </InfoMessage>
+    );
+  }
+
+  return (
+    <Card padded style={styles.card}>
+      <Text variant="caption">{grade.courseName}</Text>
+      <View style={styles.facts}>
+        <GradeFigure
+          label={t('provisionalGradeScreen.grade')}
+          grade={gradeText}
+          hidden={hidden}
+        />
+        <View
+          accessible
+          accessibilityLabel={`${t(
+            'provisionalGradeScreen.published',
+          )}: ${shortDay(new Date(grade.date))}`}
+        >
+          <Text variant="secondaryText">
+            {t('provisionalGradeScreen.published')}
+          </Text>
+          <Text variant="title" weight="bold" style={{ color: colors.title }}>
+            {shortDay(new Date(grade.date))}
+          </Text>
+        </View>
+      </View>
+      {note}
+      {failure && (
+        <FailureNote
+          title={
+            failure.decision === 'accept'
+              ? t('provisionalGradeScreen.acceptFailedTitle')
+              : t('provisionalGradeScreen.rejectFailedTitle')
+          }
+          failure={failure}
+          lostText={t('provisionalGradeScreen.lostAnswer')}
+        />
+      )}
+      {status === 'decide' && (
+        <View style={styles.buttons}>
+          {grade.canBeAccepted && (
+            <CtaButton
+              absolute={false}
+              containerStyle={styles.button}
+              title={
+                isOnline
+                  ? t('provisionalGradeScreen.accept')
+                  : t('states.needsConnection')
+              }
+              action={() => decide('accept')}
+              loading={accept.isPending}
+              disabled={!isOnline || busy}
+            />
+          )}
+          {grade.canBeRejected && (
+            <CtaButton
+              absolute={false}
+              containerStyle={styles.button}
+              variant="outlined"
+              destructive
+              title={t('provisionalGradeScreen.reject')}
+              action={() => decide('reject')}
+              loading={reject.isPending}
+              disabled={!isOnline || busy}
+              accessibilityHint={
+                isOnline ? undefined : t('states.needsConnection')
+              }
+            />
+          )}
+        </View>
+      )}
+    </Card>
+  );
+};
+
+const createStyles = ({ spacing }: Theme) =>
   StyleSheet.create({
-    chartCard: {
-      flex: 1,
-      flexDirection: 'row',
-      alignItems: 'center',
-      padding: spacing[4],
-      marginTop: spacing[2],
-      marginBottom: spacing[3],
-    },
-    metricsCard: {
-      padding: spacing[4],
-      marginTop: spacing[2],
-    },
-    spaceBottom: {
-      marginBottom: spacing[2],
-    },
-    additionalMetric: {
+    card: {
       marginTop: spacing[4],
+      gap: spacing[4],
     },
-    grade: {
-      minWidth: 60,
-      height: 60,
-      backgroundColor: colors.surface,
-      borderRadius: 12,
-      padding: spacing[2],
+    facts: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'space-between',
+      alignItems: 'flex-end',
+      columnGap: spacing[8],
+      rowGap: spacing[3],
     },
-    gradeText: {
-      fontSize: fontSizes['2xl'],
-      fontWeight: fontWeights.semibold,
+    buttons: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing[3],
     },
-    longGradeText: {
-      fontSize: fontSizes.lg,
-      fontWeight: fontWeights.semibold,
-    },
-    failureGradeText: {
-      color: palettes.rose[600],
-    },
-    rejectionTime: {
-      color: dark ? palettes.danger[300] : palettes.danger[700],
-    },
-    autoRegistration: {
-      fontSize: fontSizes.md,
-      color: dark ? palettes.primary[300] : palettes.primary[600],
+    button: {
+      padding: 0,
+      flexGrow: 1,
+      flexBasis: 140,
     },
   });
