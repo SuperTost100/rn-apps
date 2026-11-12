@@ -18,11 +18,7 @@ import {
   faChevronDown,
   faEllipsisVertical,
 } from '@fortawesome/free-solid-svg-icons';
-import {
-  IS_ANDROID,
-  useOfflineDisabled,
-  usePreferencesContext,
-} from '@polito/lib/core';
+import { IS_ANDROID, usePreferencesContext } from '@polito/lib/core';
 import { courseColors } from '@polito/lib/features/courses';
 import { useGetPersons } from '@polito/lib/features/people';
 import {
@@ -37,12 +33,10 @@ import {
   useTheme,
 } from '@polito/lib/ui';
 import { CourseModuleOverview } from '@polito/student-api-client';
-import { useQueryClient } from '@tanstack/react-query';
 
 import { useNotifications } from '~/core/hooks/useNotifications';
 import { AppPreferences } from '~/core/types/preferences';
 
-import { getCourseKey } from '../../../core/queries/courseHooks';
 import { CourseOverview } from '../../../core/types/api';
 import { CourseIndicator } from './CourseIndicator';
 
@@ -143,7 +137,6 @@ export const CourseListItem = ({
     [styles],
   );
 
-  const queryClient = useQueryClient();
   const pressed = useSharedValue<boolean>(true);
 
   const animatedHeight = useAnimatedStyle(() => ({
@@ -156,15 +149,6 @@ export const CourseListItem = ({
   const animatedChevron = useAnimatedStyle(() => ({
     transform: [{ rotateX: withTiming(pressed.value ? '180deg' : '0deg') }],
   }));
-
-  const isDataMissing = useCallback(
-    () =>
-      !!course.id &&
-      queryClient.getQueryData(getCourseKey(course.id)) === undefined,
-    [course.id, queryClient],
-  );
-
-  const isDisabled = useOfflineDisabled(isDataMissing);
 
   const subtitle = useMemo(() => {
     return (
@@ -274,7 +258,7 @@ export const CourseListItem = ({
   const courseListItem = (
     <ListItem
       accessible={accessible}
-      disabled={isDisabled || course.isOverBooking}
+      disabled={course.isOverBooking}
       linkTo={
         hasModules
           ? undefined
@@ -395,7 +379,7 @@ export const CourseListItem = ({
                       <ListItem
                         key={module.id}
                         accessible={accessible}
-                        disabled={isDisabled || module.isOverBooking}
+                        disabled={module.isOverBooking}
                         linkTo={getModuleLink(module, originalIndex)}
                         accessibilityLabel={`${accessibilityLabel} ${module.name}`}
                         title={module.name}
@@ -436,7 +420,7 @@ export const CourseListItem = ({
                     <ListItem
                       key={module.id}
                       accessible={accessible}
-                      disabled={isDisabled || module.isOverBooking}
+                      disabled={module.isOverBooking}
                       linkTo={getModuleLink(module, originalIndex)}
                       accessibilityLabel={`${accessibilityLabel} ${module.name}`}
                       title={module.name}

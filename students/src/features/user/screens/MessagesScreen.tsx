@@ -24,7 +24,7 @@ export const MessagesScreen = () => {
   const messagesQuery = useGetMessages();
   const { mutateAsync: deleteMessage } = useDeleteMessage();
 
-  const { isLoading, data: messages } = messagesQuery;
+  const { data: messages } = messagesQuery;
   const { t } = useTranslation();
 
   const handleDelete = async (messageId: number) => {
@@ -41,8 +41,16 @@ export const MessagesScreen = () => {
           <SwipeableProvider>
             <Section style={{ marginTop: spacing['2'] }}>
               <OverviewList
-                loading={isLoading}
-                emptyStateText={t('messagesScreen.empty')}
+                queries={messagesQuery}
+                skeleton={{ count: 5 }}
+                emptyState={{
+                  title: t('states.messages.emptyTitle'),
+                  text: t('states.messages.emptyText'),
+                }}
+                errorState={{
+                  title: t('states.messages.failedTitle'),
+                  text: t('states.messages.failedText'),
+                }}
               >
                 {messages?.map((message, index) => (
                   <Swipeable

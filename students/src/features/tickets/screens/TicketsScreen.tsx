@@ -12,7 +12,11 @@ import { Defs, LinearGradient, Rect, Stop, Svg } from 'react-native-svg';
 
 import { faPlus } from '@fortawesome/free-solid-svg-icons';
 import { getHtmlTextContent } from '@polito/lib/core';
-import { useAccessibility } from '@polito/lib/core';
+import {
+  useAccessibility,
+  useIsOnline,
+  useQueryStates,
+} from '@polito/lib/core';
 import {
   BottomBarSpacer,
   CtaButton,
@@ -29,7 +33,6 @@ import {
 import { TicketOverview } from '@polito/student-api-client';
 import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { onlineManager } from '@tanstack/react-query';
 
 import { useNotifications } from '../../../core/hooks/useNotifications';
 import {
@@ -113,6 +116,8 @@ export const TicketsScreen = ({ navigation }: Props) => {
   const { t } = useTranslation();
   const styles = useStylesheet(createStyles);
   const ticketsQuery = useGetTickets();
+  const states = useQueryStates(ticketsQuery);
+  const isOnline = useIsOnline();
 
   const tickets = useMemo(
     () =>
@@ -155,21 +160,28 @@ export const TicketsScreen = ({ navigation }: Props) => {
               accessibilityLabel={sectionHeaderAccessibilityLabel}
               title={t('ticketsScreen.myTickets')}
             />
-            {!ticketsQuery.isLoading &&
-              (tickets.length > 0 ? (
-                <OverviewList indented>
-                  {tickets.map((ticket, index) => (
-                    <ListItem
-                      totalData={tickets.length}
-                      index={index}
-                      ticket={ticket}
-                      key={ticket.id}
-                    />
-                  ))}
-                </OverviewList>
-              ) : (
-                <OverviewList emptyStateText={t('ticketsScreen.emptyState')} />
+            <OverviewList
+              indented
+              states={states}
+              skeleton={{ count: 3, trailing: 'chip' }}
+              emptyState={{
+                title: t('states.tickets.emptyTitle'),
+                text: t('states.tickets.emptyText'),
+              }}
+              errorState={{
+                title: t('states.tickets.failedTitle'),
+                text: t('states.tickets.failedText'),
+              }}
+            >
+              {tickets.map((ticket, index) => (
+                <ListItem
+                  totalData={tickets.length}
+                  index={index}
+                  ticket={ticket}
+                  key={ticket.id}
+                />
               ))}
+            </OverviewList>
           </Section>
           <CtaButtonSpacer />
           <BottomBarSpacer />
@@ -180,8 +192,12 @@ export const TicketsScreen = ({ navigation }: Props) => {
 
       <CtaButton
         absolute={true}
-        disabled={!onlineManager.isOnline()}
-        title={t('ticketsScreen.addNew')}
+        disabled={!isOnline}
+        title={
+          isOnline
+            ? t('ticketsScreen.addNew')
+            : t('states.tickets.newNeedsConnection')
+        }
         action={() => navigation.navigate('TicketFaqs')}
         icon={faPlus}
       />

@@ -3,14 +3,16 @@ import { useTranslation } from 'react-i18next';
 import { FlatList, Platform, StyleSheet, View } from 'react-native';
 
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
-import { usePreferencesContext } from '@polito/lib/core';
+import { usePreferencesContext, useQueryStates } from '@polito/lib/core';
 import {
   BottomBarSpacer,
   GlobalStyles,
   IndentedDivider,
-  OverviewList,
   RefreshControl,
+  RegionStateBlock,
   Row,
+  SkeletonRows,
+  StateBlock,
   Theme,
   TranslucentTextField,
   useSafeAreaSpacing,
@@ -50,6 +52,9 @@ const CourseFilesScreenContent = ({ navigation, route }: Props) => {
   const multiSelectNav =
     (navigation.getParent()?.getParent() as any) ?? navigation;
   const recentFilesQuery = useGetCourseFilesRecent(courseId);
+  const states = useQueryStates(recentFilesQuery);
+  // The toolbar stays while loading, so nothing moves when the rows arrive
+  const showToolbar = states.status === 'loading' || states.status === 'ready';
   const { paddingHorizontal } = useSafeAreaSpacing();
   const { clearNotificationScope } = useNotifications();
   const { updatePreference } = usePreferencesContext<AppPreferences>();
@@ -101,29 +106,33 @@ const CourseFilesScreenContent = ({ navigation, route }: Props) => {
 
   return (
     <>
-      <Row align="center" style={[paddingHorizontal, styles.searchBar]}>
-        <TranslucentTextField
-          autoFocus={searchFilter.length !== 0}
-          autoCorrect={false}
-          leadingIcon={faSearch}
-          value={searchFilter}
-          onChangeText={setSearchFilter}
-          style={[GlobalStyles.grow, styles.textField]}
-          label={t('courseDirectoryScreen.search')}
-          editable={true}
-          isClearable={!!searchFilter}
-          onClear={() => setSearchFilter('')}
-          onClearLabel={t('contactsScreen.clearSearch')}
+      {showToolbar && (
+        <Row align="center" style={[paddingHorizontal, styles.searchBar]}>
+          <TranslucentTextField
+            autoFocus={searchFilter.length !== 0}
+            autoCorrect={false}
+            leadingIcon={faSearch}
+            value={searchFilter}
+            onChangeText={setSearchFilter}
+            style={[GlobalStyles.grow, styles.textField]}
+            label={t('courseDirectoryScreen.search')}
+            editable={true}
+            isClearable={!!searchFilter}
+            onClear={() => setSearchFilter('')}
+            onClearLabel={t('contactsScreen.clearSearch')}
+          />
+        </Row>
+      )}
+      {showToolbar && (
+        <FileScreenHeader
+          activeSort={activeSort}
+          sortOptions={sortOptions}
+          onPressSortOption={onPressSortOption}
+          isDirectoryView={false}
+          onToggleView={onToggleView}
+          isSelectDisabled={isDownloading || isRemoving}
         />
-      </Row>
-      <FileScreenHeader
-        activeSort={activeSort}
-        sortOptions={sortOptions}
-        onPressSortOption={onPressSortOption}
-        isDirectoryView={false}
-        onToggleView={onToggleView}
-        isSelectDisabled={isDownloading || isRemoving}
-      />
+      )}
 
       <View style={{ flex: 1 }}>
         <FlatList
@@ -167,9 +176,39 @@ const CourseFilesScreenContent = ({ navigation, route }: Props) => {
             </>
           }
           ListEmptyComponent={
-            !recentFilesQuery.isLoading ? (
-              <OverviewList emptyStateText={t('courseFilesTab.empty')} />
-            ) : null
+            states.status === 'loading' ? (
+              <SkeletonRows
+                card={false}
+                count={8}
+                leading="icon"
+                trailing="none"
+                label={t('states.files.loading')}
+              />
+            ) : states.status === 'ready' && searchFilter.trim() ? (
+              <StateBlock
+                card
+                title={t('states.files.noMatchTitle', {
+                  search: searchFilter.trim(),
+                })}
+                text={t('states.files.noMatchText')}
+                action={{
+                  label: t('states.files.clearSearch'),
+                  onPress: () => setSearchFilter(''),
+                }}
+              />
+            ) : (
+              <RegionStateBlock
+                states={states}
+                emptyState={{
+                  title: t('states.files.emptyTitle'),
+                  text: t('states.files.emptyText'),
+                }}
+                errorState={{
+                  title: t('states.files.failedTitle'),
+                  text: t('states.files.failedText'),
+                }}
+              />
+            )
           }
         />
       </View>

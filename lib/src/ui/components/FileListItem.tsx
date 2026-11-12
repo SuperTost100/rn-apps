@@ -144,8 +144,13 @@ export const FileListItem = ({
         </View>
       }
       subtitle={subtitle}
-      disabled={isDisabled || rest.disabled}
       {...rest}
+      // After the spread: a file not on the phone can't open offline,
+      // whatever the caller passes
+      disabled={isDisabled || rest.disabled}
+      accessibilityHint={
+        isDisabled ? t('states.needsConnection') : rest.accessibilityHint
+      }
     />
   );
 };

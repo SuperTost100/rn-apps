@@ -1220,6 +1220,60 @@
     "refreshFailedNoTime": "Aggiornamento non riuscito. Mostro i dati salvati in precedenza.",
     "loadFailed": "Impossibile caricare queste informazioni. Riprova tra poco.",
     "close": "Chiudi",
-    "needsConnection": "Serve una connessione"
+    "needsConnection": "Serve una connessione",
+    "teaching": {
+      "failedTitle": "Impossibile caricare Didattica",
+      "failedText": "Il server non ha risposto, quindi corsi, esami e libretto non sono visibili. Controlla la connessione e riprova."
+    },
+    "courses": {
+      "emptyTitle": "Ancora nessun corso",
+      "emptyText": "I corsi compaiono qui quando il piano di studi viene approvato, insieme a lezioni, file e avvisi.",
+      "failedTitle": "Impossibile caricare i corsi"
+    },
+    "exams": {
+      "emptyTitle": "Nessun appello aperto",
+      "emptyText": "Gli appelli dei corsi del tuo piano di studi compaiono qui quando si aprono le prenotazioni.",
+      "failedTitle": "Impossibile caricare gli appelli",
+      "failedText": "Le tue prenotazioni sono al sicuro sui server dell'ateneo. Controlla la connessione e riprova."
+    },
+    "transcript": {
+      "failedTitle": "Impossibile caricare il libretto"
+    },
+    "files": {
+      "loading": "Caricamento dei file",
+      "emptyTitle": "Ancora nessun file",
+      "emptyText": "Il materiale caricato dal docente compare qui, dal più recente.",
+      "failedTitle": "Impossibile caricare i file",
+      "failedText": "La pagina del corso non ha risposto. I file già scaricati restano sul telefono. Riprova tra poco.",
+      "noMatchTitle": "Nessun file corrisponde a \"{{search}}\"",
+      "noMatchText": "La ricerca guarda i nomi dei file di questo corso.",
+      "clearSearch": "Cancella la ricerca"
+    },
+    "agenda": {
+      "loading": "Caricamento dell'agenda",
+      "failedTitle": "Impossibile caricare l'agenda",
+      "failedText": "Le tue lezioni e prenotazioni sono al sicuro. Controlla la connessione e riprova."
+    },
+    "tickets": {
+      "emptyTitle": "Ancora nessun ticket",
+      "emptyText": "Un ticket è una domanda alla segreteria. I tuoi ticket e le risposte compaiono qui.",
+      "failedTitle": "Impossibile caricare i ticket",
+      "failedText": "Il server della segreteria non ha risposto. I tuoi ticket sono al sicuro. Controlla la connessione e riprova.",
+      "newNeedsConnection": "Per un nuovo ticket serve una connessione"
+    },
+    "messages": {
+      "emptyTitle": "Nessun messaggio",
+      "emptyText": "I messaggi dell'ateneo compaiono qui, dal più recente.",
+      "failedTitle": "Impossibile caricare i messaggi",
+      "failedText": "I tuoi messaggi sono al sicuro sui server dell'ateneo. Controlla la connessione e riprova."
+    },
+    "exam": {
+      "loading": "Caricamento dell'appello",
+      "goneTitle": "Questo appello non è più in elenco",
+      "goneText": "Il docente potrebbe averlo ritirato. Se eri prenotato, l'ateneo ti manda un messaggio.",
+      "goneAction": "Mostra gli appelli",
+      "failedTitle": "Impossibile caricare l'appello",
+      "failedText": "La tua prenotazione, se ne hai una, è al sicuro. Controlla la connessione e riprova."
+    }
   }
 }

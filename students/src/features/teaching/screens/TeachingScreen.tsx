@@ -2,10 +2,13 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, TouchableHighlight, View } from 'react-native';
 
-import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
-import { useOfflineDisabled, usePreferencesContext } from '@polito/lib/core';
 import {
-  ActivityIndicator,
+  faArrowsRotate,
+  faEye,
+  faEyeSlash,
+} from '@fortawesome/free-solid-svg-icons';
+import { usePreferencesContext, useQueryStates } from '@polito/lib/core';
+import {
   BottomBarSpacer,
   Card,
   Col,
@@ -13,10 +16,13 @@ import {
   Icon,
   Metric,
   OverviewList,
+  QueryStateView,
   RefreshControl,
   Row,
   Section,
   SectionHeader,
+  SkeletonCard,
+  StateBlock,
   Text,
   type Theme,
   UnreadBadge,
@@ -46,13 +52,15 @@ import { TeachingStackParamList } from '../components/TeachingNavigator';
 
 type Props = NativeStackScreenProps<TeachingStackParamList, 'Home'>;
 
+/** The transcript card: the 140 px chart and 18 px of padding above and below */
+const TRANSCRIPT_CARD_HEIGHT = 176;
+
 export const TeachingScreen = ({ navigation }: Props) => {
   const { t } = useTranslation();
   const { colors, palettes } = useTheme();
   const styles = useStylesheet(createStyles);
   const { courses: coursePreferences, hideGrades } =
     usePreferencesContext<AppPreferences>();
-  const isOffline = useOfflineDisabled();
   const { getUnreadsCountPerCourse } = useNotifications();
   const surveyCategoriesQuery = useGetSurveyCategories();
   const coursesQuery = useGetCourses();
@@ -142,6 +150,21 @@ export const TeachingScreen = ({ navigation }: Props) => {
     );
   }, [coursePreferences, coursesQuery.data, examsQuery.data]);
 
+  const coursesStates = useQueryStates(coursesQuery);
+  const examsStates = useQueryStates([examsQuery, coursesQuery], {
+    isEmpty: () => exams.length === 0,
+  });
+  const studentStates = useQueryStates(studentQuery);
+  // When nothing loads at all, one block says so instead of three
+  const nothingLoaded = [coursesStates, examsStates, studentStates].every(
+    s => s.status === 'error',
+  );
+  const retryAll = () => {
+    coursesStates.retry();
+    examsStates.retry();
+    studentStates.retry();
+  };
+
   return (
     <ScrollView
       contentInsetAdjustmentBehavior="automatic"
@@ -159,157 +182,202 @@ export const TeachingScreen = ({ navigation }: Props) => {
       }
     >
       <View style={styles.container}>
-        {eventAdmissionsByContext.map(([contextName, events]) => (
-          <GraduationSessionSection
-            key={contextName}
-            contextName={contextName}
-            events={events}
+        {nothingLoaded ? (
+          <StateBlock
+            card
+            variant={coursesStates.isOffline ? 'empty' : 'error'}
+            title={
+              coursesStates.isOffline
+                ? t('states.offlineTitle')
+                : t('states.teaching.failedTitle')
+            }
+            text={
+              coursesStates.isOffline
+                ? t('states.offlineText')
+                : t('states.teaching.failedText')
+            }
+            action={
+              coursesStates.isOffline
+                ? undefined
+                : {
+                    label: t('states.tryAgain'),
+                    icon: faArrowsRotate,
+                    primary: true,
+                    onPress: retryAll,
+                  }
+            }
           />
-        ))}
-        {surveyCategoriesQuery.data?.length ? (
-          <SurveyTypesSection types={surveyCategoriesQuery.data} />
-        ) : undefined}
-        <Section>
-          <SectionHeader
-            title={t('coursesScreen.title')}
-            linkTo={{ screen: 'Courses' }}
-            linkToMoreCount={hiddenCoursesCount}
-          />
-          <OverviewList
-            loading={coursesQuery.isLoading && !isOffline}
-            indented
-            emptyStateText={(() => {
-              if (isOffline) return t('common.cacheMiss');
-              return (coursesQuery.data?.length ?? 0) > 0
-                ? t('teachingScreen.allCoursesHidden')
-                : t('coursesScreen.emptyState');
-            })()}
-          >
-            {courses.map(course => (
-              <CourseListItem
-                key={course.shortcode + '' + course.id}
-                course={course}
-                badge={getUnreadsCountPerCourse(
-                  course.id,
-                  course.previousEditions,
-                )}
+        ) : (
+          <>
+            {eventAdmissionsByContext.map(([contextName, events]) => (
+              <GraduationSessionSection
+                key={contextName}
+                contextName={contextName}
+                events={events}
               />
             ))}
-          </OverviewList>
-        </Section>
-        <Section>
-          <SectionHeader
-            title={t('examsScreen.title')}
-            linkTo={{ screen: 'Exams' }}
-            linkToMoreCount={
-              examsQuery.data
-                ? examsQuery.data.length - exams.length
-                : undefined
-            }
-          />
-          <OverviewList
-            loading={
-              !isOffline && (examsQuery.isLoading || coursesQuery.isLoading)
-            }
-            indented
-            emptyStateText={
-              isOffline && examsQuery.isLoading
-                ? t('common.cacheMiss')
-                : t('examsScreen.emptyState')
-            }
-          >
-            {exams.map((exam, index) => (
-              <ExamListItem
-                key={`${exam.id}` + exam.moduleNumber}
-                exam={exam}
-                bottomBorder={index < exams.length - 1}
+            {surveyCategoriesQuery.data?.length ? (
+              <SurveyTypesSection types={surveyCategoriesQuery.data} />
+            ) : undefined}
+            <Section>
+              <SectionHeader
+                title={t('coursesScreen.title')}
+                linkTo={{ screen: 'Courses' }}
+                linkToMoreCount={hiddenCoursesCount}
               />
-            ))}
-          </OverviewList>
-        </Section>
-        <Section>
-          <SectionHeader
-            title={t('common.transcript')}
-            trailingItem={<HideGrades />}
-          />
-
-          <View style={GlobalStyles.relative}>
-            <Card style={styles.transcriptCard}>
-              {studentQuery.isLoading ? (
-                isOffline ? (
-                  <OverviewList emptyStateText={t('common.cacheMiss')} />
-                ) : (
-                  <ActivityIndicator style={styles.loader} />
-                )
-              ) : (
-                <TouchableHighlight
-                  onPress={() => navigation.navigate('Transcript')}
-                  underlayColor={colors.touchableHighlight}
-                >
-                  <Row p={5} gap={5} align="center" justify="space-between">
-                    <Col justify="center" flexShrink={1} gap={5}>
-                      <Metric
-                        title={t('transcriptMetricsScreen.weightedAverage')}
-                        value={formatThirtiethsGrade(
-                          !hideGrades ? studentQuery.data?.averageGrade : null,
-                        )}
-                        color={colors.title}
-                      />
-                      <Metric
-                        title={t('transcriptMetricsScreen.averageLabel')}
-                        value={formatFinalGrade(
-                          !hideGrades
-                            ? studentQuery.data?.estimatedFinalGrade
-                            : null,
-                        )}
-                        color={colors.title}
-                      />
-                    </Col>
-                    <Col style={styles.graph} flexShrink={1}>
-                      <View style={{ alignItems: 'center' }}>
-                        <ProgressChart
-                          label={
-                            studentQuery.data?.totalCredits
-                              ? `${
-                                  hideGrades
-                                    ? '--'
-                                    : studentQuery.data?.totalAcquiredCredits
-                                }/${studentQuery.data?.totalCredits}\n${t(
-                                  'common.ects',
-                                )}`
-                              : undefined
-                          }
-                          data={
-                            hideGrades
-                              ? []
-                              : studentQuery.data?.totalCredits
-                                ? [
-                                    (studentQuery.data?.totalAttendedCredits ??
-                                      0) / studentQuery.data?.totalCredits,
-                                    (studentQuery.data?.totalAcquiredCredits ??
-                                      0) / studentQuery.data?.totalCredits,
-                                  ]
-                                : []
-                          }
-                          boxSize={140}
-                          radius={40}
-                          thickness={18}
-                          colors={[
-                            palettes.primary[400],
-                            palettes.secondary[500],
-                          ]}
-                        />
-                      </View>
-                    </Col>
-                  </Row>
-                </TouchableHighlight>
-              )}
-            </Card>
-            {transcriptBadge && (
-              <UnreadBadge text={transcriptBadge} style={styles.badge} />
-            )}
-          </View>
-        </Section>
+              <OverviewList
+                states={coursesStates}
+                indented
+                skeleton={{ count: 5, leading: 'tile' }}
+                emptyState={
+                  coursesStates.status === 'empty'
+                    ? {
+                        title: t('states.courses.emptyTitle'),
+                        text: t('states.courses.emptyText'),
+                      }
+                    : { title: t('teachingScreen.allCoursesHidden') }
+                }
+                errorState={{ title: t('states.courses.failedTitle') }}
+              >
+                {courses.map(course => (
+                  <CourseListItem
+                    key={course.shortcode + '' + course.id}
+                    course={course}
+                    badge={getUnreadsCountPerCourse(
+                      course.id,
+                      course.previousEditions,
+                    )}
+                  />
+                ))}
+              </OverviewList>
+            </Section>
+            <Section>
+              <SectionHeader
+                title={t('examsScreen.title')}
+                linkTo={{ screen: 'Exams' }}
+                linkToMoreCount={
+                  examsQuery.data
+                    ? examsQuery.data.length - exams.length
+                    : undefined
+                }
+              />
+              <OverviewList
+                states={examsStates}
+                indented
+                skeleton={{ count: 3, leading: 'tile', trailing: 'chip' }}
+                emptyState={{
+                  title: t('states.exams.emptyTitle'),
+                  text: t('states.exams.emptyText'),
+                }}
+                errorState={{ title: t('states.exams.failedTitle') }}
+              >
+                {exams.map((exam, index) => (
+                  <ExamListItem
+                    key={`${exam.id}` + exam.moduleNumber}
+                    exam={exam}
+                    bottomBorder={index < exams.length - 1}
+                  />
+                ))}
+              </OverviewList>
+            </Section>
+            <Section>
+              <SectionHeader
+                title={t('common.transcript')}
+                trailingItem={<HideGrades />}
+              />
+              <QueryStateView
+                states={studentStates}
+                skeleton={
+                  <SkeletonCard
+                    height={TRANSCRIPT_CARD_HEIGHT}
+                    style={styles.transcriptCard}
+                  />
+                }
+                errorState={{ title: t('states.transcript.failedTitle') }}
+              >
+                <View style={GlobalStyles.relative}>
+                  <Card style={styles.transcriptCard}>
+                    <TouchableHighlight
+                      onPress={() => navigation.navigate('Transcript')}
+                      underlayColor={colors.touchableHighlight}
+                    >
+                      <Row
+                        p={5}
+                        gap={5}
+                        align="center"
+                        justify="space-between"
+                        style={styles.transcriptRow}
+                      >
+                        <Col justify="center" flexShrink={1} gap={5}>
+                          <Metric
+                            title={t('transcriptMetricsScreen.weightedAverage')}
+                            value={formatThirtiethsGrade(
+                              !hideGrades
+                                ? studentQuery.data?.averageGrade
+                                : null,
+                            )}
+                            color={colors.title}
+                          />
+                          <Metric
+                            title={t('transcriptMetricsScreen.averageLabel')}
+                            value={formatFinalGrade(
+                              !hideGrades
+                                ? studentQuery.data?.estimatedFinalGrade
+                                : null,
+                            )}
+                            color={colors.title}
+                          />
+                        </Col>
+                        <Col style={styles.graph} flexShrink={1}>
+                          <View style={{ alignItems: 'center' }}>
+                            <ProgressChart
+                              label={
+                                studentQuery.data?.totalCredits
+                                  ? `${
+                                      hideGrades
+                                        ? '--'
+                                        : studentQuery.data
+                                            ?.totalAcquiredCredits
+                                    }/${studentQuery.data?.totalCredits}\n${t(
+                                      'common.ects',
+                                    )}`
+                                  : undefined
+                              }
+                              data={
+                                hideGrades
+                                  ? []
+                                  : studentQuery.data?.totalCredits
+                                    ? [
+                                        (studentQuery.data
+                                          ?.totalAttendedCredits ?? 0) /
+                                          studentQuery.data?.totalCredits,
+                                        (studentQuery.data
+                                          ?.totalAcquiredCredits ?? 0) /
+                                          studentQuery.data?.totalCredits,
+                                      ]
+                                    : []
+                              }
+                              boxSize={140}
+                              radius={40}
+                              thickness={18}
+                              colors={[
+                                palettes.primary[400],
+                                palettes.secondary[500],
+                              ]}
+                            />
+                          </View>
+                        </Col>
+                      </Row>
+                    </TouchableHighlight>
+                  </Card>
+                  {transcriptBadge && (
+                    <UnreadBadge text={transcriptBadge} style={styles.badge} />
+                  )}
+                </View>
+              </QueryStateView>
+            </Section>
+          </>
+        )}
       </View>
       <BottomBarSpacer />
     </ScrollView>
@@ -350,8 +418,8 @@ const createStyles = ({ spacing }: Theme) =>
     container: {
       marginVertical: spacing[5],
     },
-    loader: {
-      marginVertical: spacing[8],
+    transcriptRow: {
+      minHeight: TRANSCRIPT_CARD_HEIGHT,
     },
     transcriptCard: {
       marginVertical: spacing[2],

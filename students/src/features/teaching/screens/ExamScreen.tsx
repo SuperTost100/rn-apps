@@ -14,8 +14,8 @@ import {
   formatDateTime,
   formatReadableDate,
   isValidDate,
-  useOfflineDisabled,
   usePreferencesContext,
+  useQueryStates,
 } from '@polito/lib/core';
 import { useGetPerson } from '@polito/lib/features/people';
 import { PlacesListItem } from '@polito/lib/features/places';
@@ -31,11 +31,15 @@ import {
   OverviewList,
   PersonListItem,
   RefreshControl,
+  RegionStateBlock,
   Row,
   ScreenDateTime,
   ScreenTitle,
   Section,
   SectionHeader,
+  SkeletonLine,
+  SkeletonRegion,
+  SkeletonRows,
   Text,
   useBottomModal,
   useTheme,
@@ -71,7 +75,7 @@ export const ExamScreen = ({ route, navigation }: Props) => {
     modal: bottomModal,
     close: closeBottomModal,
   } = useBottomModal();
-  const isOffline = useOfflineDisabled();
+  const states = useQueryStates(examsQuery, { isEmpty: () => !exam });
   const formatHHmm = dateFormatter('HH:mm');
   useEffect(() => {
     if (routes[routes.length - 2]?.name === 'Course') {
@@ -136,161 +140,198 @@ export const ExamScreen = ({ route, navigation }: Props) => {
         contentInsetAdjustmentBehavior="automatic"
       >
         <SafeAreaView>
-          <View
-            style={{ padding: spacing[5] }}
-            accessible={true}
-            accessibilityLabel={examAccessibilityLabel}
-          >
-            <ScreenTitle
-              style={{ marginBottom: spacing[2] }}
-              title={exam?.courseName}
-            />
-            <Col gap={2}>
-              <Row justify="space-between" align="center">
-                <Text
-                  variant="caption"
-                  style={{ flexShrink: 1, marginRight: spacing[2] }}
-                >
-                  {exam?.type}
-                </Text>
-                {exam?.status && Number(accessibility?.fontSize) < 150 && (
-                  <ExamStatusBadge exam={exam} />
-                )}
-              </Row>
-              {exam?.status && Number(accessibility?.fontSize) >= 150 && (
-                <ExamStatusBadge exam={exam} />
-              )}
-              <ScreenDateTime
+          {states.status === 'loading' && (
+            <SkeletonRegion label={t('states.exam.loading')}>
+              <Col gap={2} style={{ padding: spacing[5] }}>
+                <SkeletonLine variant="heading" width="80%" />
+                <SkeletonLine variant="caption" width="50%" />
+                <SkeletonLine variant="title" width="60%" />
+              </Col>
+              <SkeletonRows count={4} leading="icon" trailing="none" />
+            </SkeletonRegion>
+          )}
+          <RegionStateBlock
+            states={states}
+            emptyState={{
+              title: t('states.exam.goneTitle'),
+              text: t('states.exam.goneText'),
+              action: {
+                label: t('states.exam.goneAction'),
+                onPress: () => navigation.navigate('Exams'),
+              },
+            }}
+            errorState={{
+              title: t('states.exam.failedTitle'),
+              text: t('states.exam.failedText'),
+            }}
+            style={{ marginTop: spacing[4] }}
+          />
+          {states.status === 'ready' && (
+            <>
+              <View
+                style={{ padding: spacing[5] }}
                 accessible={true}
-                date={
-                  exam
-                    ? exam.examStartsAt && isValidDate(exam?.examStartsAt)
-                      ? formatReadableDate(exam.examStartsAt)
-                      : t('common.dateToBeDefinedShort')
-                    : ''
-                }
-                time={
-                  exam
-                    ? exam?.examStartsAt && isValidDate(exam?.examStartsAt)
-                      ? `${formatHHmm(exam.examStartsAt)} - ${formatHHmm(
-                          exam.examEndsAt!,
-                        )}`
-                      : ''
-                    : ''
-                }
-              />
-            </Col>
-          </View>
-          <OverviewList loading={!isOffline && teacherQuery.isLoading} indented>
-            <PlacesListItem
-              eventName={exam?.courseName ?? ''}
-              places={exam?.places}
-            />
-            {teacherQuery.data && (
-              <PersonListItem
-                person={teacherQuery.data}
-                subtitle={t('common.teacher')}
-              />
-            )}
-            {!!exam?.notes?.length && (
-              <ListItem
-                leadingItem={
-                  <Icon icon={faNoteSticky} size={fontSizes['2xl']} />
-                }
-                title={exam.notes}
-                accessibilityLabel="a"
-                subtitle={t('examScreen.notes')}
-                inverted
-                titleProps={{ numberOfLines: 0 }}
-              />
-            )}
-            <ListItem
-              leadingItem={
-                <Icon icon={faHourglassEnd} size={fontSizes['2xl']} />
-              }
-              inverted
-              title={
-                exam?.bookingEndsAt
-                  ? formatDateTime(exam?.bookingEndsAt)
-                  : t('common.dateToBeDefined')
-              }
-              subtitle={t('examScreen.bookingEndsAt')}
-              trailingItem={
-                exam?.status === ExamStatusEnum.Unavailable &&
-                exam?.bookingEndsAt &&
-                isExamPassed(exam.bookingEndsAt) ? (
-                  <Icon
-                    icon={faTriangleExclamation}
-                    color="red"
-                    size={
-                      accessibility?.fontSize && accessibility.fontSize < 150
-                        ? fontSizes.md
-                        : fontSizes['3xl']
+                accessibilityLabel={examAccessibilityLabel}
+              >
+                <ScreenTitle
+                  style={{ marginBottom: spacing[2] }}
+                  title={exam?.courseName}
+                />
+                <Col gap={2}>
+                  <Row justify="space-between" align="center">
+                    <Text
+                      variant="caption"
+                      style={{ flexShrink: 1, marginRight: spacing[2] }}
+                    >
+                      {exam?.type}
+                    </Text>
+                    {exam?.status && Number(accessibility?.fontSize) < 150 && (
+                      <ExamStatusBadge exam={exam} />
+                    )}
+                  </Row>
+                  {exam?.status && Number(accessibility?.fontSize) >= 150 && (
+                    <ExamStatusBadge exam={exam} />
+                  )}
+                  <ScreenDateTime
+                    accessible={true}
+                    date={
+                      exam
+                        ? exam.examStartsAt && isValidDate(exam?.examStartsAt)
+                          ? formatReadableDate(exam.examStartsAt)
+                          : t('common.dateToBeDefinedShort')
+                        : ''
+                    }
+                    time={
+                      exam
+                        ? exam?.examStartsAt && isValidDate(exam?.examStartsAt)
+                          ? `${formatHHmm(exam.examStartsAt)} - ${formatHHmm(
+                              exam.examEndsAt!,
+                            )}`
+                          : ''
+                        : ''
                     }
                   />
-                ) : undefined
-              }
-            />
-
-            <ListItem
-              leadingItem={<Icon icon={faUsers} size={fontSizes['2xl']} />}
-              inverted
-              /* check using undefined since the fields can be 0 */
-              title={
-                exam?.bookedCount !== undefined
-                  ? getExam(exam.bookedCount, exam.availableCount)
-                  : t('examScreen.noBookedCount')
-              }
-              subtitle={t('examScreen.bookedCount')}
-              trailingItem={
-                exam?.status === ExamStatusEnum.Unavailable &&
-                exam.availableCount === 0 ? (
-                  <Icon
-                    icon={faTriangleExclamation}
-                    color="red"
-                    size={fontSizes.md}
-                  />
-                ) : undefined
-              }
-            />
-          </OverviewList>
-          {exam?.status === 'requested' && (
-            <>
-              <Section>
-                <SectionHeader title="Reschedule reason" />
-              </Section>
+                </Col>
+              </View>
               <OverviewList
-                loading={!isOffline && teacherQuery.isLoading}
+                loading={teacherQuery.isLoading}
+                skeleton={{ count: 4, leading: 'icon', trailing: 'none' }}
                 indented
               >
-                <ListItem
-                  inverted
-                  /* check using undefined since the fields can be 0 */
-                  title={
-                    <Text variant="longProse" style={{ marginTop: 10 }}>
-                      {exam?.requestReason ?? ''}
-                    </Text>
-                  }
-                  subtitle={t('examScreen.requestReasonTitle')}
+                <PlacesListItem
+                  eventName={exam?.courseName ?? ''}
+                  places={exam?.places}
                 />
+                {teacherQuery.data && (
+                  <PersonListItem
+                    person={teacherQuery.data}
+                    subtitle={t('common.teacher')}
+                  />
+                )}
+                {!!exam?.notes?.length && (
+                  <ListItem
+                    leadingItem={
+                      <Icon icon={faNoteSticky} size={fontSizes['2xl']} />
+                    }
+                    title={exam.notes}
+                    accessibilityLabel="a"
+                    subtitle={t('examScreen.notes')}
+                    inverted
+                    titleProps={{ numberOfLines: 0 }}
+                  />
+                )}
                 <ListItem
+                  leadingItem={
+                    <Icon icon={faHourglassEnd} size={fontSizes['2xl']} />
+                  }
+                  inverted
+                  title={
+                    exam?.bookingEndsAt
+                      ? formatDateTime(exam?.bookingEndsAt)
+                      : t('common.dateToBeDefined')
+                  }
+                  subtitle={t('examScreen.bookingEndsAt')}
+                  trailingItem={
+                    exam?.status === ExamStatusEnum.Unavailable &&
+                    exam?.bookingEndsAt &&
+                    isExamPassed(exam.bookingEndsAt) ? (
+                      <Icon
+                        icon={faTriangleExclamation}
+                        color="red"
+                        size={
+                          accessibility?.fontSize &&
+                          accessibility.fontSize < 150
+                            ? fontSizes.md
+                            : fontSizes['3xl']
+                        }
+                      />
+                    ) : undefined
+                  }
+                />
+
+                <ListItem
+                  leadingItem={<Icon icon={faUsers} size={fontSizes['2xl']} />}
                   inverted
                   /* check using undefined since the fields can be 0 */
                   title={
-                    <Text variant="longProse" style={{ marginTop: 10 }}>
-                      {exam?.requestDetails ?? ''}
-                    </Text>
+                    exam?.bookedCount !== undefined
+                      ? getExam(exam.bookedCount, exam.availableCount)
+                      : t('examScreen.noBookedCount')
                   }
-                  subtitle={t('examScreen.requestDetailsTitle')}
+                  subtitle={t('examScreen.bookedCount')}
+                  trailingItem={
+                    exam?.status === ExamStatusEnum.Unavailable &&
+                    exam.availableCount === 0 ? (
+                      <Icon
+                        icon={faTriangleExclamation}
+                        color="red"
+                        size={fontSizes.md}
+                      />
+                    ) : undefined
+                  }
                 />
               </OverviewList>
+              {exam?.status === 'requested' && (
+                <>
+                  <Section>
+                    <SectionHeader title="Reschedule reason" />
+                  </Section>
+                  <OverviewList
+                    loading={teacherQuery.isLoading}
+                    skeleton={{ count: 2, trailing: 'none' }}
+                    indented
+                  >
+                    <ListItem
+                      inverted
+                      /* check using undefined since the fields can be 0 */
+                      title={
+                        <Text variant="longProse" style={{ marginTop: 10 }}>
+                          {exam?.requestReason ?? ''}
+                        </Text>
+                      }
+                      subtitle={t('examScreen.requestReasonTitle')}
+                    />
+                    <ListItem
+                      inverted
+                      /* check using undefined since the fields can be 0 */
+                      title={
+                        <Text variant="longProse" style={{ marginTop: 10 }}>
+                          {exam?.requestDetails ?? ''}
+                        </Text>
+                      }
+                      subtitle={t('examScreen.requestDetailsTitle')}
+                    />
+                  </OverviewList>
+                </>
+              )}
+              {exam?.feedback &&
+                exam?.status === ExamStatusEnum.Unavailable && (
+                  <ErrorCard
+                    text={exam.feedback}
+                    style={{ paddingTop: spacing[3] }}
+                  />
+                )}
             </>
-          )}
-          {exam?.feedback && exam?.status === ExamStatusEnum.Unavailable && (
-            <ErrorCard
-              text={exam.feedback}
-              style={{ paddingTop: spacing[3] }}
-            />
           )}
           <CtaButtonSpacer />
           <BottomBarSpacer />

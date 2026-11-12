@@ -1,14 +1,9 @@
-import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet } from 'react-native';
 
 import { faStar } from '@fortawesome/free-regular-svg-icons';
 import { faPaperclip } from '@fortawesome/free-solid-svg-icons';
-import {
-  formatDate,
-  getHtmlTextContent,
-  useOfflineDisabled,
-} from '@polito/lib/core';
+import { formatDate, getHtmlTextContent } from '@polito/lib/core';
 import {
   DisclosureIndicator,
   Icon,
@@ -21,9 +16,7 @@ import {
   useTheme,
 } from '@polito/lib/ui';
 import { TicketOverview } from '@polito/student-api-client';
-import { useQueryClient } from '@tanstack/react-query';
 
-import { TICKET_QUERY_PREFIX } from '../../../core/queries/ticketHooks';
 import { TicketStatusBadge } from './TicketStatusBadge';
 
 interface TicketListItemProps extends Partial<ListItemProps> {
@@ -38,14 +31,6 @@ export const TicketListItem = ({
   const { palettes } = useTheme();
   const styles = useStylesheet(createStyles);
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
-
-  const isDataMissing = useCallback(
-    () =>
-      queryClient.getQueryData([TICKET_QUERY_PREFIX, ticket.id]) === undefined,
-    [ticket, queryClient],
-  );
-  const isDisabled = useOfflineDisabled(isDataMissing);
 
   return (
     <ListItem
@@ -56,7 +41,6 @@ export const TicketListItem = ({
         screen: 'Ticket',
         params: { id: ticket.id },
       }}
-      disabled={isDisabled}
       unread={unread || ticket.unreadCount > 0}
       title={getHtmlTextContent(ticket?.subject)}
       subtitle={

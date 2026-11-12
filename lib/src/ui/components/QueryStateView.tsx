@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactElement, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleProp, ViewStyle } from 'react-native';
 
@@ -131,7 +131,7 @@ export const QueryStateView = ({
 
   if (states.status === 'loading') {
     return isElementLike(skeleton) && skeleton !== undefined ? (
-      skeleton
+      (skeleton as ReactElement)
     ) : (
       <SkeletonRows {...(skeleton as SkeletonRowsProps | undefined)} />
     );
@@ -142,5 +142,7 @@ export const QueryStateView = ({
   ) {
     return <RegionStateBlock states={states} {...blockProps} />;
   }
-  return typeof children === 'function' ? children(states) : children;
+  return (
+    typeof children === 'function' ? children(states) : children
+  ) as ReactElement;
 };

@@ -1194,6 +1194,60 @@
     "refreshFailedNoTime": "Couldn't refresh. Showing what was saved earlier.",
     "loadFailed": "Couldn't load this information. Try again in a moment.",
     "close": "Close",
-    "needsConnection": "Needs a connection"
+    "needsConnection": "Needs a connection",
+    "teaching": {
+      "failedTitle": "Couldn't load Teaching",
+      "failedText": "The server didn't answer, so your courses, exams and transcript aren't shown. Check your connection and try again."
+    },
+    "courses": {
+      "emptyTitle": "No courses yet",
+      "emptyText": "Your courses appear here when your study plan is approved. Lectures, files and announcements come with them.",
+      "failedTitle": "Couldn't load your courses"
+    },
+    "exams": {
+      "emptyTitle": "No exam calls open",
+      "emptyText": "Exam calls for the courses in your study plan appear here when booking opens.",
+      "failedTitle": "Couldn't load the exam calls",
+      "failedText": "Your bookings are safe on the university's servers. Check your connection and try again."
+    },
+    "transcript": {
+      "failedTitle": "Couldn't load your transcript"
+    },
+    "files": {
+      "loading": "Loading files",
+      "emptyTitle": "No files yet",
+      "emptyText": "Material the teacher uploads appears here, newest first.",
+      "failedTitle": "Couldn't load the files",
+      "failedText": "The course page didn't answer. Files you already downloaded are still on this phone. Try again in a moment.",
+      "noMatchTitle": "No files match \"{{search}}\"",
+      "noMatchText": "Search looks at the names of the files of this course.",
+      "clearSearch": "Clear search"
+    },
+    "agenda": {
+      "loading": "Loading the agenda",
+      "failedTitle": "Couldn't load the agenda",
+      "failedText": "Your lectures and bookings are safe. Check your connection and try again."
+    },
+    "tickets": {
+      "emptyTitle": "No tickets yet",
+      "emptyText": "A ticket is a question to the student office. Your tickets and the replies appear here.",
+      "failedTitle": "Couldn't load your tickets",
+      "failedText": "The student office server didn't answer. Your tickets are safe. Check your connection and try again.",
+      "newNeedsConnection": "New ticket needs a connection"
+    },
+    "messages": {
+      "emptyTitle": "No messages",
+      "emptyText": "Messages from the university appear here, newest first.",
+      "failedTitle": "Couldn't load your messages",
+      "failedText": "Your messages are safe on the university's servers. Check your connection and try again."
+    },
+    "exam": {
+      "loading": "Loading the exam call",
+      "goneTitle": "This exam call is no longer listed",
+      "goneText": "The teacher may have withdrawn it. If you were booked, the university sends you a message.",
+      "goneAction": "Show exam calls",
+      "failedTitle": "Couldn't load this exam call",
+      "failedText": "Your booking, if you have one, is safe. Check your connection and try again."
+    }
   }
 }

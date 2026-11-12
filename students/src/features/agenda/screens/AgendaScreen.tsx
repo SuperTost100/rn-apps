@@ -16,15 +16,16 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import {
   APP_TIMEZONE,
-  useOfflineDisabled,
   usePreferencesContext,
+  useQueryStates,
 } from '@polito/lib/core';
 import {
   ActivityIndicator,
   BottomBarSpacer,
   HeaderAccessory,
   IconButton,
-  OverviewList,
+  RegionStateBlock,
+  SkeletonRows,
   Theme,
   useSafeAreaSpacing,
   useStylesheet,
@@ -76,7 +77,16 @@ export const AgendaScreen = ({ navigation, route }: Props) => {
     selectedDate.startOf('week'),
   ]);
 
-  const { isLoading, data } = useGetAgendaWeeks(weeks);
+  const { isLoading, data, weekQueries, sourceQueries } =
+    useGetAgendaWeeks(weeks);
+  // A week is built from the API queries: until one exists, their state is
+  // the agenda's (the week query itself waits for them)
+  const states = useQueryStates(
+    data.length ? weekQueries.filter(q => q.data) : sourceQueries,
+    { isEmpty: () => false },
+  );
+  const isWaiting =
+    states.status === 'loading' || (states.status === 'ready' && !data.length);
 
   const [dataPickerIsOpened, setDataPickerIsOpened] = useState<boolean>(false);
 
@@ -88,8 +98,6 @@ export const AgendaScreen = ({ navigation, route }: Props) => {
   }).current;
 
   const flatListRef = useRef<FlatList<AgendaWeek>>(null);
-
-  const isOffline = useOfflineDisabled();
 
   const [agendaState, setAgendaState] = useState<AgendaState>({
     contentHeight: 0, // the total height of scrollview content
@@ -270,11 +278,26 @@ export const AgendaScreen = ({ navigation, route }: Props) => {
         confirmText={t('common.confirm')}
         cancelText={t('common.cancel')}
       />
-      {!data.length && isOffline && (
-        <OverviewList emptyStateText={t('common.cacheMiss')} />
+      {isWaiting && (
+        <SkeletonRows
+          count={5}
+          leading="tile"
+          trailing="none"
+          label={t('states.agenda.loading')}
+          style={styles.skeleton}
+        />
       )}
-
-      {((!data.length && isLoading) || agendaState.isRefreshing) && (
+      {states.status === 'error' && (
+        <RegionStateBlock
+          states={states}
+          errorState={{
+            title: t('states.agenda.failedTitle'),
+            text: t('states.agenda.failedText'),
+          }}
+          style={styles.block}
+        />
+      )}
+      {agendaState.isRefreshing && (
         <ActivityIndicator style={styles.activityIndicator} size="large" />
       )}
       {!!data.length && !agendaState.isRefreshing && (
@@ -344,6 +367,12 @@ const createStyles = ({ spacing }: Theme) =>
     },
     separator: {
       height: spacing[8],
+    },
+    skeleton: {
+      paddingVertical: spacing[3],
+    },
+    block: {
+      marginTop: spacing[4],
     },
     container: { flex: 1 },
     listContainer: {

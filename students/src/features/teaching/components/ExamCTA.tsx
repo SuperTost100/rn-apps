@@ -1,11 +1,10 @@
 import { useTranslation } from 'react-i18next';
 
-import { useFeedbackContext } from '@polito/lib/core';
+import { useFeedbackContext, useIsOnline } from '@polito/lib/core';
 import { CtaButton } from '@polito/lib/ui';
 import { ExamStatusEnum } from '@polito/student-api-client';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { onlineManager } from '@tanstack/react-query';
 
 import { useConfirmationDialog } from '../../../core/hooks/useConfirmationDialog';
 import {
@@ -23,6 +22,7 @@ interface Props {
 export const ExamCTA = ({ exam, absolute = false }: Props) => {
   const { t } = useTranslation();
   const { setFeedback } = useFeedbackContext();
+  const isOnline = useIsOnline();
 
   const { navigate, reset } =
     useNavigation<NativeStackNavigationProp<TeachingStackParamList, any>>();
@@ -91,7 +91,10 @@ export const ExamCTA = ({ exam, absolute = false }: Props) => {
       }
       action={action}
       loading={mutationsLoading}
-      disabled={!onlineManager.isOnline() || examUnavailable}
+      disabled={!isOnline || examUnavailable}
+      accessibilityHint={
+        !isOnline && !examUnavailable ? t('states.needsConnection') : undefined
+      }
       variant="filled"
       absolute={absolute}
       containerStyle={{ paddingVertical: 0 }}

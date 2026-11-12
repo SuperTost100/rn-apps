@@ -422,5 +422,14 @@ export const useGetAgendaWeeks = (mondays: DateTime[]) => {
   return {
     isLoading,
     data: queries.filter(q => q.data).map(q => q.data as AgendaWeek),
+    /** One query per week, built from the sources below */
+    weekQueries: queries,
+    /** The API queries the weeks are built from, for loading and failed states */
+    sourceQueries: [
+      examsQuery,
+      bookingsQuery,
+      ...lecturesQueries.queries,
+      ...deadlinesQueries.queries,
+    ],
   };
 };
