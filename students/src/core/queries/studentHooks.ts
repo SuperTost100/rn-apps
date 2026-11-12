@@ -411,7 +411,8 @@ export const useGetNotifications = () => {
   return useQuery({
     queryKey: NOTIFICATIONS_QUERY_KEY,
     queryFn: () => studentClient.getNotifications(),
-    staleTime: Infinity,
+    // The inbox and its badges: refreshed at launch and when the app comes
+    // back after five minutes, not only when a push arrives
     refetchOnWindowFocus: true,
   });
 };

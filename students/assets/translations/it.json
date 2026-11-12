@@ -1451,13 +1451,13 @@
     "senders": {
       "studentOffice": "Segreteria studenti",
       "university": "Politecnico di Torino",
-      "news": "Notizie",
+      "news": "Politecnico di Torino",
       "course": "Corso",
       "teacher": "Docente",
       "emergency": "Politecnico di Torino",
-      "event": "Eventi",
+      "event": "Politecnico di Torino",
       "secretariat": "Segreteria studenti",
-      "exams": "Esami",
+      "exams": "Politecnico di Torino",
       "personal": "Politecnico di Torino"
     },
     "rowLabel": "{{kind}} da {{sender}}: {{title}}, {{when}}",

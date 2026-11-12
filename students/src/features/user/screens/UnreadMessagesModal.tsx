@@ -116,7 +116,7 @@ export const UnreadMessagesModal = ({ navigation }: Props) => {
           title={t('inboxScreen.urgent.openInInbox')}
           action={() => {
             navigation.goBack();
-            navigation.navigate('Inbox');
+            navigation.navigate('Message', { id: message.id });
           }}
         />
       </View>

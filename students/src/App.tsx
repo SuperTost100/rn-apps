@@ -48,6 +48,9 @@ Mapbox.setAccessToken(process.env.MAPBOX_TOKEN! || 'no_token');
 i18n.use(initReactI18next).init({
   compatibilityJSON: 'v3',
   fallbackLng: 'en',
+  // React Native renders text, not HTML: escaping showed "Dell&#39;Orso"
+  // in labels built from names and titles
+  interpolation: { escapeValue: false },
   resources: {
     en: {
       translation: { ...en, mfaScreen: mfaScreenTranslations.en },
