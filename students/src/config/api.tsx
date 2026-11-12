@@ -3,6 +3,7 @@ import {
   Configuration as AuthConfiguration,
   DefaultConfig as AuthDefaultConfig,
 } from '@polito/auth-api-client';
+import { fetchWithTimeout } from '@polito/lib/core';
 import { PlacesApiConfig } from '@polito/lib/features/places';
 import {
   BASE_PATH,
@@ -32,6 +33,8 @@ export const updateGlobalApiConfiguration = ({
 
   const configurationParameters: ConfigurationParameters = {
     basePath,
+    // Every API call gives up after a while instead of hanging
+    fetchApi: fetchWithTimeout,
     headers: {
       // This currently has no effect but makes sure we don't hit the device
       // http cache, getting results in the wrong language

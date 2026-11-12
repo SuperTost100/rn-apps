@@ -44,6 +44,7 @@ import {
 } from '../types/auth';
 import { APP_TIMEZONE } from '../utils/dates';
 import { isEnvProduction } from '../utils/env';
+import { isRequestTimeout } from '../utils/fetchWithTimeout';
 import { createPolitoAppKeychainServices } from '../utils/keychain';
 import { isResponseError } from '../utils/queries';
 import { errorPresentation } from '../utils/queryStates';
@@ -196,14 +197,18 @@ export const ApiProvider = <Prefs extends object = {}>({
       query: Query<unknown, unknown, unknown>,
       client: QueryClient,
     ) => {
-      if (!isResponseError(error)) return;
-      if (error.response.status === 401) {
-        // Unchanged: log out and show what the server said
-        await mutationErrorHandler(error, client);
-        return;
+      // A timeout is handled as a failed load, without a server message
+      if (!isResponseError(error)) {
+        if (!isRequestTimeout(error)) return;
+      } else {
+        if (error.response.status === 401) {
+          // Unchanged: log out and show what the server said
+          await mutationErrorHandler(error, client);
+          return;
+        }
+        await readServerMessage(error);
+        if (error.response.url?.includes('/login')) return;
       }
-      await readServerMessage(error);
-      if (error.response.url?.includes('/login')) return;
       const retry = () => {
         query.fetch().catch(() => {});
       };
@@ -262,7 +267,11 @@ export const ApiProvider = <Prefs extends object = {}>({
           // so one sent without a network can hang until the app restarts.
           // Saved data comes from restoreQueries at startup instead
           networkMode: 'online',
-          retry: isEnvProduction ? 2 : 1,
+          // A request that timed out already waited its full limit: the
+          // screen shows the failure with Try again instead of waiting more
+          retry: (failureCount, error) =>
+            !isRequestTimeout(error) &&
+            failureCount < (isEnvProduction ? 2 : 1),
           refetchOnWindowFocus: isEnvProduction,
           persister: queryPersister.persisterFn,
         },

@@ -1,6 +1,7 @@
 export * from './dates';
 export * from './device';
 export * from './env';
+export * from './fetchWithTimeout';
 export * from './html';
 export * from './keychain';
 export * from './navigation';
