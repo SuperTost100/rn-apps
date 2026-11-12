@@ -1,19 +1,44 @@
+import { Platform, StyleSheet } from 'react-native';
+
 import { MaterialTopTabBarProps } from '@react-navigation/material-top-tabs';
 
-import { useTextScale } from '../hooks/useTextScale';
+import { useTheme } from '../hooks/useTheme';
 import { HeaderAccessory } from './HeaderAccessory';
 import { Tab } from './Tab';
 import { Tabs } from './Tabs';
 
+/**
+ * Underlined text tabs under the header, scrolling sideways with a fade on
+ * the side that has more and the selected tab kept in view
+ */
 export const TopTabBar = ({
   state,
   descriptors,
   navigation,
 }: MaterialTopTabBarProps) => {
-  const { isLarge } = useTextScale();
+  const { colors, layout, spacing } = useTheme();
+  // The same colour HeaderAccessory draws, so the fade blends into it
+  const background = Platform.select({
+    ios: colors.headersBackground,
+    default: colors.surface,
+  });
   return (
-    <HeaderAccessory>
-      <Tabs>
+    <HeaderAccessory
+      style={{
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: colors.divider,
+      }}
+    >
+      <Tabs
+        fadeColor={background}
+        selectedIndexes={[state.index]}
+        contentContainerStyle={{
+          // The label of the first tab lines up with the 16 px gutter
+          paddingHorizontal: layout.gutter - spacing[3],
+          paddingVertical: 0,
+          gap: 0,
+        }}
+      >
         {state.routes.map((route, index) => {
           const { options } = descriptors[route.key];
           const label =
@@ -64,7 +89,6 @@ export const TopTabBar = ({
               onPress={onPress}
               onLongPress={onLongPress}
               badge={badgeText}
-              style={isLarge ? { paddingVertical: 0 } : undefined}
             >
               {label as string}
             </Tab>

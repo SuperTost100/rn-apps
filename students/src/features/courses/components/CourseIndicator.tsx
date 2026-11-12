@@ -10,12 +10,12 @@ interface Props {
 }
 
 export const CourseIndicator = ({ uniqueShortcode }: Props) => {
-  const { palettes } = useTheme();
+  const { colors } = useTheme();
   const prefs = usePreferencesContext<AppPreferences>();
   const coursePrefs = prefs.courses[uniqueShortcode];
 
   if (!coursePrefs) {
-    return <CourseIcon color={palettes.primary[500]} />;
+    return <CourseIcon color={colors.primary} />;
   }
 
   return (

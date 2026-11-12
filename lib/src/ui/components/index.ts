@@ -11,6 +11,7 @@ export * from './Card';
 export * from './CarouselDots';
 export * from './ChatBubble';
 export * from './Col';
+export * from './CourseTile';
 export * from './CtaButton';
 export * from './CtaButtonContainer';
 export * from './DecorativeIcon';
