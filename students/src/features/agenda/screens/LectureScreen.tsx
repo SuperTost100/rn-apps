@@ -42,6 +42,7 @@ import { isRecordedVC } from '../../courses/utils/lectures';
 import { AgendaStackParamList } from '../components/AgendaNavigator';
 import { useAgendaDialog } from '../hooks/useAgendaDialog';
 import { cleanupPastSingleEvents } from '../utils/hiddenEvents';
+import { placesStack } from '../utils/placesStack';
 
 type Props = NativeStackScreenProps<AgendaStackParamList, 'Lecture'>;
 
@@ -255,7 +256,7 @@ export const LectureScreen = ({ route, navigation }: Props) => {
                 }
                 isAction
                 onPress={() => {
-                  navigation.navigate('PlacesAgendaStack', {
+                  navigation.navigate(placesStack(navigation), {
                     screen: 'Place',
                     params: {
                       placeId: resolvePlaceId(lecture.place!),

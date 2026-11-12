@@ -217,6 +217,7 @@ const thisMonday = DateTime.now().setZone(APP_TIMEZONE).startOf('week');
 
 interface AgendaWeekQueryFnParams {
   preferences: PreferencesContextProps<AppPreferences>;
+  filters: AgendaTypesFilterState;
   startDate: DateTime;
   examsData: Exam[];
   bookingsData: Booking[];
@@ -236,6 +237,7 @@ const agendaWeekSources = new Map<string, string>();
 
 const getAgendaWeekQueryFn = async ({
   preferences,
+  filters,
   startDate,
   examsData,
   bookingsData,
@@ -244,13 +246,13 @@ const getAgendaWeekQueryFn = async ({
   sources,
 }: AgendaWeekQueryFnParams): Promise<AgendaWeek> => {
   agendaWeekSources.set(
-    hashKey(getAgendaWeekQueryKey(preferences.agendaScreen.filters, startDate)),
+    hashKey(getAgendaWeekQueryKey(filters, startDate)),
     sources,
   );
   let queryFilters: AgendaTypesFilterState;
 
   // if all filters are set to false, set all query filters to true
-  if (ALL_AGENDA_TYPES.every(type => !preferences.agendaScreen.filters[type])) {
+  if (ALL_AGENDA_TYPES.every(type => !filters[type])) {
     queryFilters = {
       exam: true,
       booking: true,
@@ -258,7 +260,7 @@ const getAgendaWeekQueryFn = async ({
       deadline: true,
     };
   } else {
-    queryFilters = { ...preferences.agendaScreen.filters };
+    queryFilters = { ...filters };
   }
 
   const until = startDate.plus({ week: 1 });
@@ -325,8 +327,16 @@ const useRebuildChangedAgendaWeeks = (
   });
 };
 
-export const useGetAgendaWeek = (startDate: DateTime = thisMonday) => {
+/**
+ * One week of the agenda. `filters` replaces the agenda's own type filters,
+ * for extracts that must show every lecture whatever the agenda hides
+ */
+export const useGetAgendaWeek = (
+  startDate: DateTime = thisMonday,
+  filters?: AgendaTypesFilterState,
+) => {
   const preferences = usePreferencesContext<AppPreferences>();
+  const typeFilters = filters ?? preferences.agendaScreen.filters;
 
   const examsQuery = useGetExams();
   const bookingsQuery = useGetBookings();
@@ -337,13 +347,11 @@ export const useGetAgendaWeek = (startDate: DateTime = thisMonday) => {
     .join();
 
   const agendaWeekQuery = useQuery<AgendaWeek>({
-    queryKey: getAgendaWeekQueryKey(
-      preferences.agendaScreen.filters,
-      startDate,
-    ),
+    queryKey: getAgendaWeekQueryKey(typeFilters, startDate),
     queryFn: async () =>
       getAgendaWeekQueryFn({
         preferences,
+        filters: typeFilters,
         startDate,
         examsData: examsQuery.data!,
         bookingsData: bookingsQuery.data!,
@@ -360,7 +368,7 @@ export const useGetAgendaWeek = (startDate: DateTime = thisMonday) => {
     staleTime: 300000, // TODO define
   });
 
-  useRebuildChangedAgendaWeeks(preferences.agendaScreen.filters, [
+  useRebuildChangedAgendaWeeks(typeFilters, [
     { startDate, sources, hasData: agendaWeekQuery.data !== undefined },
   ]);
 
@@ -393,6 +401,7 @@ export const useGetAgendaWeeks = (mondays: DateTime[]) => {
       queryFn: () =>
         getAgendaWeekQueryFn({
           preferences,
+          filters: preferences.agendaScreen.filters,
           startDate: monday,
           examsData: examsQuery.data!,
           bookingsData: bookingsQuery.data!,

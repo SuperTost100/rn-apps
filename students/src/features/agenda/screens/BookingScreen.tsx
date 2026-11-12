@@ -54,6 +54,7 @@ import {
 import { useGetProfile } from '../../../core/queries/studentHooks';
 import { BookingDateTime } from '../../bookings/components/BookingDateTime';
 import { AgendaStackParamList } from '../components/AgendaNavigator';
+import { placesStack } from '../utils/placesStack';
 
 type Props = NativeStackScreenProps<AgendaStackParamList, 'Booking'>;
 
@@ -161,7 +162,7 @@ export const BookingScreen = ({ navigation, route }: Props) => {
     if (location.type === 'virtualPlace') {
       await openInAppLink(location.url);
     } else if (location.type === 'place') {
-      navigation.navigate('PlacesAgendaStack', {
+      navigation.navigate(placesStack(navigation), {
         screen: 'Place',
         params: {
           placeId: resolvePlaceId(location),
