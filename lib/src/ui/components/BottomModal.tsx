@@ -1,7 +1,6 @@
 import { PropsWithChildren, useEffect, useRef, useState } from 'react';
 import {
   Animated,
-  Dimensions,
   KeyboardAvoidingView,
   LayoutChangeEvent,
   Modal,
@@ -10,18 +9,20 @@ import {
   Pressable,
   StyleSheet,
   View,
+  useWindowDimensions,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useTheme } from '../hooks/useTheme';
 
-const ANIMATION_DURATION = 300;
-const BACKDROP_OPACITY = 0.4;
+const ANIMATION_DURATION = 200;
 const SWIPE_CLOSE_DISTANCE_RATIO = 0.3;
 const SWIPE_CLOSE_VELOCITY = 0.5;
 
 export type BottomModalProps = PropsWithChildren<{
   visible: boolean;
   onClose?: () => void;
+  /** Closes on a tap on the scrim, a swipe down and the back button. Default true */
   dismissable?: boolean;
   scrollOffset?: number;
   scrollViewRef?: any;
@@ -32,15 +33,17 @@ export const BottomModal = ({
   children,
   visible,
   onClose,
-  dismissable,
+  dismissable = true,
   scrollOffset = 0,
   onModalHide,
 }: BottomModalProps) => {
-  const { colors } = useTheme();
+  const { colors, spacing } = useTheme();
+  const { height: windowHeight } = useWindowDimensions();
+  const { top } = useSafeAreaInsets();
+  // The sheet never reaches under the status bar: 24 px stay above it
+  const maxSheetHeight = windowHeight - top - spacing[6];
   const [mounted, setMounted] = useState(visible);
-  const [sheetHeight, setSheetHeight] = useState(
-    Dimensions.get('window').height,
-  );
+  const [sheetHeight, setSheetHeight] = useState(windowHeight);
 
   const progress = useRef(new Animated.Value(0)).current;
 
@@ -121,10 +124,7 @@ export const BottomModal = ({
     inputRange: [0, 1],
     outputRange: [sheetHeight, 0],
   });
-  const backdropOpacity = progress.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, BACKDROP_OPACITY],
-  });
+  const backdropOpacity = progress;
 
   return (
     <Modal
@@ -139,7 +139,7 @@ export const BottomModal = ({
         <Animated.View
           style={[
             styles.backdrop,
-            { backgroundColor: colors.black, opacity: backdropOpacity },
+            { backgroundColor: colors.scrim, opacity: backdropOpacity },
           ]}
         >
           <Pressable
@@ -156,7 +156,10 @@ export const BottomModal = ({
         >
           <Animated.View
             onLayout={onSheetLayout}
-            style={[styles.sheet, { transform: [{ translateY }] }]}
+            style={[
+              styles.sheet,
+              { maxHeight: maxSheetHeight, transform: [{ translateY }] },
+            ]}
             {...panResponder.panHandlers}
           >
             {children}

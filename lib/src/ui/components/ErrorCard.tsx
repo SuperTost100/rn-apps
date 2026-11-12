@@ -1,8 +1,12 @@
 import { PropsWithChildren, ReactElement } from 'react';
 import { Platform, TextStyle, ViewProps, ViewStyle } from 'react-native';
 
+import { faCircleExclamation } from '@fortawesome/free-solid-svg-icons';
+
 import { useTheme } from '../hooks/useTheme';
 import { Card } from './Card';
+import { Icon } from './Icon';
+import { Row } from './Row';
 import { Text } from './Text';
 
 type Props = PropsWithChildren<
@@ -15,6 +19,10 @@ type Props = PropsWithChildren<
   }
 >;
 
+/**
+ * An error on a plain card: the alert icon in the danger colour, then the
+ * text. No coloured border or bar: the icon and the words carry it.
+ */
 export const ErrorCard = ({
   text,
   style,
@@ -23,39 +31,31 @@ export const ErrorCard = ({
   spaced = true,
   ...rest
 }: Props) => {
-  // TODO aggiungere possibilità di utilizzo tramite enum che inidichi il tipo, fatto il fix con inserimento card nei modal della ESC da valutare se inserire qua tutto
-
-  const { spacing, fontSizes, colors } = useTheme();
+  const { colors, layout, spacing } = useTheme();
   return (
     <Card
       accessible={Platform.select({ android: true, ios: false })}
       rounded
       spaced={spaced}
-      // rounded={rounded ?? Platform.select({ android: false })}
       translucent={false}
-      style={[
-        {
-          borderStyle: 'solid',
-          borderWidth: 1,
-          borderColor: colors.errorCardBorder,
-        },
-        style,
-      ]}
+      style={style}
       {...rest}
     >
       {!children ? (
-        <Text
-          style={[
-            {
-              padding: spacing[5],
-              color: colors.errorCardText,
-              fontSize: fontSizes.sm,
-            },
-            testStyle,
-          ]}
-        >
-          {text && text.charAt(0).toUpperCase() + text.slice(1).toLowerCase()}
-        </Text>
+        <Row align="center" gap={3} style={{ padding: layout.cardPadding }}>
+          <Icon
+            icon={faCircleExclamation}
+            size={20}
+            color={colors.dangerText}
+            style={{ marginVertical: spacing[0.5] }}
+          />
+          <Text
+            variant="secondaryText"
+            style={[{ color: colors.prose, flexShrink: 1 }, testStyle]}
+          >
+            {text && text.charAt(0).toUpperCase() + text.slice(1).toLowerCase()}
+          </Text>
+        </Row>
       ) : (
         children
       )}

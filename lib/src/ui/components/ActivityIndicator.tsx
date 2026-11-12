@@ -3,16 +3,14 @@ import {
   ActivityIndicator as RNActivityIndicator,
 } from 'react-native';
 
-import { IS_ANDROID } from '../../core/constants';
 import { useTheme } from '../hooks/useTheme';
 
+/**
+ * The platform spinner in the secondary text colour, which keeps 3:1 on the
+ * page and on cards in both themes
+ */
 export const ActivityIndicator = (props: ActivityIndicatorProps) => {
-  const { palettes } = useTheme();
+  const { colors } = useTheme();
 
-  return (
-    <RNActivityIndicator
-      color={IS_ANDROID ? palettes.secondary[600] : undefined}
-      {...props}
-    />
-  );
+  return <RNActivityIndicator color={colors.secondaryText} {...props} />;
 };

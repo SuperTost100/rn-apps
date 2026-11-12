@@ -28,18 +28,14 @@ export const InfoMessage = ({
   ...rest
 }: PropsWithChildren<Props>) => {
   const styles = useStylesheet(createStyles);
-  const { palettes, dark } = useTheme();
+  const { colors } = useTheme();
 
-  const palette =
+  const [backgroundColor, textColor] =
     variant === 'warning'
-      ? palettes.warning
+      ? [colors.warningBg, colors.warningText]
       : variant === 'error'
-        ? palettes.error
-        : palettes.info;
-
-  const borderColor = palette[dark ? 500 : 600];
-  const textColor = palette[dark ? 200 : 800];
-  const backgroundColor = palette[dark ? 900 : 50];
+        ? [colors.dangerBg, colors.dangerText]
+        : [colors.infoBg, colors.infoText];
 
   const defaultIcon =
     variant === 'warning'
@@ -50,16 +46,20 @@ export const InfoMessage = ({
 
   return (
     <View
-      style={[styles.container, { borderColor, backgroundColor }, style]}
+      style={[styles.container, { backgroundColor }, style]}
       accessibilityRole="alert"
       {...rest}
     >
       <View style={styles.iconWrapper}>
-        <Icon icon={icon ?? defaultIcon} color={textColor} size={16} />
+        <Icon icon={icon ?? defaultIcon} color={textColor} size={20} />
       </View>
       <View style={styles.body}>
         {typeof children === 'string' ? (
-          <Text style={[styles.text, { color: textColor }]} weight="medium">
+          <Text
+            variant="secondaryText"
+            style={{ color: textColor }}
+            weight="medium"
+          >
             {children}
           </Text>
         ) : (
@@ -70,25 +70,21 @@ export const InfoMessage = ({
   );
 };
 
-const createStyles = ({ spacing, shapes, fontSizes }: Theme) =>
+// A tinted note: the tone's background and text, an icon, no border
+const createStyles = ({ spacing, shapes }: Theme) =>
   StyleSheet.create({
     container: {
       flexDirection: 'row',
-      alignItems: 'flex-start',
+      alignItems: 'center',
       gap: spacing[3],
       paddingHorizontal: spacing[4],
       paddingVertical: spacing[3],
-      borderRadius: shapes.md,
-      borderWidth: 1,
+      borderRadius: shapes.lg,
     },
     iconWrapper: {
-      paddingTop: spacing[1],
+      alignSelf: 'flex-start',
     },
     body: {
       flex: 1,
-    },
-    text: {
-      fontSize: fontSizes.sm,
-      lineHeight: fontSizes.sm * 1.5,
     },
   });

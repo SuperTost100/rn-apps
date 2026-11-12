@@ -18,43 +18,51 @@ interface Props {
   spacing?: number;
 }
 
+/** The state icon: 40 px, as in the mockup's empty and error blocks */
+const STATE_ICON_SIZE = 40;
+
+/**
+ * "Nothing here": an optional icon, the message as a title and an
+ * optional caption, centred
+ */
 export const EmptyState = ({
   icon,
   iconColor,
   message,
   caption,
-  spacing = 12,
+  spacing,
   iconSize,
 }: Props) => {
-  const { colors, fontSizes, spacing: _spacing } = useTheme();
+  const { colors, spacing: themeSpacing } = useTheme();
   const styles = useStylesheet(createStyles);
 
   return (
     <Col
       accessibilityRole="text"
       accessible={true}
-      accessibilityLabel={message}
+      accessibilityLabel={[message, caption].filter(Boolean).join('. ')}
       align="center"
-      style={{
-        padding: _spacing[spacing as unknown as keyof Theme['spacing']],
-      }}
+      gap={2}
+      style={[
+        styles.container,
+        spacing !== undefined && {
+          padding: themeSpacing[spacing as keyof Theme['spacing']],
+        },
+      ]}
     >
       {icon && (
         <Icon
           icon={icon}
           color={iconColor ?? colors.secondaryText}
-          size={iconSize || fontSizes['3xl']}
+          size={iconSize || STATE_ICON_SIZE}
           style={styles.icon}
         />
       )}
-      <Text style={{ textAlign: 'center' }} variant="secondaryText">
+      <Text variant="title" weight="semibold" style={styles.centred}>
         {message}
       </Text>
       {caption && (
-        <Text
-          style={{ textAlign: 'center', fontSize: fontSizes.xs }}
-          variant="secondaryText"
-        >
+        <Text variant="secondaryText" style={styles.centred}>
           {caption}
         </Text>
       )}
@@ -64,7 +72,14 @@ export const EmptyState = ({
 
 const createStyles = ({ spacing }: Theme) =>
   StyleSheet.create({
+    container: {
+      paddingVertical: spacing[8],
+      paddingHorizontal: spacing[6],
+    },
     icon: {
-      marginBottom: spacing[4],
+      marginBottom: spacing[1],
+    },
+    centred: {
+      textAlign: 'center',
     },
   });

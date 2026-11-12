@@ -30,7 +30,7 @@ export type Props = Feedback & {
 };
 
 const DURATION_TIME = 4000; // 4 seconds
-const ANIMATION_TIME = 300; // .3 seconds
+const ANIMATION_TIME = 180; // ease-out, as in the mockup
 
 /**
  * Snackbars provide brief feedback about an operation through a message rendered at the bottom of the container in which it's wrapped.
@@ -46,7 +46,7 @@ export const Snackbar = ({
   const styles = useStylesheet(createStyles);
   const { bottom } = useSafeAreaInsets();
   const { isEnabled, announce } = useScreenReader();
-  const { dark, palettes } = useTheme();
+  const { colors, elevation } = useTheme();
 
   const { current: opacity } = React.useRef<Animated.Value>(
     new Animated.Value(0.0),
@@ -128,8 +128,6 @@ export const Snackbar = ({
     ...actionProps
   } = action || {};
 
-  const marginLeft = action ? -12 : -16;
-
   const wrapperPaddings = {
     paddingBottom: bottom,
   };
@@ -141,17 +139,29 @@ export const Snackbar = ({
         accessibilityLiveRegion="polite"
         style={[
           styles.container,
+          elevation.overlay,
           {
             opacity: opacity,
+            transform: [
+              {
+                translateY: opacity.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [8, 0],
+                }),
+              },
+            ],
           },
         ]}
         {...rest}
       >
-        <Text style={styles.content}>{text}</Text>
+        <Text variant="secondaryText" style={styles.content}>
+          {text}
+        </Text>
         {action && (
-          <View style={[styles.actionsContainer, { marginLeft }]}>
+          <View style={styles.actionsContainer}>
             <TouchableHighlight
-              underlayColor={palettes.gray[dark ? 300 : 700]}
+              accessibilityRole="button"
+              underlayColor={colors.touchableHighlight}
               onPress={event => {
                 onPressAction?.(event);
                 onDismiss?.();
@@ -159,7 +169,9 @@ export const Snackbar = ({
               style={styles.button}
               {...actionProps}
             >
-              <Text style={styles.buttonLabel}>{actionLabel!}</Text>
+              <Text variant="label" weight="bold" style={styles.buttonLabel}>
+                {actionLabel!}
+              </Text>
             </TouchableHighlight>
           </View>
         )}
@@ -174,54 +186,51 @@ export const Snackbar = ({
 Snackbar.DURATION = DURATION_TIME;
 Snackbar.ANIMATION = ANIMATION_TIME;
 
-const createStyles = ({ dark, palettes, shapes, spacing }: Theme) =>
+const createStyles = ({ colors, controls, layout, shapes, spacing }: Theme) =>
   StyleSheet.create({
     wrapper: {
       position: 'absolute',
       bottom: 60,
       width: '100%',
-      paddingHorizontal: spacing[5],
+      paddingHorizontal: layout.gutter,
     },
     container: {
       margin: 0,
       flexDirection: 'row',
+      flexWrap: 'wrap',
       justifyContent: 'space-between',
       alignItems: 'center',
-      minHeight: 48,
-      elevation: 6,
-      borderRadius: shapes.md,
-      backgroundColor: palettes.gray[dark ? 200 : 800],
+      columnGap: spacing[3],
+      minHeight: controls.touchTarget,
+      paddingVertical: spacing[1],
+      paddingHorizontal: spacing[4],
+      borderRadius: shapes.lg,
+      backgroundColor: colors.snackbar,
     },
     content: {
-      marginHorizontal: spacing[4],
-      marginVertical: 14,
-      flex: 1,
+      paddingVertical: spacing[2.5],
+      flexGrow: 1,
       flexShrink: 1,
+      flexBasis: 180,
       minWidth: 0,
-      fontWeight: '500',
-      color: palettes.gray[dark ? 800 : 50],
+      color: colors.onSnackbar,
     },
     actionsContainer: {
       flexDirection: 'row',
       justifyContent: 'flex-end',
       alignItems: 'center',
-      minHeight: 48,
       flexShrink: 0,
+      marginLeft: 'auto',
+      // The label lines up with the snackbar's edge; the padding sits outside
+      marginRight: -spacing[3],
     },
     button: {
-      marginRight: 8,
-      marginLeft: 4,
-      paddingHorizontal: 12,
-      paddingVertical: 10,
+      minHeight: controls.touchTarget,
+      justifyContent: 'center',
+      paddingHorizontal: spacing[3],
       borderRadius: shapes.md,
     },
     buttonLabel: {
-      fontWeight: '500',
-      color: palettes.primary[dark ? 600 : 300],
-    },
-    icon: {
-      width: 40,
-      height: 40,
-      margin: 0,
+      color: colors.snackbarAction,
     },
   });
