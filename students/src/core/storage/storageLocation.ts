@@ -8,6 +8,7 @@ import { lookup } from 'react-native-mime-types';
 import { PUBLIC_APP_DIRECTORY_PATH } from '@polito/lib/core';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { isTestBuild } from '../../config/testBuild';
 import { dirname, mkdirRecursive } from '../../utils/files';
 import { getFileDatabase } from '../database/FileDatabase';
 import {
@@ -129,9 +130,17 @@ function getRelativePathAndFilenameForStorage(
   return getRelativePathAndFilename(filePath, basePath);
 }
 
-/** Path to the app Courses root for a user: documentDirectory/username/Courses */
+/**
+ * Path to the app Courses root for a user: documentDirectory/username/Courses.
+ * Test builds use "Courses test": Android does not let one app write over
+ * files that the official app saved in the shared Documents folder.
+ */
 export function getCoursesRootPath(username: string): string {
-  return [PUBLIC_APP_DIRECTORY_PATH, username, 'Courses']
+  return [
+    PUBLIC_APP_DIRECTORY_PATH,
+    username,
+    isTestBuild ? 'Courses test' : 'Courses',
+  ]
     .filter(Boolean)
     .join('/');
 }
