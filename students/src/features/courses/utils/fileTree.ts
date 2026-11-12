@@ -71,21 +71,6 @@ export const findFolder = (
   return null;
 };
 
-/** Any entry of the tree by id */
-export const findEntry = (
-  entries: readonly FileEntry[],
-  id: string,
-): FileEntry | null => {
-  for (const entry of entries) {
-    if (entry.id === id) return entry;
-    if (isFolder(entry)) {
-      const inner = findEntry(entry.files ?? [], id);
-      if (inner) return inner;
-    }
-  }
-  return null;
-};
-
 export interface FolderStats {
   /** Files inside, at any depth */
   files: number;

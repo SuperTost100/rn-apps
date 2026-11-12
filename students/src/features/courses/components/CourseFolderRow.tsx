@@ -22,7 +22,7 @@ interface Props {
 }
 
 /** "9 files, 2 folders · 6.2 MB", or "Empty" */
-export const useFolderSummary = () => {
+const useFolderSummary = () => {
   const { t } = useTranslation();
   const { language } = usePreferencesContext<AppPreferences>();
   return (stats: FolderStats) => {

@@ -6,7 +6,6 @@ import { courseColors } from '@polito/lib/features/courses';
 import {
   CourseOverview as ApiCourseOverview,
   CourseAllOfVcOtherCourses,
-  CourseDirectory,
   CourseDirectoryEntry,
   CourseFileOverview,
   CourseModuleEdition,
@@ -26,10 +25,7 @@ import { stripIdInParentheses } from '~/utils/files';
 import { CourseLectureSection } from '../../features/courses/types/CourseLectureSections';
 import { isCourseDetailed } from '../../features/courses/utils/courses';
 import { CourseOverview, Exam } from '../types/api';
-import {
-  CourseDirectoryContentWithLocations,
-  CourseFileOverviewWithLocation,
-} from '../types/files';
+import { CourseDirectoryContentWithLocations } from '../types/files';
 import { AppPreferences, CoursesPreferences } from '../types/preferences';
 import { useGetExams } from './examHooks';
 
@@ -238,11 +234,6 @@ export const useGetCourseFiles = <T = CourseDirectoryContentWithLocations[]>(
   });
 };
 
-// Reads the files query through select, so it updates whenever that query does
-// and refetching it fetches the files
-export const useGetCourseFilesRecent = (courseId: number) =>
-  useGetCourseFiles(courseId, sortRecentFiles);
-
 const isFile = (
   item: CourseDirectoryEntry,
 ): item is { type: 'file' } & CourseFileOverview => item.type === 'file';
@@ -276,114 +267,6 @@ const computeFileLocations = (
     }
   });
   return result;
-};
-
-/**
- * Extract a flat array of files contained into the given directory tree
- */
-const flattenFiles = (
-  directoryContent:
-    | CourseDirectoryContentWithLocations[]
-    | CourseFileOverviewWithLocation[],
-): CourseFileOverviewWithLocation[] => {
-  const result: CourseFileOverviewWithLocation[] = [];
-  directoryContent?.forEach(item => {
-    if ((item as CourseDirectoryContentWithLocations).type === 'file') {
-      result.push(item as CourseFileOverviewWithLocation);
-    } else {
-      result.push(
-        ...flattenFiles(
-          (
-            item as Extract<
-              CourseDirectoryContentWithLocations,
-              { type: 'directory' }
-            >
-          ).files,
-        ),
-      );
-    }
-  });
-  return result;
-};
-
-/**
- * Extract files from folders and sort them by decreasing createdAt
- */
-const sortRecentFiles = (
-  directoryContent: CourseDirectoryContentWithLocations[],
-): CourseFileOverviewWithLocation[] => {
-  const flatFiles = flattenFiles(directoryContent);
-  return flatFiles.sort(
-    (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
-  );
-};
-
-export const useGetCourseDirectory = (
-  courseId: number,
-  directoryId?: string,
-) => {
-  const selectDirectory = useCallback(
-    (rootDirectoryContent: CourseDirectoryEntry[]) => {
-      if (!directoryId) {
-        // Root directory
-        return rootDirectoryContent;
-      }
-      return findDirectory(directoryId, rootDirectoryContent);
-    },
-    [directoryId],
-  );
-
-  return useGetCourseFiles(courseId, selectDirectory);
-};
-
-/**
- * Recursively look for a given directory with a depth-by-depth approach
- *
- * @param searchDirectoryId The id of the directory we are looking for
- * @param directoryContent
- */
-const findDirectory = (
-  searchDirectoryId: string,
-  directoryContent: CourseDirectoryEntry[],
-): CourseDirectoryEntry[] | null => {
-  let result = null;
-  const childDirectories = directoryContent.filter(
-    f => f.type === 'directory',
-  ) as CourseDirectory[];
-
-  let nextDepthFiles: CourseDirectoryEntry[] = [];
-  for (let i = 0; i < childDirectories.length; i++) {
-    const currentDir = childDirectories[i];
-    if (currentDir.id === searchDirectoryId) {
-      result = currentDir.files;
-      break;
-    }
-
-    nextDepthFiles = [...nextDepthFiles, ...currentDir.files];
-  }
-
-  if (!result && nextDepthFiles.length) {
-    result = findDirectory(searchDirectoryId, nextDepthFiles);
-  }
-
-  return result;
-};
-
-export const getFlattenedCourseFiles = (
-  content: CourseDirectoryContentWithLocations[],
-  directoryId?: string,
-): CourseFileOverviewWithLocation[] => {
-  if (!directoryId) {
-    return flattenFiles(content);
-  }
-  const dirContent = findDirectory(
-    directoryId,
-    content as CourseDirectoryEntry[],
-  );
-  if (!dirContent) {
-    return [];
-  }
-  return flattenFiles(dirContent as CourseDirectoryContentWithLocations[]);
 };
 
 export const useGetCourseAssignments = (courseId: number) => {
