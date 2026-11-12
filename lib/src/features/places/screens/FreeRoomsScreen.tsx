@@ -12,7 +12,6 @@ import { View } from 'react-native';
 import {
   faChevronLeft,
   faChevronRight,
-  faFrown,
   faMapPin,
 } from '@fortawesome/free-solid-svg-icons';
 import { BottomSheetFlatList } from '@gorhom/bottom-sheet';
@@ -29,13 +28,13 @@ import { notNullish } from '../../../core/utils/predicates';
 import {
   ActivityIndicator,
   BottomSheet,
-  EmptyState,
   Icon,
   IconButton,
   IndentedDivider,
   ListItem,
   ListItemProps,
   Row,
+  StateBlock,
   Text,
 } from '../../../ui/components';
 import { useTheme } from '../../../ui/hooks/useTheme';
@@ -327,10 +326,7 @@ export const FreeRoomsScreen = ({ navigation }: Props) => {
             isLoadingRooms ? (
               <ActivityIndicator style={{ marginVertical: spacing[8] }} />
             ) : (
-              <EmptyState
-                message={t('freeRoomsScreen.noFreeRooms')}
-                icon={faFrown}
-              />
+              <StateBlock title={t('freeRoomsScreen.noFreeRooms')} />
             )
           }
         />

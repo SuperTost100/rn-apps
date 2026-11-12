@@ -713,7 +713,13 @@
     "searchCategories": "Cerca categorie",
     "title": "Luoghi",
     "viewWholeCampus": "Vedi tutta la sede",
-    "searchIn": "in {{campus}}"
+    "searchIn": "in {{campus}}",
+    "searchPlaceholder": "Cerca aule ed edifici",
+    "clearSearch": "Cancella la ricerca",
+    "locationBlockedTitle": "La posizione è disattivata per questa app",
+    "locationBlockedText": "Per vedere dove sei sulla mappa, consenti la posizione nelle impostazioni del telefono.",
+    "openSettings": "Apri impostazioni",
+    "notNow": "Non ora"
   },
   "placesSearchScreen": {
     "searchPlaceholder": "Prova con \"Aula 1\""

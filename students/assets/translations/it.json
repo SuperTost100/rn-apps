@@ -13,7 +13,9 @@
     "paragraphSpacingTitle": "Paragrafi",
     "paragraphSpacingSubtitle": "Aggiunge spazio extra tra un paragrafo e l’altro",
     "wordSpacingTitle": "Parole",
-    "wordSpacingSubtitle": "Amplia la distanza tra le parole"
+    "wordSpacingSubtitle": "Amplia la distanza tra le parole",
+    "sampleFirst": "La prova in itinere si terrà giovedì prossimo alle 9:00. Gli studenti con cognome dalla A alla L sono in Aula 7T, gli altri in Aula 10I. Portate un documento d'identità e una penna.",
+    "sampleSecond": "Il programma della prova e due temi degli anni passati sono nella cartella Prove in itinere del materiale del corso. Scrivete alla docente entro lunedì se vi serve tempo aggiuntivo."
   },
   "agendaScreen": {
     "dailyLayout": "Layout giornaliero",
@@ -163,7 +165,7 @@
       "true": "Attiva"
     },
     "agenda": "Agenda",
-    "appFeedback": "Segnalazioni App",
+    "appFeedback": "Segnalazioni sull'app",
     "areYouSure?": "Sei sicuro?",
     "booking": "Prenotazione",
     "booking_plural": "Prenotazioni",
@@ -409,7 +411,8 @@
       "compare": "Comparativa",
       "error": "Visualizzazione comparativa non disponibile per mancanza di dati nei periodi precedenti"
     },
-    "explain": "Come leggere il grafico"
+    "explain": "Come leggere il grafico",
+    "notGiven": "Non indicato"
   },
   "courseHideEventScreen": {
     "button": "Mostra in agenda",
@@ -747,7 +750,13 @@
     "searchCategories": "Cerca categorie",
     "title": "Luoghi",
     "viewWholeCampus": "Vedi tutta la sede",
-    "searchIn": "in {{campus}}"
+    "searchIn": "in {{campus}}",
+    "searchPlaceholder": "Cerca aule ed edifici",
+    "clearSearch": "Cancella la ricerca",
+    "locationBlockedTitle": "La posizione è disattivata per questa app",
+    "locationBlockedText": "Per vedere dove sei sulla mappa, consenti la posizione nelle impostazioni del telefono.",
+    "openSettings": "Apri impostazioni",
+    "notNow": "Non ora"
   },
   "profileScreen": {
     "enrollmentYear": "Anno di immatricolazione {{- enrollmentYear}}",
@@ -830,9 +839,9 @@
   "appInfoScreen": {
     "title": "Info app",
     "whatsNew": "Novità",
-    "news": "News",
+    "news": "Novità",
     "whatsNewEmpty": "Non ci sono novità sull'app",
-    "gotIt": "Ho capito!",
+    "gotIt": "Ho capito",
     "daysAgo": "{{count}} giorni fa",
     "recentCommunications": "Comunicazioni recenti",
     "recentCommunicationsEmpty": "Non ci sono comunicazioni recenti",

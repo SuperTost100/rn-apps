@@ -8,13 +8,19 @@ import {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+  Alert,
   Dimensions,
   Platform,
   StyleSheet,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { PERMISSIONS, RESULTS, request } from 'react-native-permissions';
+import {
+  PERMISSIONS,
+  RESULTS,
+  openSettings,
+  request,
+} from 'react-native-permissions';
 import Animated, {
   Extrapolation,
   interpolate,
@@ -98,11 +104,15 @@ export const PlacesScreen = ({ navigation, route }: Props) => {
   const { placesSearched } = usePreferencesContext();
   const { isLarge } = useTextScale();
   const { cameraRef } = useContext(MapNavigatorContext);
-  const { floorId: mapFloorId, setFloorId: setMapFloorId } =
-    useContext(PlacesContext);
+  const {
+    floorId: mapFloorId,
+    setFloorId: setMapFloorId,
+    showLogo = true,
+  } = useContext(PlacesContext);
   const searchPlaceToListItem = useSearchPlaceToListItem();
   const [search, setSearch] = useState('');
   const [floorId, setFloorId] = useState<string>();
+  const [controlsHeight, setControlsHeight] = useState(48);
   const [debouncedSearch, setDebouncedSearch] = useState(search);
   const bottomSheetPosition = useSharedValue(0);
   const [screenHeight, setScreenHeight] = useState(
@@ -133,6 +143,24 @@ export const PlacesScreen = ({ navigation, route }: Props) => {
     });
     if (permission) {
       const status = await request(permission).catch(() => RESULTS.DENIED);
+      // Blocked: the phone no longer asks, so the tap would do nothing.
+      // Say why and offer the way to the phone's settings
+      if (status === RESULTS.BLOCKED) {
+        Alert.alert(
+          t('placesScreen.locationBlockedTitle'),
+          t('placesScreen.locationBlockedText'),
+          [
+            { text: t('placesScreen.notNow'), style: 'cancel' },
+            {
+              text: t('placesScreen.openSettings'),
+              onPress: () => {
+                openSettings().catch(() => {});
+              },
+            },
+          ],
+        );
+        return;
+      }
       if (status !== RESULTS.GRANTED && status !== RESULTS.LIMITED) return;
     }
     Mapbox.locationManager.start();
@@ -141,7 +169,7 @@ export const PlacesScreen = ({ navigation, route }: Props) => {
       const { latitude, longitude } = location.coords;
       cameraRef.current?.flyTo([longitude, latitude]);
     }
-  }, [cameraRef]);
+  }, [cameraRef, t]);
 
   const categoryFilterActive = useMemo(
     () => categoryId || subCategoryId,
@@ -245,21 +273,22 @@ export const PlacesScreen = ({ navigation, route }: Props) => {
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      headerLeft: !categoryFilterActive
-        ? () => (
-            <HeaderLogo
-              ml={4}
-              style={Platform.select({
-                android: { marginRight: 0.5 },
-              })}
-            />
-          )
-        : undefined,
+      headerLeft:
+        !categoryFilterActive && showLogo
+          ? () => (
+              <HeaderLogo
+                ml={4}
+                style={Platform.select({
+                  android: { marginRight: 0.5 },
+                })}
+              />
+            )
+          : undefined,
       headerRight: () => {
         return <CampusSelector />;
       },
     });
-  }, [categoryFilterActive, navigation]);
+  }, [categoryFilterActive, navigation, showLogo]);
 
   const controlsAnimatedStyle = useAnimatedStyle(() => {
     const opacity = interpolate(
@@ -304,31 +333,18 @@ export const PlacesScreen = ({ navigation, route }: Props) => {
     if (campus) setFloorId(campus.floors?.find(f => f.level >= 0)?.id);
   }, [campus]);
   const floorSelectorButton = (
-    <TranslucentCard {...(isLarge ? { style: { height: 55 } } : {})}>
+    <TranslucentCard>
       <TouchableOpacity
         accessibilityLabel={t('placesScreen.changeFloor')}
         disabled={!!debouncedSearch && displayFloorId != null}
+        style={styles.floorButton}
       >
         <Row ph={3} pv={2.5} gap={1} align="center">
           {!isLarge && <Icon icon={faElevator} />}
-          <Text
-            ellipsizeMode="tail"
-            numberOfLines={1}
-            {...(isLarge
-              ? { style: { height: 75, marginVertical: -20, maxWidth: 250 } }
-              : {
-                  flexShrink: 1,
-                  flexGrow: 1,
-                  marginRight: 20,
-                })}
-          >
+          <Text ellipsizeMode="tail" numberOfLines={1} style={styles.shrink}>
             {campus?.floors.find(f => f.id === floorId)?.name}
           </Text>
-          <Icon
-            icon={faChevronDown}
-            size={fontSizes.xs}
-            style={{ position: 'absolute', right: 15 }}
-          />
+          <Icon icon={faChevronDown} size={fontSizes.xs} />
         </Row>
       </TouchableOpacity>
     </TranslucentCard>
@@ -429,9 +445,16 @@ export const PlacesScreen = ({ navigation, route }: Props) => {
         </Tabs>
       )}
 
-      <Animated.View style={[styles.controls, controlsAnimatedStyle]}>
+      <Animated.View
+        style={[
+          styles.controls,
+          { marginTop: -(controlsHeight + spacing[2.5]) },
+          controlsAnimatedStyle,
+        ]}
+        onLayout={e => setControlsHeight(e.nativeEvent.layout.height)}
+      >
         <Row gap={3} align="stretch" justify="space-between">
-          <TranslucentCard {...(isLarge ? { style: { height: 40 } } : {})}>
+          <TranslucentCard>
             <IconButton
               icon={faCrosshairs}
               size={spacing[6]}
@@ -452,9 +475,7 @@ export const PlacesScreen = ({ navigation, route }: Props) => {
           {campus?.floors?.length ? (
             !debouncedSearch ? (
               <StatefulMenuView
-                style={{
-                  maxWidth: '60%',
-                }}
+                style={styles.floorMenu}
                 onPressAction={({
                   nativeEvent: { event: selectedFloorId },
                 }) => {
@@ -482,13 +503,7 @@ export const PlacesScreen = ({ navigation, route }: Props) => {
                 >
                   {!isLarge && <Icon icon={faElevator} />}
 
-                  <Text
-                    style={{
-                      fontSize: fontSizes['2xs'],
-                      maxWidth: 100,
-                      marginVertical: -spacing[2.5],
-                    }}
-                  >
+                  <Text variant="caption" style={styles.multipleFloors}>
                     {t('placesScreen.multipleFloors')}
                   </Text>
                 </Row>
@@ -521,6 +536,14 @@ export const PlacesScreen = ({ navigation, route }: Props) => {
           ]
             .filter(Boolean)
             .join(' ')}
+          // The full label is read by screen readers; the visible hint is
+          // short, because a placeholder is clipped, not shortened
+          textFieldProps={{
+            placeholder: categoryFilterName
+              ? `${t('common.search')} ${categoryFilterName}`
+              : t('placesScreen.searchPlaceholder'),
+            onClearLabel: t('placesScreen.clearSearch'),
+          }}
           isLoading={isLoadingPlaces}
           listProps={{
             data: listItems,
@@ -539,12 +562,26 @@ export const PlacesScreen = ({ navigation, route }: Props) => {
 
 const createStyles = ({ spacing }: Theme) =>
   StyleSheet.create({
+    // Just above the bottom sheet: the offset is the controls' own height,
+    // so at large text they get taller without covering the sheet
     controls: {
       position: 'absolute',
       top: 0,
       left: spacing[5],
       right: spacing[5],
-      marginTop: -58,
+    },
+    floorMenu: {
+      maxWidth: '60%',
+    },
+    floorButton: {
+      flexGrow: 1,
+      justifyContent: 'center',
+    },
+    shrink: {
+      flexShrink: 1,
+    },
+    multipleFloors: {
+      maxWidth: 160,
     },
     divider: {
       alignSelf: 'stretch',

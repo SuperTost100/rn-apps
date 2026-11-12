@@ -156,7 +156,13 @@ export const PlacesNavigator = ({
   // when the map opens: see PlacesScreen
 
   return (
-    <PlacesContext.Provider value={{ floorId, setFloorId: checkAndSetFloorId }}>
+    <PlacesContext.Provider
+      value={{
+        floorId,
+        setFloorId: checkAndSetFloorId,
+        showLogo: !headerOptions?.root,
+      }}
+    >
       <Map.Navigator
         id="PlacesTabNavigator"
         screenOptions={{

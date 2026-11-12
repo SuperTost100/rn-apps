@@ -13,6 +13,7 @@ import { faTimesCircle } from '@fortawesome/free-solid-svg-icons';
 import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
 
 import { useStylesheet } from '../hooks/useStylesheet';
+import { useTextScale } from '../hooks/useTextScale';
 import { useTheme } from '../hooks/useTheme';
 import { Theme } from '../types/Theme';
 import { ActivityIndicator } from './ActivityIndicator';
@@ -47,7 +48,8 @@ const BottomSheetTextFieldComponent = ({
   onChangeText,
   ...rest
 }: BottomSheetTextFieldProps) => {
-  const { colors } = useTheme();
+  const { colors, fontSizes } = useTheme();
+  const { scale } = useTextScale();
   const styles = useStylesheet(createStyles);
   const keyboardContext = useBottomSheetKeyboard();
 
@@ -79,12 +81,15 @@ const BottomSheetTextFieldComponent = ({
       <BottomSheetTextInput
         clearButtonMode="never"
         placeholder={label}
+        accessibilityLabel={label}
         keyboardType="default"
         placeholderTextColor={colors.secondaryText}
         selectionColor={colors.link}
         style={[
           styles.textInput,
           {
+            // Follows the in-app text size, as the rest of the text does
+            fontSize: fontSizes.md * scale,
             textAlignVertical:
               (rest.numberOfLines ?? 1) === 1 ? 'center' : 'top',
           },

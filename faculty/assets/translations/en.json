@@ -697,7 +697,13 @@
     "searchCategories": "Search categories",
     "title": "Places",
     "viewWholeCampus": "View the whole campus",
-    "searchIn": "in {{campus}}"
+    "searchIn": "in {{campus}}",
+    "searchPlaceholder": "Search rooms and buildings",
+    "clearSearch": "Clear search",
+    "locationBlockedTitle": "Location is off for this app",
+    "locationBlockedText": "To see where you are on the map, allow location in the phone's settings.",
+    "openSettings": "Open settings",
+    "notNow": "Not now"
   },
   "placesSearchScreen": {
     "searchPlaceholder": "Try with \"Room 1\""

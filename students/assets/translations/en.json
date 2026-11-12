@@ -13,7 +13,9 @@
     "paragraphSpacingTitle": "Paragraph spacing",
     "paragraphSpacingSubtitle": "Add extra space between paragraphs",
     "wordSpacingTitle": "Word spacing",
-    "wordSpacingSubtitle": "Increase distance between words"
+    "wordSpacingSubtitle": "Increase distance between words",
+    "sampleFirst": "The midterm exam is next Thursday at 9:00. Students with surnames from A to L sit in room 7T, the others in room 10I. Bring an identity document and a pen.",
+    "sampleSecond": "The exam programme and two past papers are in the Midterms folder of the course files. Write to the teacher by Monday if you need extra time."
   },
   "agendaScreen": {
     "dailyLayout": "Daily layout",
@@ -163,7 +165,7 @@
       "true": "Active"
     },
     "agenda": "Agenda",
-    "appFeedback": "App Feedback",
+    "appFeedback": "App feedback",
     "areYouSure?": "Are you sure?",
     "booking": "Booking",
     "booking_plural": "Bookings",
@@ -409,7 +411,8 @@
       "compare": "Comparative",
       "error": "Comparative view not available due to lack of data in previous periods"
     },
-    "explain": "How to read this chart"
+    "explain": "How to read this chart",
+    "notGiven": "Not given"
   },
   "courseHideEventScreen": {
     "button": "Show in agenda",
@@ -555,7 +558,7 @@
     "revoke": "Revoke authorisation",
     "revokeConfirm": "Revoking the authorization to keep your data in the ESC-Router will deactivate this card and any other cards linked to your academic careers, if any",
     "text": "To obtain your European Student Card (ESC), you authorized the transmission of your data through ESC_router. You can revoke this authorization at any time.",
-    "title": "ESC Data Settings"
+    "title": "ESC data"
   },
   "europeanCardScreen": {
     "title": "THE EUROPEAN STUDENT CARD",
@@ -747,7 +750,13 @@
     "searchCategories": "Search categories",
     "title": "Places",
     "viewWholeCampus": "View the whole campus",
-    "searchIn": "in {{campus}}"
+    "searchIn": "in {{campus}}",
+    "searchPlaceholder": "Search rooms and buildings",
+    "clearSearch": "Clear search",
+    "locationBlockedTitle": "Location is off for this app",
+    "locationBlockedText": "To see where you are on the map, allow location in the phone's settings.",
+    "openSettings": "Open settings",
+    "notNow": "Not now"
   },
   "profileScreen": {
     "enrollmentYear": "Enrollment year {{- enrollmentYear}}",
@@ -830,11 +839,11 @@
   "appInfoScreen": {
     "title": "App info",
     "whatsNew": "What's new",
-    "news": "News",
+    "news": "What's new",
     "whatsNewEmpty": "There are no news about the app",
-    "gotIt": "Got it!",
+    "gotIt": "Got it",
     "daysAgo": "{{count}} days ago",
-    "recentCommunications": "Recent Communications",
+    "recentCommunications": "Recent communications",
     "recentCommunicationsEmpty": "There are no recent communications",
     "feedback": "Feedback",
     "reportProblemTitle": "Something not working?",
