@@ -45,7 +45,7 @@ import { Settings } from 'luxon';
 import { version } from '../../../../package.json';
 import { useConfirmationDialog } from '../../../core/hooks/useConfirmationDialog';
 import { useUpdateDevicePreferences } from '../../../core/queries/studentHooks';
-import { formatFileSize } from '../../../utils/files';
+import { formatSize } from '../../courses/utils/fileTree';
 import { OptionSheet } from '../components/OptionSheet';
 import { UserStackParamList } from '../components/UserNavigator';
 
@@ -178,6 +178,7 @@ const useAuthenticatorState = () => {
  */
 const RemoveFilesRow = () => {
   const { t } = useTranslation();
+  const { language } = usePreferencesContext<AppPreferences>();
   const { setFeedback } = useFeedbackContext();
   const {
     getCoursesCachePath,
@@ -212,7 +213,7 @@ const RemoveFilesRow = () => {
     }, [refreshSize]),
   );
 
-  const size = cacheSize ? formatFileSize(cacheSize) : undefined;
+  const size = cacheSize ? formatSize(cacheSize, language) : undefined;
   const confirm = useConfirmationDialog({
     title: t('profile.settings.removeFilesTitle'),
     message: t('profile.settings.removeFilesText', { size }),

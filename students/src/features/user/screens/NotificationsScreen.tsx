@@ -163,6 +163,9 @@ const CourseCard = ({ course }: { course: FollowedCourse }) => {
         : t('course.settings.saveFailedAll'),
     );
 
+  // The card shows a failed course itself, so no alert pops up for it
+  const states = useQueryStates(query);
+
   return (
     <Card accessibilityRole="none">
       <List>
@@ -194,12 +197,12 @@ const CourseCard = ({ course }: { course: FollowedCourse }) => {
               }
             />
           ))
-        ) : query.isError ? (
+        ) : states.status === 'error' ? (
           <ListItem
             title={t('profile.notifications.courseFailed')}
             subtitle={t('profile.notifications.tryAgain')}
             leadingItem={<OutlineIcon name="alert" color={colors.dangerText} />}
-            onPress={() => query.refetch()}
+            onPress={states.retry}
             disabled={isOffline}
           />
         ) : (

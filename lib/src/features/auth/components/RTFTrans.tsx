@@ -12,6 +12,12 @@ export type RTFTransProps = ComponentProps<typeof Trans> & {
 };
 
 /**
+ * A line break that draws its own newline: Trans renders <br/> as a void
+ * element and drops any children given to it, which lost every break
+ */
+const LineBreak = () => <Text>{'\n'}</Text>;
+
+/**
  * A translation with <b>, <i>, <u> and <br/> in it, drawn with the app's
  * text, so it follows the theme, the font and the in-app text size
  */
@@ -34,7 +40,7 @@ export const RTFTrans = ({
             key="u"
           />
         ),
-        br: <Text key="br">{'\n'}</Text>,
+        br: <LineBreak key="br" />,
         ...props.components,
       }}
     >

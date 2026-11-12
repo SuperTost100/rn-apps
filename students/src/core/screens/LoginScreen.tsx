@@ -155,7 +155,6 @@ const createStyles = ({ layout, spacing }: Theme) =>
       flexDirection: 'row',
       flexWrap: 'wrap',
       justifyContent: 'space-between',
-      marginHorizontal: -spacing[3],
     },
     button: {
       paddingHorizontal: 0,

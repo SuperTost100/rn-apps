@@ -265,20 +265,17 @@ export const ProfileScreen = ({ navigation, route }: Props) => {
             errorState={{ title: t('states.career.failedTitle') }}
           >
             <ListItem
-              title={
-                student
-                  ? [
-                      student.degreeLevel,
-                      degreeNameAsTitle(student.degreeName ?? ''),
-                    ]
-                      .filter(Boolean)
-                      .join(' ')
-                  : ''
-              }
+              title={degreeNameAsTitle(student?.degreeName ?? '')}
               titleProps={{ numberOfLines: 0 }}
-              subtitle={t('profile.career.firstYear', {
-                year: getStudentEnrollmentYear(student),
-              })}
+              subtitle={[
+                student?.degreeLevel,
+                t('profile.career.firstYear', {
+                  year: getStudentEnrollmentYear(student),
+                }),
+              ]
+                .filter(Boolean)
+                .join('\n')}
+              subtitleProps={{ numberOfLines: 0 }}
               leadingItem={<OutlineIcon name="bookopen" color={iconColor} />}
               linkTo={{
                 screen: 'Degree',
@@ -341,8 +338,9 @@ const createStyles = ({ layout, spacing }: Theme) =>
     cards: {
       marginTop: spacing[2],
     },
+    // The dots under the cards already leave 24 px
     section: {
-      marginTop: spacing[4],
+      marginTop: 0,
     },
     group: {
       marginTop: layout.sectionGap,
