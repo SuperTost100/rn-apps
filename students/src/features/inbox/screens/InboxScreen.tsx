@@ -181,7 +181,6 @@ export const InboxScreen = ({ navigation }: Props) => {
           trailing="value"
           titleLines={2}
           label={t('inboxScreen.loading')}
-          style={styles.skeleton}
         />
       </>
     );
@@ -290,7 +289,11 @@ export const InboxScreen = ({ navigation }: Props) => {
             )}
             <TextButton
               onPress={onMarkAll}
-              disabled={loading || !unread}
+              // Marking as read tells the server: it needs the network
+              disabled={loading || !unread || states.isOffline}
+              accessibilityHint={
+                states.isOffline ? t('states.needsConnection') : undefined
+              }
               loading={!!progress}
               style={styles.markAll}
             >
@@ -399,9 +402,6 @@ const createStyles = ({ layout, spacing }: Theme) =>
     },
     group: {
       marginVertical: 0,
-    },
-    skeleton: {
-      marginHorizontal: layout.gutter,
     },
     firstCard: {
       marginTop: spacing[4],
