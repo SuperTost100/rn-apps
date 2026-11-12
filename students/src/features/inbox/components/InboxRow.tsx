@@ -12,6 +12,7 @@ import {
 } from '@fortawesome/free-regular-svg-icons';
 import {
   faBullhorn,
+  faCircle,
   faTriangleExclamation,
 } from '@fortawesome/free-solid-svg-icons';
 import { APP_TIMEZONE, usePreferencesContext } from '@polito/lib/core';
@@ -86,12 +87,15 @@ const useWhen = () => {
     const date = at.toFormat('cccc d LLLL');
     if (day >= today.startOf('week')) {
       return {
-        shown: `${at.toFormat('ccc')} ${time}`,
+        // Non-breaking spaces: "Tue 15:30" and "8 Nov" never split
+        shown: `${at.toFormat('ccc')}\u00A0${time}`,
         spoken: t('inboxScreen.when.other', { date, time }),
       };
     }
     return {
-      shown: at.toFormat(day.year === today.year ? 'd LLL' : 'd LLL yyyy'),
+      shown: at
+        .toFormat(day.year === today.year ? 'd LLL' : 'd LLL yyyy')
+        .replace(/ /g, '\u00A0'),
       spoken: t('inboxScreen.when.other', {
         date: at.toFormat(
           day.year === today.year ? 'cccc d LLLL' : 'cccc d LLLL yyyy',
@@ -161,9 +165,7 @@ export const InboxRow = ({ item, onPress }: Props) => {
         <View>
           <View style={styles.sender}>
             {courseColor && (
-              <View
-                style={[styles.courseDot, { backgroundColor: courseColor }]}
-              />
+              <Icon icon={faCircle} size={10} color={courseColor} />
             )}
             <Text
               variant="secondaryText"
@@ -192,7 +194,12 @@ export const InboxRow = ({ item, onPress }: Props) => {
               {when.shown}
             </Text>
           )}
-          <View style={[styles.dot, item.unread && styles.dotUnread]} />
+          {/* Dots are glyphs: round views drew square on Android after scrolling */}
+          {item.unread ? (
+            <Icon icon={faCircle} size={10} color={colors.badge} />
+          ) : (
+            <View style={styles.dot} />
+          )}
         </View>
       }
     />
@@ -220,11 +227,6 @@ const createStyles = ({ colors, controls, spacing }: Theme) =>
     senderText: {
       flexShrink: 1,
     },
-    courseDot: {
-      width: 10,
-      height: 10,
-      borderRadius: 5,
-    },
     trailing: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -237,8 +239,5 @@ const createStyles = ({ colors, controls, spacing }: Theme) =>
       width: 10,
       height: 10,
       borderRadius: 5,
-    },
-    dotUnread: {
-      backgroundColor: colors.badge,
     },
   });
