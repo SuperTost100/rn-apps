@@ -3,6 +3,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -235,11 +236,22 @@ export const ApiProvider = <Prefs extends object = {}>({
     [mutationErrorHandler, readServerMessage, setFeedback, t],
   );
 
-  const queryClient = useMemo(() => {
+  // The handlers change whenever their inputs do (the language, the snackbar
+  // setter, which changes each time a snackbar shows). The client reads them
+  // through refs, because a new client would leave every mounted useQuery
+  // observing the old cache while writes and new screens used the new one
+  const queryErrorHandlerRef = useRef(queryErrorHandler);
+  const mutationErrorHandlerRef = useRef(mutationErrorHandler);
+  useEffect(() => {
+    queryErrorHandlerRef.current = queryErrorHandler;
+    mutationErrorHandlerRef.current = mutationErrorHandler;
+  }, [queryErrorHandler, mutationErrorHandler]);
+
+  const [queryClient] = useState(() => {
     const client = new QueryClient({
       queryCache: new QueryCache({
         onError: (error, query) => {
-          queryErrorHandler(error, query, client);
+          queryErrorHandlerRef.current(error, query, client);
         },
       }),
       defaultOptions: {
@@ -257,13 +269,13 @@ export const ApiProvider = <Prefs extends object = {}>({
         mutations: {
           retry: 0,
           onError(error) {
-            mutationErrorHandler(error, client);
+            mutationErrorHandlerRef.current(error, client);
           },
         },
       },
     });
     return client;
-  }, [mutationErrorHandler, queryErrorHandler]);
+  });
 
   useEffect(() => {
     // Update ApiContext based on the provided token and selected language
