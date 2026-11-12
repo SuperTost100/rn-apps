@@ -182,6 +182,8 @@ export interface SkeletonRowsProps {
   leading?: 'none' | 'icon' | 'tile' | 'avatar';
   /** What the real rows have at the end. Default: chevron */
   trailing?: 'none' | 'chevron' | 'chip' | 'value';
+  /** Titles that usually wrap get two lines. Default: 1 */
+  titleLines?: 1 | 2;
   /** The real rows have a subtitle. Default: true */
   subtitle?: boolean;
   /** Two subtitle lines, for rows whose subtitle usually wraps */
@@ -207,6 +209,7 @@ export const SkeletonRows = ({
   count = 3,
   leading = 'none',
   trailing = 'chevron',
+  titleLines = 1,
   subtitle = true,
   subtitleLines = 1,
   card = true,
@@ -265,6 +268,7 @@ export const SkeletonRows = ({
           </View>
         )}
         <View style={{ flex: 1 }}>
+          {titleLines === 2 && <SkeletonLine width="88%" />}
           <SkeletonLine width={TITLE_WIDTHS[i % 6]} />
           {subtitle && (
             <SkeletonLine variant="secondaryText" width={SUB_WIDTHS[i % 6]} />

@@ -42,7 +42,7 @@ export const MessagesScreen = () => {
             <Section style={{ marginTop: spacing['2'] }}>
               <OverviewList
                 queries={messagesQuery}
-                skeleton={{ count: 5 }}
+                skeleton={{ count: 6 }}
                 emptyState={{
                   title: t('states.messages.emptyTitle'),
                   text: t('states.messages.emptyText'),

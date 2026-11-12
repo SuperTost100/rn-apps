@@ -7,7 +7,11 @@ import {
   faEye,
   faEyeSlash,
 } from '@fortawesome/free-solid-svg-icons';
-import { usePreferencesContext, useQueryStates } from '@polito/lib/core';
+import {
+  usePreferencesContext,
+  useQueryStates,
+  useQuietQueryErrors,
+} from '@polito/lib/core';
 import {
   BottomBarSpacer,
   Card,
@@ -68,6 +72,8 @@ export const TeachingScreen = ({ navigation }: Props) => {
   const studentQuery = useGetStudent();
   const eventAdmissionsQuery = useGetEventAdmissions();
   const transcriptBadge = null;
+  // These sections appear only when they have something to show
+  useQuietQueryErrors([surveyCategoriesQuery, eventAdmissionsQuery]);
 
   const eventAdmissionsByContext = useMemo(() => {
     if (!eventAdmissionsQuery.data?.length) {

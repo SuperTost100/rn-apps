@@ -1,7 +1,6 @@
-import { useCallback, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  AccessibilityInfo,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -31,7 +30,6 @@ import {
   useTheme,
 } from '@polito/lib/ui';
 import { TicketOverview } from '@polito/student-api-client';
-import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { useNotifications } from '../../../core/hooks/useNotifications';
@@ -131,22 +129,6 @@ export const TicketsScreen = ({ navigation }: Props) => {
     [ticketsQuery.data],
   );
 
-  useFocusEffect(
-    useCallback(() => {
-      if (!ticketsQuery.data || tickets.length > 0) {
-        return;
-      }
-      AccessibilityInfo.announceForAccessibility(t('ticketsScreen.emptyState'));
-    }, [tickets, t, ticketsQuery.data]),
-  );
-
-  const sectionHeaderAccessibilityLabel = useMemo(() => {
-    const baseText = t('ticketsScreen.myTickets');
-    return tickets.length > 0
-      ? baseText
-      : [baseText, t('ticketsScreen.emptyState')].join(', ');
-  }, [tickets, t]);
-
   return (
     <>
       <ScrollView
@@ -156,14 +138,11 @@ export const TicketsScreen = ({ navigation }: Props) => {
       >
         <SafeAreaView>
           <Section>
-            <SectionHeader
-              accessibilityLabel={sectionHeaderAccessibilityLabel}
-              title={t('ticketsScreen.myTickets')}
-            />
+            <SectionHeader title={t('ticketsScreen.myTickets')} />
             <OverviewList
               indented
               states={states}
-              skeleton={{ count: 3, trailing: 'chip' }}
+              skeleton={{ count: 3, trailing: 'chip', titleLines: 2 }}
               emptyState={{
                 title: t('states.tickets.emptyTitle'),
                 text: t('states.tickets.emptyText'),

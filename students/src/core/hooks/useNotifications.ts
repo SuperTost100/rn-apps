@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from 'react';
 
+import { useQuietQueryErrors } from '@polito/lib/core';
 import {
   CourseModuleEdition,
   MessageType,
@@ -59,7 +60,10 @@ const courseTransactionsMapping: Record<
 };
 
 const useUnreadNotificationsByScope = () => {
-  const { data: notifications } = useGetNotifications();
+  const notificationsQuery = useGetNotifications();
+  const { data: notifications } = notificationsQuery;
+  // Badges: a failed load leaves them as they were, with nothing to say
+  useQuietQueryErrors(notificationsQuery);
   return useMemo(
     () =>
       (notifications?.data

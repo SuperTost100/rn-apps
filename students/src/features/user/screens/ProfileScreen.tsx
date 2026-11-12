@@ -11,7 +11,11 @@ import {
   faPersonThroughWindow,
 } from '@fortawesome/free-solid-svg-icons';
 import { AuthProfile } from '@polito/auth-api-client';
-import { useApiContext, useOfflineDisabled } from '@polito/lib/core';
+import {
+  useApiContext,
+  useOfflineDisabled,
+  useQuietQueryErrors,
+} from '@polito/lib/core';
 import { useLogout } from '@polito/lib/features/auth';
 import {
   BottomBarSpacer,
@@ -151,6 +155,9 @@ export const ProfileScreen = ({ navigation, route }: Props) => {
   const smartCardUrl = smartCardQuery.data?.url;
   const pictureQuery = useGetProfilePicture(profile?.username);
   const messages = useGetMessages();
+  // The student card falls back to the plain details without these, and
+  // the unread badge on Messages stays as it was
+  useQuietQueryErrors([escQuery, smartCardQuery, pictureQuery, messages]);
   const mfaChallengeQuery = useMfaChallengeHandler();
 
   const enrollmentYear = useMemo(() => {

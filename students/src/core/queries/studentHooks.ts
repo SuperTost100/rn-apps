@@ -5,7 +5,11 @@ import {
   GetAccessTokenAcceptEnum,
   TokenType,
 } from '@polito/auth-api-client';
-import { pluckData, toOASTruncable } from '@polito/lib/core';
+import {
+  pluckData,
+  toOASTruncable,
+  useQuietQueryErrors,
+} from '@polito/lib/core';
 import {
   ExamGrade,
   Message,
@@ -356,6 +360,8 @@ export const useInvalidateMessages = () => {
 
 export const useGetModalMessages = () => {
   const messagesQuery = useGetMessages();
+  // The unread-messages modal opens only when messages load
+  useQuietQueryErrors(messagesQuery);
 
   return useQuery<Message[]>({
     queryKey: [MESSAGES_QUERY_PREFIX, 'modal'],

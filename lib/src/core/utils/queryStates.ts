@@ -103,27 +103,59 @@ export const getQueryStates = <D extends unknown[] = unknown[]>(
 };
 
 /**
- * The refetch functions of the queries some mounted region renders states
- * for, with a count. TanStack binds `refetch` once per observer, so the
- * function a result exposes is the same one `query.observers` holds: the
- * global error handler can tell whether a failure is already on screen.
+ * The refetch functions of the queries that mounted consumers mark, with a
+ * count. TanStack binds `refetch` once per observer, so the function a result
+ * exposes is the same one `query.observers` holds: the global error handler
+ * can tell whether a failure is already on screen.
+ * - states: a region renders the query's loading, failed and empty states.
+ * - quiet: a background consumer (a badge, a prefetch) that has nothing to
+ *   say when the query fails.
  */
-const stateAwareRefetchers = new Map<unknown, number>();
+const marked = {
+  states: new Map<unknown, number>(),
+  quiet: new Map<unknown, number>(),
+};
 
-/** Marks the queries of a region as rendered with states; returns the undo */
-export const markStateAware = (refetchers: readonly unknown[]) => {
-  refetchers.forEach(r =>
-    stateAwareRefetchers.set(r, (stateAwareRefetchers.get(r) ?? 0) + 1),
-  );
+type Mark = keyof typeof marked;
+
+const markObservers = (kind: Mark, refetchers: readonly unknown[]) => {
+  const map = marked[kind];
+  refetchers.forEach(r => map.set(r, (map.get(r) ?? 0) + 1));
   return () =>
     refetchers.forEach(r => {
-      const n = (stateAwareRefetchers.get(r) ?? 1) - 1;
-      if (n <= 0) stateAwareRefetchers.delete(r);
-      else stateAwareRefetchers.set(r, n);
+      const n = (map.get(r) ?? 1) - 1;
+      if (n <= 0) map.delete(r);
+      else map.set(r, n);
     });
+};
+
+/** Marks the queries of a region as rendered with states; returns the undo */
+export const markStateAware = (refetchers: readonly unknown[]) =>
+  markObservers('states', refetchers);
+
+/** Marks queries a background consumer reads quietly; returns the undo */
+export const markQuiet = (refetchers: readonly unknown[]) =>
+  markObservers('quiet', refetchers);
+
+/**
+ * How a failure of this query should reach the user:
+ * - states: a mounted region shows it.
+ * - quiet: only background consumers read it, so nothing to say.
+ * - alert: a screen that does not render states shows it.
+ */
+export const errorPresentation = (query: {
+  observers: readonly { refetch: unknown }[];
+}): 'states' | 'quiet' | 'alert' => {
+  if (query.observers.some(o => marked.states.has(o.refetch))) return 'states';
+  if (
+    query.observers.length > 0 &&
+    query.observers.every(o => marked.quiet.has(o.refetch))
+  )
+    return 'quiet';
+  return 'alert';
 };
 
 /** Whether a mounted region shows this query's loading, failed and empty states */
 export const isShownWithStates = (query: {
   observers: readonly { refetch: unknown }[];
-}) => query.observers.some(o => stateAwareRefetchers.has(o.refetch));
+}) => errorPresentation(query) === 'states';

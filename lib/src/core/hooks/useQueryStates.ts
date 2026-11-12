@@ -6,6 +6,7 @@ import {
   QueryStates,
   QueryStatesOptions,
   getQueryStates,
+  markQuiet,
   markStateAware,
 } from '../utils/queryStates';
 import { useIsOnline } from './useOfflineDisabled';
@@ -47,4 +48,19 @@ export const useQueryStates = <D extends unknown[] = unknown[]>(
   useEffect(() => markStateAware(list.map(q => q.refetch)));
 
   return states;
+};
+
+/**
+ * For background consumers of queries (badges, prefetches) that show nothing
+ * when the query fails: their failures raise no alert. A screen that renders
+ * the same query without states still gets its alert.
+ */
+export const useQuietQueryErrors = (
+  queries: QueryStateSource | readonly QueryStateSource[],
+) => {
+  const list = (
+    Array.isArray(queries) ? queries : [queries]
+  ) as readonly QueryStateSource[];
+  // Marked again after every render, like useQueryStates
+  useEffect(() => markQuiet(list.map(q => q.refetch)));
 };

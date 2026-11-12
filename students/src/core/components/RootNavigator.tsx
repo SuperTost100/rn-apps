@@ -10,7 +10,11 @@ import {
   faCompass,
   faUser,
 } from '@fortawesome/free-solid-svg-icons';
-import { useApiContext, usePreferencesContext } from '@polito/lib/core';
+import {
+  useApiContext,
+  usePreferencesContext,
+  useQuietQueryErrors,
+} from '@polito/lib/core';
 import {
   PlacesNavigator,
   useGetCurrentCampus,
@@ -86,10 +90,13 @@ export const RootNavigator = ({
   const { getUnreadsCount } = useNotifications();
   const hasSyncedFiles = useRef(false);
   const campus = useGetCurrentCampus();
-  const { data: sites } = useGetSites();
+  const sitesQuery = useGetSites();
+  const { data: sites } = sitesQuery;
   const { isOnboardingVisible, closeOnboarding } =
     useModalManager(versionModalIsOpen);
   const profileMessages = useGetMessages();
+  // The tab badge and the campus list load in the background
+  useQuietQueryErrors([profileMessages, sitesQuery]);
 
   useInitFirebaseMessaging();
 

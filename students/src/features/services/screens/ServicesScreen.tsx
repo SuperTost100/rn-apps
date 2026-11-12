@@ -18,7 +18,7 @@ import {
   useOfflineDisabled,
   usePreferencesContext,
 } from '@polito/lib/core';
-import { useOpenInAppLink } from '@polito/lib/core';
+import { useOpenInAppLink, useQuietQueryErrors } from '@polito/lib/core';
 import {
   BottomBarSpacer,
   Grid,
@@ -52,6 +52,8 @@ export const ServicesScreen = () => {
   const queryClient = useQueryClient();
   const unreadTickets = getUnreadsCount(['services', 'tickets']);
   const unreadEmailsQuery = useGetUnreadEmails();
+  // The webmail badge
+  useQuietQueryErrors(unreadEmailsQuery);
   const [fontSize, setFontSize] = useState(Number(accessibility?.fontSize));
   useEffect(() => {
     setFontSize(Number(accessibility?.fontSize) ?? 0);

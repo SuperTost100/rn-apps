@@ -45,7 +45,7 @@ import { APP_TIMEZONE } from '../utils/dates';
 import { isEnvProduction } from '../utils/env';
 import { createPolitoAppKeychainServices } from '../utils/keychain';
 import { isResponseError } from '../utils/queries';
-import { isShownWithStates } from '../utils/queryStates';
+import { errorPresentation } from '../utils/queryStates';
 
 const DATA_MAX_AGE = 1000 * 3600 * 24 * 7;
 
@@ -175,7 +175,8 @@ export const ApiProvider = <Prefs extends object = {}>({
   /**
    * Queries: a region that renders states (useQueryStates) shows its own
    * failure, so it gets no alert. When older data stays on screen a short
-   * snackbar says the refresh failed. Screens not converted yet keep an
+   * snackbar says the refresh failed. Background consumers marked with
+   * useQuietQueryErrors say nothing. Screens not converted yet keep an
    * alert, with a translated message and Try again, never the server's text.
    */
   const queryErrorHandler = useCallback(
@@ -195,7 +196,9 @@ export const ApiProvider = <Prefs extends object = {}>({
       const retry = () => {
         query.fetch().catch(() => {});
       };
-      if (isShownWithStates(query)) {
+      const presentation = errorPresentation(query);
+      if (presentation === 'quiet') return;
+      if (presentation === 'states') {
         if (query.state.data === undefined) return;
         const { dataUpdatedAt } = query.state;
         setFeedback({
