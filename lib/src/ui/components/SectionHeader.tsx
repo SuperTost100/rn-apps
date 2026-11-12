@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TextProps,
   TextStyle,
-  TouchableOpacity,
   TouchableOpacityProps,
   View,
 } from 'react-native';
@@ -21,6 +20,7 @@ import { Theme } from '../types/Theme';
 import { IconButton } from './IconButton';
 import { Separator } from './Separator';
 import { Text } from './Text';
+import { TextButton } from './TextButton';
 
 interface Props {
   title: string;
@@ -61,133 +61,102 @@ export const SectionHeader = ({
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
   const { isLarge } = useTextScale();
+  // At large text the title wraps instead of losing its end
   const ellipsis: Partial<TextProps> = ellipsizeTitle
     ? {
-        numberOfLines: 1,
+        numberOfLines: isLarge ? 3 : 1,
         ellipsizeMode: 'tail',
       }
     : {};
 
-  const renderHeader = () => {
-    return (
-      <View style={{ ...styles.innerContainer }}>
-        <View style={styles.titleContainer}>
-          {separator && <Separator />}
-
-          <View style={{ ...styles.innerTitleContainer }}>
-            <Text
-              accessible={false}
-              variant="heading"
-              style={[styles.title, titleStyle, styles.titleContainer]}
-              accessibilityRole="header"
-              {...ellipsis}
-            >
-              {title}
-            </Text>
-            {trailingIcon && (
-              <IconButton
-                {...{
-                  size: isLarge ? 40 : 16,
-                  ...trailingIcon,
-                  noPadding: true,
-                }}
-              />
-            )}
-          </View>
-
-          {subtitle && (
-            <Text
-              accessible={false}
-              variant="secondaryText"
-              style={subtitleStyle}
-              accessibilityRole="header"
-              {...ellipsis}
-            >
-              {subtitle}
-            </Text>
-          )}
-        </View>
-        {trailingItem && trailingItem}
-        {linkTo && linkToMoreCount != null && linkToMoreCount > 0 && (
-          <TouchableOpacity
-            accessible={true}
-            accessibilityRole="button"
-            onPress={() => {
-              if (typeof linkTo === 'string') {
-                navigation.navigate(linkTo as any);
-              } else {
-                navigation.navigate(linkTo.screen as any, linkTo.params);
-              }
-            }}
-          >
-            <Text variant="link">
-              {t('sectionHeader.cta')}
-              {(linkToMoreCount ?? 0) > 0 &&
-                ' ' +
-                  t('sectionHeader.ctaMoreSuffix', {
-                    count: linkToMoreCount,
-                  })}
-            </Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    );
+  const goToLink = () => {
+    if (!linkTo) return;
+    if (typeof linkTo === 'string') {
+      navigation.navigate(linkTo as any);
+    } else {
+      navigation.navigate(linkTo.screen as any, linkTo.params);
+    }
   };
 
-  if (!linkTo) {
-    return (
-      <View
-        style={styles.container}
-        accessible={accessible}
-        accessibilityRole={linkTo ? 'button' : 'header'}
-        accessibilityLabel={accessibilityLabel}
-      >
-        {renderHeader()}
-      </View>
-    );
-  }
+  const linkLabel = linkTo
+    ? t('sectionHeader.cta') +
+      ((linkToMoreCount ?? 0) > 0
+        ? ' ' + t('sectionHeader.ctaMoreSuffix', { count: linkToMoreCount })
+        : '')
+    : undefined;
 
   return (
-    <TouchableOpacity
-      style={styles.container}
-      accessible={accessible}
-      accessibilityRole={linkTo ? 'button' : 'header'}
-      accessibilityLabel={accessibilityLabel}
-      onPress={() => {
-        if (linkTo) {
-          if (typeof linkTo === 'string') {
-            navigation.navigate(linkTo as any);
-          } else {
-            navigation.navigate(linkTo.screen as any, linkTo.params);
-          }
-        }
-      }}
-    >
-      {renderHeader()}
-    </TouchableOpacity>
+    <View style={styles.container}>
+      <View
+        style={styles.titleContainer}
+        accessible={accessible}
+        accessibilityRole="header"
+        accessibilityLabel={accessibilityLabel}
+      >
+        {separator && <Separator />}
+        <View style={styles.innerTitleContainer}>
+          <Text
+            variant="heading"
+            style={[styles.title, titleStyle]}
+            {...ellipsis}
+          >
+            {title}
+          </Text>
+          {trailingIcon && (
+            <IconButton
+              {...{
+                size: isLarge ? 24 : 16,
+                ...trailingIcon,
+              }}
+            />
+          )}
+        </View>
+        {subtitle && (
+          <Text variant="secondaryText" style={subtitleStyle} {...ellipsis}>
+            {subtitle}
+          </Text>
+        )}
+      </View>
+      {trailingItem}
+      {linkLabel && (
+        <TextButton
+          onPress={goToLink}
+          accessibilityLabel={linkLabel}
+          style={styles.link}
+        >
+          {linkLabel}
+        </TextButton>
+      )}
+    </View>
   );
 };
 
-const createStyles = ({ spacing, colors }: Theme) =>
+const createStyles = ({ spacing, colors, layout }: Theme) =>
   StyleSheet.create({
     container: {
-      paddingHorizontal: spacing[4],
-    },
-    innerContainer: {
       flexDirection: 'row',
       alignItems: 'flex-end',
+      flexWrap: 'wrap',
+      columnGap: spacing[3],
+      paddingHorizontal: layout.gutter,
+      // 12 to the card below, with the card's own 8
+      marginBottom: spacing[1],
     },
     title: {
       color: colors.heading,
-      marginEnd: spacing[5],
+      flexShrink: 1,
     },
     titleContainer: {
       flex: 1,
+      minWidth: '50%',
+    },
+    // The 48 px target reaches past the title line, so the label sits on it
+    link: {
+      marginBottom: -spacing[3],
     },
     innerTitleContainer: {
       alignItems: 'center',
       flexDirection: 'row',
-      padding: 0,
-      margin: 0,
+      gap: spacing[1],
     },
   });

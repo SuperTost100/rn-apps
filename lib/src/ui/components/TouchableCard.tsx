@@ -27,6 +27,7 @@ export const TouchableCard = ({
   cardStyle,
   rounded = true,
   disabled,
+  accessibilityState,
   ...rest
 }: TouchableCardProps) => {
   const { colors, shapes } = useTheme();
@@ -36,14 +37,12 @@ export const TouchableCard = ({
       underlayColor={colors.touchableHighlight}
       style={[rounded && { borderRadius: shapes.lg }, style]}
       disabled={disabled}
+      accessibilityRole={rest.onPress ? 'button' : undefined}
+      accessibilityState={{ disabled: !!disabled, ...accessibilityState }}
       {...rest}
     >
       <Card
-        style={[
-          { marginVertical: 0 },
-          disabled && { opacity: 0.5, elevation: 0 },
-          cardStyle,
-        ]}
+        style={[{ marginVertical: 0 }, disabled && { opacity: 0.5 }, cardStyle]}
         spaced={false}
         rounded
       >
