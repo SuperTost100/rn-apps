@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 import {
   AccessibilityInfo,
   BackHandler,
-  ScrollView,
+  FlatList,
+  ListRenderItem,
   StyleSheet,
   View,
 } from 'react-native';
@@ -17,6 +18,7 @@ import {
 import {
   BottomBarSpacer,
   Card,
+  CardRow,
   List,
   RefreshControl,
   RegionStateBlock,
@@ -424,19 +426,16 @@ export const CourseFilesScreen = ({ route, navigation }: Props) => {
     );
   } else if (searchResults) {
     body = searchResults.length ? (
-      <>
-        <Text
-          variant="secondaryText"
-          style={styles.resultCount}
-          accessibilityLiveRegion="polite"
-        >
-          {t('course.files.matches', {
-            count: searchResults.length,
-            search: search.trim(),
-          })}
-        </Text>
-        {listCard(searchResults, true)}
-      </>
+      <Text
+        variant="secondaryText"
+        style={styles.resultCount}
+        accessibilityLiveRegion="polite"
+      >
+        {t('course.files.matches', {
+          count: searchResults.length,
+          search: search.trim(),
+        })}
+      </Text>
     ) : (
       <StateBlock
         card
@@ -450,9 +449,7 @@ export const CourseFilesScreen = ({ route, navigation }: Props) => {
       />
     );
   } else if (folderId) {
-    body = sorted.length ? (
-      listCard(sorted, false)
-    ) : (
+    body = sorted.length ? null : (
       <StateBlock
         card
         title={t('states.files.emptyFolderTitle')}
@@ -478,75 +475,110 @@ export const CourseFilesScreen = ({ route, navigation }: Props) => {
               }
             />
           )}
-          {listCard(sorted, view === 'all')}
         </View>
       </>
     );
   }
 
+  // The long list (all files, a folder, search results) is virtualised: a
+  // course can have hundreds of files. Everything above it is the header.
+  let rows: FileEntry[] = [];
+  let rowsShowFolder = false;
+  if (states.status !== 'loading' && isReady) {
+    if (searchResults) {
+      rows = searchResults;
+      rowsShowFolder = true;
+    } else if (folderId) {
+      rows = folderHit ? sorted : [];
+    } else {
+      rows = sorted;
+      rowsShowFolder = view === 'all';
+    }
+  }
+  const renderRow: ListRenderItem<FileEntry> = ({ item, index }) => (
+    <CardRow index={index} count={rows.length}>
+      {renderEntry(item, rowsShowFolder)}
+    </CardRow>
+  );
+
+  const header = (
+    <>
+      {showControls && !isSelecting && (
+        <View style={styles.search}>
+          <TranslucentTextField
+            autoCorrect={false}
+            leadingIcon={faSearch}
+            value={search}
+            onChangeText={setSearch}
+            label={t('course.files.search')}
+            editable={isReady}
+            isClearable={!!search}
+            onClear={() => setSearch('')}
+            onClearLabel={t('contactsScreen.clearSearch')}
+            style={styles.searchField}
+          />
+        </View>
+      )}
+      {showControls && !search.trim() && (
+        <>
+          {isSelecting ? (
+            <View style={styles.selectionRow}>
+              <Text variant="secondaryText" style={styles.selectionHint}>
+                {t('course.files.selectionHint')}
+              </Text>
+              <TextButton onPress={toggleAll}>
+                {everythingSelected
+                  ? t('course.files.clearSelection')
+                  : t('course.files.selectAll')}
+              </TextButton>
+            </View>
+          ) : (
+            <FilesToolbar
+              view={folderId ? undefined : view}
+              onChangeView={v =>
+                updatePreference(
+                  'filesScreen',
+                  v === 'all' ? 'filesView' : 'directoryView',
+                )
+              }
+              sort={sort}
+              onPressSort={() => setSortOpen(true)}
+              onPressSelect={() => startSelection()}
+              disabled={!isReady || visibleIds.length === 0}
+            />
+          )}
+          {!isOnline && isReady && !isSelecting && (
+            <Text variant="secondaryText" style={styles.offlineNote}>
+              {t('course.files.offlineNote')}
+            </Text>
+          )}
+        </>
+      )}
+      {crumbs}
+      {body}
+    </>
+  );
+
   return (
     <View style={styles.screen}>
-      <ScrollView
+      <FlatList
+        data={rows}
+        keyExtractor={item => String(item.id)}
+        renderItem={renderRow}
+        extraData={[selection, isSelecting, rowsShowFolder]}
+        ListHeaderComponent={header}
+        ListFooterComponent={
+          <>
+            <View style={{ height: isSelecting ? barHeight : 0 }} />
+            <BottomBarSpacer />
+          </>
+        }
+        initialNumToRender={15}
+        windowSize={11}
         contentInsetAdjustmentBehavior="automatic"
         keyboardShouldPersistTaps="handled"
         refreshControl={<RefreshControl manual queries={[filesQuery]} />}
-      >
-        {showControls && !isSelecting && (
-          <View style={styles.search}>
-            <TranslucentTextField
-              autoCorrect={false}
-              leadingIcon={faSearch}
-              value={search}
-              onChangeText={setSearch}
-              label={t('course.files.search')}
-              editable={isReady}
-              isClearable={!!search}
-              onClear={() => setSearch('')}
-              onClearLabel={t('contactsScreen.clearSearch')}
-              style={styles.searchField}
-            />
-          </View>
-        )}
-        {showControls && !search.trim() && (
-          <>
-            {isSelecting ? (
-              <View style={styles.selectionRow}>
-                <Text variant="secondaryText" style={styles.selectionHint}>
-                  {t('course.files.selectionHint')}
-                </Text>
-                <TextButton onPress={toggleAll}>
-                  {everythingSelected
-                    ? t('course.files.clearSelection')
-                    : t('course.files.selectAll')}
-                </TextButton>
-              </View>
-            ) : (
-              <FilesToolbar
-                view={folderId ? undefined : view}
-                onChangeView={v =>
-                  updatePreference(
-                    'filesScreen',
-                    v === 'all' ? 'filesView' : 'directoryView',
-                  )
-                }
-                sort={sort}
-                onPressSort={() => setSortOpen(true)}
-                onPressSelect={() => startSelection()}
-                disabled={!isReady || visibleIds.length === 0}
-              />
-            )}
-            {!isOnline && isReady && !isSelecting && (
-              <Text variant="secondaryText" style={styles.offlineNote}>
-                {t('course.files.offlineNote')}
-              </Text>
-            )}
-          </>
-        )}
-        {crumbs}
-        {body}
-        <View style={{ height: isSelecting ? barHeight : 0 }} />
-        <BottomBarSpacer />
-      </ScrollView>
+      />
       {isSelecting && (
         <SelectionActionBar
           toDownload={toDownload.length}

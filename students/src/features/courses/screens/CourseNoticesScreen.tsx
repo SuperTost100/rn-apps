@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
 
 import {
   getHtmlTextContent,
@@ -9,8 +9,7 @@ import {
 } from '@polito/lib/core';
 import {
   BottomBarSpacer,
-  Card,
-  List,
+  CardRow,
   ListItem,
   OutlineIcon,
   QueryStateView,
@@ -78,75 +77,92 @@ export const CourseNoticesScreen = () => {
     clearNotificationScope(scope);
   });
 
+  type Notice = (typeof notices)[number];
+  const renderNotice = ({
+    item: notice,
+    index,
+  }: {
+    item: Notice;
+    index: number;
+  }) => {
+    const unread = !!getUnreadsCount([...scope, `${notice.id}`]);
+    const posted = when(notice.publishedAt);
+    return (
+      <CardRow index={index} count={notices.length}>
+        <ListItem
+          title={notice.text}
+          subtitle={posted}
+          unread={unread}
+          leadingItem={
+            <OutlineIcon
+              name="megaphone"
+              color={unread ? colors.title : colors.secondaryText}
+            />
+          }
+          accessibilityLabel={[
+            unread ? t('primitives.unread') : undefined,
+            notice.text.slice(0, 160),
+            posted,
+          ]
+            .filter(Boolean)
+            .join(', ')}
+          linkTo={{
+            screen: 'Notice',
+            params: { noticeId: notice.id, courseId },
+          }}
+        />
+      </CardRow>
+    );
+  };
+
+  // A course can have many announcements: the rows are a FlatList, and the
+  // loading, empty and failed states sit in its header
   return (
-    <ScrollView
+    <FlatList
+      data={states.status === 'ready' ? notices : []}
+      keyExtractor={notice => String(notice.id)}
+      renderItem={renderNotice}
+      ListHeaderComponent={
+        states.status === 'ready' ? (
+          <View style={styles.first} />
+        ) : (
+          <View style={styles.first}>
+            <QueryStateView
+              states={states}
+              skeleton={{
+                count: 5,
+                leading: 'icon',
+                trailing: 'none',
+                titleLines: 2,
+                label: t('states.notices.loading'),
+              }}
+              emptyState={{
+                title: t('states.notices.emptyTitle'),
+                text: t('course.announcements.emptyText'),
+                action: {
+                  label: t('navigation.courseSettings'),
+                  onPress: () =>
+                    navigation.navigate('CoursePreferences', {
+                      courseId,
+                      uniqueShortcode: uniqueShortcodeOf(courseId, courses),
+                    }),
+                },
+              }}
+              errorState={{
+                title: t('states.notices.failedTitle'),
+                text: t('states.notices.failedText'),
+              }}
+            >
+              {null}
+            </QueryStateView>
+          </View>
+        )
+      }
+      ListFooterComponent={<BottomBarSpacer />}
+      initialNumToRender={12}
       contentInsetAdjustmentBehavior="automatic"
       refreshControl={<RefreshControl manual queries={[noticesQuery]} />}
-    >
-      <View style={styles.first}>
-        <QueryStateView
-          states={states}
-          skeleton={{
-            count: 5,
-            leading: 'icon',
-            trailing: 'none',
-            titleLines: 2,
-            label: t('states.notices.loading'),
-          }}
-          emptyState={{
-            title: t('states.notices.emptyTitle'),
-            text: t('course.announcements.emptyText'),
-            action: {
-              label: t('navigation.courseSettings'),
-              onPress: () =>
-                navigation.navigate('CoursePreferences', {
-                  courseId,
-                  uniqueShortcode: uniqueShortcodeOf(courseId, courses),
-                }),
-            },
-          }}
-          errorState={{
-            title: t('states.notices.failedTitle'),
-            text: t('states.notices.failedText'),
-          }}
-        >
-          <Card>
-            <List>
-              {notices.map(notice => {
-                const unread = !!getUnreadsCount([...scope, `${notice.id}`]);
-                const posted = when(notice.publishedAt);
-                return (
-                  <ListItem
-                    key={notice.id}
-                    title={notice.text}
-                    subtitle={posted}
-                    unread={unread}
-                    leadingItem={
-                      <OutlineIcon
-                        name="megaphone"
-                        color={unread ? colors.title : colors.secondaryText}
-                      />
-                    }
-                    accessibilityLabel={[
-                      unread ? t('primitives.unread') : undefined,
-                      notice.text.slice(0, 160),
-                      posted,
-                    ]
-                      .filter(Boolean)
-                      .join(', ')}
-                    linkTo={{
-                      screen: 'Notice',
-                      params: { noticeId: notice.id, courseId },
-                    }}
-                  />
-                );
-              })}
-            </List>
-          </Card>
-        </QueryStateView>
-      </View>
-      <BottomBarSpacer />
-    </ScrollView>
+    />
   );
 };
 

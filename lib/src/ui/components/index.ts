@@ -10,6 +10,7 @@ export * from './BottomSheet';
 export * from './BottomSheetTextField';
 export * from './Callout';
 export * from './Card';
+export * from './CardRow';
 export * from './CarouselDots';
 export * from './ChatBubble';
 export * from './Col';

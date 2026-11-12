@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, ScrollView, SectionList, StyleSheet, View } from 'react-native';
 
 import { faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
 import {
@@ -10,8 +10,8 @@ import {
 } from '@polito/lib/core';
 import {
   BottomBarSpacer,
+  CardRow,
   Icon,
-  OverviewList,
   PillButton,
   RefreshControl,
   RegionStateBlock,
@@ -216,53 +216,19 @@ export const InboxScreen = ({ navigation }: Props) => {
         }}
       />
     );
-  } else {
-    body = groups.map(group => (
-      <View key={group.id}>
-        <View style={styles.groupLabel}>
-          {group.id === 'pinned' && (
-            <Icon
-              icon={faTriangleExclamation}
-              size={14}
-              color={colors.dangerText}
-            />
-          )}
-          <Text
-            variant="secondaryText"
-            weight="semibold"
-            role="heading"
-            style={group.id === 'pinned' && { color: colors.dangerText }}
-          >
-            {t(`inboxScreen.groups.${group.id}`)}
-          </Text>
-        </View>
-        <OverviewList indented style={styles.group}>
-          {group.items.map(item => (
-            <InboxRow key={item.key} item={item} onPress={open} />
-          ))}
-        </OverviewList>
-      </View>
-    ));
   }
+
+  // The groups are a virtualised SectionList: the inbox has no upper bound
+  const sections =
+    !loading && states.status !== 'error'
+      ? groups.map(group => ({ id: group.id, data: group.items }))
+      : [];
 
   // An empty inbox has nothing to filter or mark
   const showTools = states.status !== 'error' && (loading || items.length > 0);
 
-  return (
-    <ScrollView
-      contentInsetAdjustmentBehavior="automatic"
-      refreshControl={
-        <RefreshControl
-          queries={[
-            notificationsQuery,
-            messagesQuery,
-            ticketsQuery,
-            coursesQuery,
-          ]}
-          manual
-        />
-      }
-    >
+  const header = (
+    <>
       {showTools && (
         <>
           <FilterChips
@@ -303,8 +269,54 @@ export const InboxScreen = ({ navigation }: Props) => {
         </>
       )}
       {body}
-      <BottomBarSpacer />
-    </ScrollView>
+    </>
+  );
+
+  return (
+    <SectionList
+      sections={sections}
+      keyExtractor={item => item.key}
+      renderSectionHeader={({ section }) => (
+        <View style={styles.groupLabel}>
+          {section.id === 'pinned' && (
+            <Icon
+              icon={faTriangleExclamation}
+              size={14}
+              color={colors.dangerText}
+            />
+          )}
+          <Text
+            variant="secondaryText"
+            weight="semibold"
+            role="heading"
+            style={section.id === 'pinned' && { color: colors.dangerText }}
+          >
+            {t(`inboxScreen.groups.${section.id}`)}
+          </Text>
+        </View>
+      )}
+      renderItem={({ item, index, section }) => (
+        <CardRow index={index} count={section.data.length}>
+          <InboxRow item={item} onPress={open} />
+        </CardRow>
+      )}
+      stickySectionHeadersEnabled={false}
+      ListHeaderComponent={header}
+      ListFooterComponent={<BottomBarSpacer />}
+      initialNumToRender={15}
+      contentInsetAdjustmentBehavior="automatic"
+      refreshControl={
+        <RefreshControl
+          queries={[
+            notificationsQuery,
+            messagesQuery,
+            ticketsQuery,
+            coursesQuery,
+          ]}
+          manual
+        />
+      }
+    />
   );
 };
 
@@ -399,9 +411,6 @@ const createStyles = ({ layout, spacing }: Theme) =>
       paddingHorizontal: layout.gutter,
       paddingTop: spacing[6],
       paddingBottom: spacing[2],
-    },
-    group: {
-      marginVertical: 0,
     },
     firstCard: {
       marginTop: spacing[4],
