@@ -1200,5 +1200,8 @@
   },
   "videoPlayer": {
     "speedSectionTitle": "Velocità"
+  },
+  "primitives": {
+    "unread": "Non letto"
   }
 }

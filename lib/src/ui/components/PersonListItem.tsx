@@ -55,10 +55,11 @@ export const PersonListItem = ({
   );
 };
 
+// The leading column is 40 px: the picture fills it
 const styles = StyleSheet.create({
   picture: {
-    width: '100%',
-    height: '100%',
+    width: 40,
+    height: 40,
     borderRadius: 20,
   },
 });

@@ -1089,5 +1089,8 @@
     "renderingToMail": "Rendering to mail...",
     "examInfo": "Exam info",
     "modifyLecture": "Modify Lecture"
+  },
+  "primitives": {
+    "unread": "Unread"
   }
 }

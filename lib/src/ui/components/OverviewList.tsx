@@ -22,7 +22,8 @@ type Props = PropsWithChildren<
 >;
 
 /**
- * Displays a list of items with automatic dividers inside a card.
+ * Displays a list of items with automatic dividers inside a card, 8 px from
+ * whatever is above and below it.
  * (Only suitable for short non virtual-scrolled lists)
  */
 export const OverviewList = ({
@@ -36,20 +37,14 @@ export const OverviewList = ({
   rounded,
   ...rest
 }: Props) => {
-  const { spacing } = useTheme();
+  const { spacing, layout } = useTheme();
   const { t } = useTranslation();
   const { isEnabled, announce } = useScreenReader();
   return (
     <Card
       rounded={rounded}
       translucent={translucent}
-      style={[
-        {
-          marginBottom: spacing[0],
-          marginHorizontal: spacing[4],
-        },
-        style,
-      ]}
+      style={[{ marginHorizontal: layout.gutter }, style]}
       {...rest}
       onAccessibilityTap={() => {
         if (loading && isEnabled) {

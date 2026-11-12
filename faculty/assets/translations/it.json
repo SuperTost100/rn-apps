@@ -1116,5 +1116,8 @@
     "renderingToMail": "Reindirizzamento alla mail...",
     "examInfo": "Info esame",
     "modifyLecture": "Modifica Lezione"
+  },
+  "primitives": {
+    "unread": "Non letto"
   }
 }
