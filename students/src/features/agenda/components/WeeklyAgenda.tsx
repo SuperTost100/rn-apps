@@ -98,8 +98,10 @@ const createStyles = ({ spacing }: Theme) =>
       width: '15%',
       maxWidth: 200,
     },
+    // flex 1 rather than flexGrow alone: a long message wraps instead of
+    // widening the row past the screen
     itemsColumn: {
-      flexGrow: 1,
+      flex: 1,
       justifyContent: 'center',
     },
   });

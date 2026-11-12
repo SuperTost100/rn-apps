@@ -17,6 +17,8 @@ import {
 import { AttachmentChip } from './AttachmentChip';
 
 interface TicketAttachmentChipProps {
+  /** On an incoming bubble, which sits on the surface instead of the blue */
+  incoming?: boolean;
   attachment: TicketAttachment;
   replyId?: number;
   ticketId: number;
@@ -26,6 +28,7 @@ export const TicketAttachmentChip = ({
   attachment,
   ticketId,
   replyId,
+  incoming = false,
 }: TicketAttachmentChipProps) => {
   const styles = useStylesheet(createStyles);
   const [shouldOpen, setShouldOpen] = useState<boolean>(false);
@@ -66,22 +69,25 @@ export const TicketAttachmentChip = ({
     setShouldOpen(false);
   }, [shouldOpen, replyAttachment]);
 
-  return (
-    <ThemeContext.Provider value={darkTheme}>
-      <TouchableOpacity onPress={onPressAttachment} style={styles.container}>
-        <AttachmentChip
-          attachment={{
-            name: attachment.filename,
-            size: attachment.sizeInKiloBytes,
-            uri: null,
-            type: attachment.mimeType,
-          }}
-          loading={
-            isDownloadingReplyAttachment || isDownloadingTicketAttachment
-          }
-        />
-      </TouchableOpacity>
-    </ThemeContext.Provider>
+  const chip = (
+    <TouchableOpacity onPress={onPressAttachment} style={styles.container}>
+      <AttachmentChip
+        attachment={{
+          name: attachment.filename,
+          size: attachment.sizeInKiloBytes,
+          uri: null,
+          type: attachment.mimeType,
+        }}
+        loading={isDownloadingReplyAttachment || isDownloadingTicketAttachment}
+      />
+    </TouchableOpacity>
+  );
+
+  // Outgoing bubbles are blue: the chip takes the dark theme's light text
+  return incoming ? (
+    chip
+  ) : (
+    <ThemeContext.Provider value={darkTheme}>{chip}</ThemeContext.Provider>
   );
 };
 

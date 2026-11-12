@@ -83,7 +83,7 @@ const HeaderRightDropdown = ({
 }) => {
   const { mutate } = useSwitchCareer();
   const { t } = useTranslation();
-  const { palettes, spacing } = useTheme();
+  const { colors, spacing } = useTheme();
   const username = profile?.username || '';
   const allCareerIds = useMemo(
     () => profile?.allUsernames ?? [],
@@ -121,9 +121,7 @@ const HeaderRightDropdown = ({
           <Text variant="link" style={{ marginRight: 5 }}>
             {username}
           </Text>
-          {canSwitchCareer && (
-            <Icon icon={faAngleDown} color={palettes.primary[500]} />
-          )}
+          {canSwitchCareer && <Icon icon={faAngleDown} color={colors.link} />}
         </Row>
       </StatefulMenuView>
     </View>

@@ -45,6 +45,7 @@ export const ChatMessage = ({
           {message.attachments.map((item, index) => {
             return (
               <TicketAttachmentChip
+                incoming={received}
                 key={index}
                 attachment={item}
                 ticketId={ticketId}
@@ -54,7 +55,7 @@ export const ChatMessage = ({
           })}
         </View>
       ) : null,
-    [styles, message, ticketId],
+    [styles, message, ticketId, received],
   );
 
   return (

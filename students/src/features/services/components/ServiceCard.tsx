@@ -132,7 +132,11 @@ const createStyles = ({ spacing, fontSizes }: Theme, isLargeFont: boolean) =>
       fontSize: fontSizes.md,
       flexShrink: 1,
     },
+    // The 16 px hit slop gives the 48 px target, so the button keeps its
+    // small box and the card its height
     favButton: {
       padding: spacing[2],
+      minHeight: 0,
+      minWidth: 0,
     },
   });
