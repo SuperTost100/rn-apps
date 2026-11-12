@@ -1,30 +1,19 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  AccessibilityInfo,
-  Alert,
-  Keyboard,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  View,
-} from 'react-native';
-import { Document } from 'react-native-render-html';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
-import { faQuestionCircle } from '@fortawesome/free-regular-svg-icons';
-import { faPencil, faSearch } from '@fortawesome/free-solid-svg-icons';
-import { useAccessibility, useQueryStates } from '@polito/lib/core';
+import { faPencil } from '@fortawesome/free-solid-svg-icons';
+import {
+  getHtmlTextContent,
+  useDebounceValue,
+  useQueryStates,
+} from '@polito/lib/core';
 import {
   BottomBarSpacer,
   CtaButton,
-  GlobalStyles,
-  Icon,
-  IconButton,
   ListItem,
+  OutlineIcon,
   OverviewList,
-  Row,
-  ScreenTitle,
-  Section,
   Text,
   TextField,
   type Theme,
@@ -33,188 +22,122 @@ import {
 } from '@polito/lib/ui';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-import { innerText } from 'domutils';
-import { parseDocument } from 'htmlparser2';
-
 import { useSearchTicketFaqs } from '../../../core/queries/ticketHooks';
 import { ServiceStackParamList } from '../../services/components/ServicesNavigator';
 
 type Props = NativeStackScreenProps<ServiceStackParamList, 'TicketFaqs'>;
 
+/**
+ * Search the FAQs before writing a ticket: an option offered by the new
+ * ticket form, never a step to get through. Results come as you type.
+ */
 export const TicketFaqsScreen = ({ navigation }: Props) => {
   const { t } = useTranslation();
-  const { spacing, fontSizes } = useTheme();
   const styles = useStylesheet(createStyles);
+  const { colors } = useTheme();
   const [search, setSearch] = useState('');
-  const [hasSearchedOnce, setHasSearchedOnce] = useState(false);
-  const ticketFaqsQuery = useSearchTicketFaqs(search);
-  const faqStates = useQueryStates(ticketFaqsQuery);
-  const ticketFaqs = useMemo(() => {
-    return (
-      ticketFaqsQuery.data?.sort((a, b) =>
-        a.question > b.question ? 1 : -1,
-      ) ?? []
-    );
-  }, [ticketFaqsQuery.data]);
-
-  const canSearch = search?.length > 2;
-
-  const { accessibilityListLabel } = useAccessibility();
-
-  useEffect(() => {
-    if (!ticketFaqsQuery?.data) {
-      return;
-    }
-    if (ticketFaqs?.length === 0 && canSearch && hasSearchedOnce) {
-      AccessibilityInfo.announceForAccessibility(
-        t('ticketFaqsScreen.emptyState'),
-      );
-    }
-  }, [ticketFaqs, canSearch, hasSearchedOnce, ticketFaqsQuery.data, t]);
-
-  const triggerSearch = () => {
-    if (!canSearch) {
-      Alert.alert(t('common.error'), t('ticketFaqsScreen.searchMinLengthHint'));
-      return;
-    }
-    ticketFaqsQuery.refetch();
-    setHasSearchedOnce(true);
-  };
+  const term = useDebounceValue(search, 400).trim();
+  const faqsQuery = useSearchTicketFaqs(term);
+  const states = useQueryStates(faqsQuery);
+  const hasTerm = term.length >= 3;
+  const faqs = hasTerm
+    ? [...(faqsQuery.data ?? [])].sort((a, b) =>
+        a.question.localeCompare(b.question),
+      )
+    : [];
 
   return (
     <ScrollView
       contentInsetAdjustmentBehavior="automatic"
-      automaticallyAdjustKeyboardInsets
       keyboardShouldPersistTaps="handled"
+      automaticallyAdjustKeyboardInsets
+      contentContainerStyle={styles.content}
     >
-      <SafeAreaView>
-        <Section>
-          <View style={styles.heading}>
-            <ScreenTitle
-              title={t('ticketFaqsScreen.findFAQ')}
-              style={styles.title}
-            />
-            <Text variant="secondaryText" style={styles.description}>
-              {t('ticketFaqsScreen.findFAQSubtitle')}
+      <View style={styles.pad}>
+        <Text variant="secondaryText">{t('ticketFaqsScreen.intro')}</Text>
+        <TextField
+          variant="boxed"
+          label={t('ticketFaqsScreen.searchLabel')}
+          placeholder={t('ticketFaqsScreen.searchPlaceholder')}
+          hint={t('ticketFaqsScreen.searchHint')}
+          value={search}
+          onChangeText={setSearch}
+          returnKeyType="search"
+          autoCapitalize="none"
+        />
+      </View>
+      {hasTerm && (
+        <View accessibilityLiveRegion="polite">
+          {states.status === 'ready' && (
+            <Text
+              variant="secondaryText"
+              style={[styles.pad, styles.count]}
+              accessibilityRole="text"
+            >
+              {t('ticketFaqsScreen.results', { count: faqs.length })}
             </Text>
-          </View>
-          <OverviewList>
-            <Row align="center" style={styles.searchBar}>
-              <TextField
-                label={t('ticketFaqsScreen.search')}
-                value={search}
-                onChangeText={setSearch}
-                onSubmitEditing={() => {
-                  Keyboard.dismiss();
-                  triggerSearch();
-                }}
-                editable={!ticketFaqsQuery?.isFetching}
-                returnKeyType="search"
-                style={GlobalStyles.grow}
-                inputStyle={styles.messageInput}
-              />
-              <IconButton
-                accessibilityLabel={t('ticketFaqsScreen.searchButton')}
-                iconPadding={spacing[5]}
-                icon={faSearch}
-                loading={ticketFaqsQuery.isFetching}
-                onPress={() => {
-                  triggerSearch();
-                }}
-                accessibilityRole="button"
-                disabled={!canSearch}
-              />
-            </Row>
-          </OverviewList>
-          {hasSearchedOnce &&
-            (ticketFaqs.length > 0 ? (
-              <OverviewList indented states={faqStates}>
-                {ticketFaqs.map((faq, index) => {
-                  const dom = parseDocument(
-                    faq.question.replace(/\\r+/g, ' ').replace(/\\"/g, '"'),
-                  ) as Document;
-                  const title = innerText(dom.children as any[]);
-                  const accessibilityLabel = [
-                    accessibilityListLabel(index, ticketFaqs?.length || 0),
-                    title,
-                  ].join(', ');
-                  return (
-                    <ListItem
-                      accessibilityLabel={accessibilityLabel}
-                      key={faq.id}
-                      leadingItem={
-                        <Icon icon={faQuestionCircle} size={fontSizes['2xl']} />
-                      }
-                      linkTo={{
-                        screen: 'TicketFaq',
-                        params: { faq },
-                      }}
-                      title={<Text numberOfLines={3}>{title}</Text>}
-                      accessibilityRole="button"
-                    />
-                  );
-                })}
-              </OverviewList>
-            ) : (
-              <OverviewList
-                indented
-                states={faqStates}
-                skeleton={{ count: 3, leading: 'icon', subtitle: false }}
-                emptyState={{ title: t('ticketFaqsScreen.emptyState') }}
-                errorState={{ title: t('states.tickets.failedFaqsTitle') }}
+          )}
+          <OverviewList
+            states={states}
+            skeleton={{
+              count: 3,
+              leading: 'icon',
+              subtitle: false,
+              titleLines: 2,
+            }}
+            emptyState={{
+              title: t('ticketFaqsScreen.noResultsTitle', { term }),
+              text: t('ticketFaqsScreen.noResultsText'),
+            }}
+            errorState={{ title: t('states.tickets.failedFaqsTitle') }}
+          >
+            {faqs.map(faq => (
+              <ListItem
+                key={faq.id}
+                leadingItem={
+                  <OutlineIcon name="info" color={colors.secondaryText} />
+                }
+                title={getHtmlTextContent(faq.question)}
+                titleProps={{ numberOfLines: 3 }}
+                linkTo={{ screen: 'TicketFaq', params: { faq } }}
               />
             ))}
-        </Section>
-
-        {hasSearchedOnce && !ticketFaqsQuery.isFetching && (
-          <CtaButton
-            accessibilityLabel={t('ticketFaqScreen.writeTicketMessage')}
-            absolute={false}
-            title={t('ticketFaqsScreen.writeTicket')}
-            hint={t('ticketFaqsScreen.noResultFound')}
-            action={() =>
-              navigation.navigate('CreateTicket', {
-                subtopicId: undefined,
-                topicId: undefined,
-              })
-            }
-            icon={faPencil}
-          />
-        )}
-
-        <BottomBarSpacer />
-      </SafeAreaView>
+          </OverviewList>
+        </View>
+      )}
+      <View style={styles.pad}>
+        <Text variant="secondaryText" style={styles.notFound}>
+          {t('ticketFaqsScreen.noResultFound')}
+        </Text>
+        <CtaButton
+          absolute={false}
+          variant="outlined"
+          containerStyle={styles.cta}
+          title={t('ticketFaqsScreen.writeTicket')}
+          icon={faPencil}
+          action={() => navigation.navigate('CreateTicket', {})}
+        />
+      </View>
+      <BottomBarSpacer />
     </ScrollView>
   );
 };
 
-const createStyles = ({ spacing, palettes, fontSizes }: Theme) =>
+const createStyles = ({ layout, spacing }: Theme) =>
   StyleSheet.create({
-    heading: {
-      paddingTop: spacing[5],
-      paddingHorizontal: spacing[5],
+    content: {
+      paddingTop: spacing[4],
     },
-    title: {
-      fontSize: fontSizes['3xl'],
-      marginBottom: spacing[1],
+    pad: {
+      paddingHorizontal: layout.gutter,
     },
-    spacer: {
-      height: spacing[56],
+    count: {
+      paddingBottom: spacing[1],
     },
-    description: {
-      marginBottom: spacing[4],
+    notFound: {
+      marginTop: spacing[6],
     },
-    noResultFound: {
-      textAlign: 'center',
-      color: palettes.text[100],
-    },
-    emptyState: {
-      backgroundColor: palettes.primary[700],
-    },
-    searchBar: {
-      paddingRight: spacing[2],
-    },
-    messageInput: {
-      borderBottomWidth: 0,
+    cta: {
+      paddingHorizontal: 0,
     },
   });

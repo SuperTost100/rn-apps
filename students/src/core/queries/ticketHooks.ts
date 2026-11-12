@@ -81,6 +81,8 @@ export const useCreateTicket = () => {
         await rethrowApiError(err as Error);
       }
     },
+    // The form says what went wrong, so the app-wide alert stays quiet
+    onError() {},
     onSuccess() {
       return client.invalidateQueries({ queryKey: TICKETS_QUERY_KEY });
     },
@@ -99,6 +101,8 @@ export const useReplyToTicket = (ticketId: number) => {
     mutationFn: (dto: ReplyToTicketRequest) => {
       return ticketsClient.replyToTicket(dto);
     },
+    // The thread marks a failed reply and offers Try again
+    onError() {},
     onSuccess() {
       return invalidatesQueries.forEach(queryKey =>
         client.invalidateQueries({ queryKey }),
@@ -142,6 +146,8 @@ export const useProvideTicketFeedback = (ticketId: number) => {
         ticketId,
         ticketFeedbackRequest,
       }),
+    // The rating screen says when it fails
+    onError() {},
     onSuccess() {
       return invalidatesQueries.forEach(queryKey =>
         client.invalidateQueries({ queryKey }),
@@ -170,6 +176,8 @@ export const useMarkTicketAsClosed = (ticketId: number) => {
 
   return useMutation({
     mutationFn: () => ticketsClient.markTicketAsClosed({ ticketId }),
+    // The thread says when it fails
+    onError() {},
     onSuccess() {
       return invalidatesQueries.forEach(queryKey =>
         client.invalidateQueries({ queryKey }),
@@ -221,13 +229,21 @@ export const useGetTicketAttachment = (
   });
 };
 
+/**
+ * The FAQs matching a search of three characters or more. Empty searches
+ * fetch nothing
+ */
 export const useSearchTicketFaqs = (search: string) => {
   const ticketsClient = useTicketsClient();
+  const term = search.trim();
 
   return useQuery({
-    queryKey: FAQS_QUERY_KEY,
-    queryFn: () => ticketsClient.searchTicketFAQs({ search }).then(pluckData),
-    enabled: false,
-    staleTime: 0,
+    queryKey: [...FAQS_QUERY_KEY, term],
+    queryFn: () =>
+      ticketsClient.searchTicketFAQs({ search: term }).then(pluckData),
+    enabled: term.length >= 3,
+    staleTime: 5 * 60 * 1000,
+    // Suggestions are not worth keeping between app launches
+    persister: undefined,
   });
 };

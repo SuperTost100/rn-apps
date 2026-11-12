@@ -1,24 +1,17 @@
 import { useTranslation } from 'react-i18next';
-import { Platform, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
-import { faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
 import {
-  Col,
+  BottomActionBar,
   CtaButton,
-  Icon,
-  Row,
+  InfoMessage,
   Text,
   type Theme,
   useStylesheet,
   useTheme,
 } from '@polito/lib/ui';
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 
 import { PodiumIcon } from './PodiumIcon';
-
-const ANDROID_TAB_BAR_HEIGHT = 60;
-const IOS_TAB_BAR_HEIGHT = 49;
 
 interface TicketAutoResolvedProps {
   onClose: () => void;
@@ -26,96 +19,61 @@ interface TicketAutoResolvedProps {
 
 const PODIUM_ICON_SIZE = 64;
 
+/** After the virtual assistant's answer solved the question */
 export const TicketAutoResolved = ({ onClose }: TicketAutoResolvedProps) => {
   const { t } = useTranslation();
   const styles = useStylesheet(createStyles);
-  const { palettes, spacing } = useTheme();
-  const measuredTabBarHeight = useBottomTabBarHeight();
-  const { bottom: safeBottom } = useSafeAreaInsets();
-  const tabBarHeight =
-    measuredTabBarHeight ||
-    Platform.select({
-      android: ANDROID_TAB_BAR_HEIGHT + safeBottom,
-      default: IOS_TAB_BAR_HEIGHT + safeBottom,
-    });
+  const { colors } = useTheme();
 
   return (
     <View style={styles.screen}>
-      <Col flex={1} align="center" justify="center" gap={6}>
-        <PodiumIcon size={PODIUM_ICON_SIZE} color={palettes.success[700]} />
-        <Col gap={3} align="center">
-          <Text style={styles.title}>{t('ticketResolvedScreen.title')}</Text>
-          <Text style={styles.subtitle}>
-            {t('ticketScreen.autoResolvedSubtitle')}
-          </Text>
-        </Col>
-      </Col>
-      <Col gap={2} style={{ paddingBottom: tabBarHeight + spacing[2] }}>
-        <Row gap={4} style={styles.infoMessage}>
-          <Icon
-            icon={faTriangleExclamation}
-            size={16}
-            color={palettes.warning[800]}
-          />
-          <Text style={styles.infoText}>
+      <ScrollView contentContainerStyle={styles.content}>
+        <PodiumIcon size={PODIUM_ICON_SIZE} color={colors.successText} />
+        <Text variant="title" accessibilityRole="header" style={styles.center}>
+          {t('ticketResolvedScreen.title')}
+        </Text>
+        <Text variant="prose" style={styles.center}>
+          {t('ticketScreen.autoResolvedSubtitle')}
+        </Text>
+        <InfoMessage style={styles.hint}>
+          <Text variant="secondaryText" style={{ color: colors.infoText }}>
             {t('ticketScreen.autoResolvedHint')}
           </Text>
-        </Row>
+        </InfoMessage>
+      </ScrollView>
+      <BottomActionBar>
         <CtaButton
           absolute={false}
           title={t('common.close')}
           action={onClose}
-          containerStyle={styles.buttonContainer}
+          containerStyle={styles.cta}
         />
-      </Col>
+      </BottomActionBar>
     </View>
   );
 };
 
-const createStyles = ({
-  spacing,
-  fontSizes,
-  fontWeights,
-  colors,
-  palettes,
-  shapes,
-}: Theme) =>
+const createStyles = ({ layout, spacing }: Theme) =>
   StyleSheet.create({
     screen: {
       flex: 1,
-      backgroundColor: colors.background,
-      paddingHorizontal: spacing[5],
     },
-    title: {
-      fontSize: fontSizes['2xl'],
-      fontWeight: fontWeights.semibold,
-      color: colors.heading,
+    content: {
+      flexGrow: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing[4],
+      paddingHorizontal: layout.gutter,
+      paddingVertical: spacing[8],
+    },
+    center: {
       textAlign: 'center',
     },
-    subtitle: {
-      fontSize: fontSizes.sm,
-      fontWeight: fontWeights.medium,
-      color: colors.prose,
-      textAlign: 'center',
+    hint: {
+      alignSelf: 'stretch',
+      marginHorizontal: 0,
     },
-    infoMessage: {
-      alignItems: 'flex-start',
-      backgroundColor: palettes.warning[50],
-      borderWidth: 1,
-      borderColor: palettes.warning[600],
-      borderRadius: shapes.lg,
-      paddingHorizontal: spacing[5],
-      paddingVertical: spacing[3],
-    },
-    infoText: {
-      flex: 1,
-      fontSize: fontSizes.xs,
-      fontWeight: fontWeights.medium,
-      color: palettes.warning[800],
-      lineHeight: 16,
-    },
-    buttonContainer: {
-      paddingVertical: 0,
-      paddingHorizontal: 0,
+    cta: {
+      padding: 0,
     },
   });

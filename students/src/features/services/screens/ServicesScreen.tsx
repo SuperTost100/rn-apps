@@ -1,30 +1,28 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ReactElement, useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { SafeAreaView, ScrollView, StyleSheet } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 import {
-  faBookBookmark,
-  faBriefcase,
-  faClipboardQuestion,
-  faComments,
-  faEnvelope,
-  faIdCard,
-  faNewspaper,
-  faPersonCirclePlus,
-  faSignsPost,
-} from '@fortawesome/free-solid-svg-icons';
-import {
-  split,
+  To,
+  useFeedbackContext,
   useOfflineDisabled,
   usePreferencesContext,
 } from '@polito/lib/core';
 import { useOpenInAppLink, useQuietQueryErrors } from '@polito/lib/core';
 import {
   BottomBarSpacer,
-  Grid,
+  ListItem,
+  OutlineIcon,
+  OutlineIconName,
+  OverviewList,
+  Section,
+  SectionHeader,
+  Text,
   Theme,
-  auto,
+  UnreadBadge,
   useStylesheet,
+  useTextScale,
+  useTheme,
 } from '@polito/lib/ui';
 import { useScrollToTop } from '@react-navigation/native';
 import { useQueryClient } from '@tanstack/react-query';
@@ -32,224 +30,282 @@ import { useQueryClient } from '@tanstack/react-query';
 import { AppPreferences } from '~/core/types/preferences.ts';
 
 import { useNotifications } from '../../../core/hooks/useNotifications';
+import { useGetBookings } from '../../../core/queries/bookingHooks';
 import {
   WEBMAIL_LINK_QUERY_KEY,
   useGetWebmailLink,
 } from '../../../core/queries/studentAuthHooks';
 import { useGetUnreadEmails } from '../../../core/queries/studentHooks.ts';
-import { ServiceCard } from '../components/ServiceCard';
+import { useGetCpdSurveys } from '../../../core/queries/surveysHooks';
+import { useGetTickets } from '../../../core/queries/ticketHooks';
 
+interface ServiceRow {
+  id: string;
+  name: string;
+  icon: OutlineIconName;
+  linkTo?: To<any>;
+  onPress?: () => void;
+  disabled?: boolean;
+  /** A short status on the right, e.g. "3 upcoming" */
+  status?: string;
+  /** Unread items inside: the only case with a badge */
+  unread?: number;
+  /** Read by screen readers after the name, e.g. "opens in the browser" */
+  hint?: string;
+}
+
+/**
+ * Services as a short list grouped by purpose. Each row says what is waiting
+ * inside ("1 new reply", "2 to fill in"); a badge only counts unread items.
+ */
 export const ServicesScreen = () => {
   const { t } = useTranslation();
-  // Tapping the active tab again scrolls back to the top
   const scrollRef = useRef<ScrollView>(null);
+  // Tapping the active tab again scrolls back to the top
   useScrollToTop(scrollRef);
-  const {
-    favoriteServices: favoriteServiceIds,
-    emailGuideRead,
-    updatePreference,
-    accessibility,
-  } = usePreferencesContext<AppPreferences>();
-  const { getUnreadsCount } = useNotifications();
   const styles = useStylesheet(createStyles);
+  const { colors } = useTheme();
+  const { isLarge } = useTextScale();
+  // favoriteServices may still be stored from older versions: it is ignored
+  const { emailGuideRead } = usePreferencesContext<AppPreferences>();
+  const { getUnreadsCount } = useNotifications();
+  const { setFeedback } = useFeedbackContext();
   const isOffline = useOfflineDisabled();
   const queryClient = useQueryClient();
-  const unreadTickets = getUnreadsCount(['services', 'tickets']);
-  const unreadEmailsQuery = useGetUnreadEmails();
-  // The webmail badge
-  useQuietQueryErrors(unreadEmailsQuery);
-  const [fontSize, setFontSize] = useState(Number(accessibility?.fontSize));
-  useEffect(() => {
-    setFontSize(Number(accessibility?.fontSize) ?? 0);
-  }, [accessibility?.fontSize]);
   const openInAppLink = useOpenInAppLink();
   const getWebmailLink = useGetWebmailLink();
+  const [isOpeningMail, setIsOpeningMail] = useState(false);
 
-  const openWebmailLink = useCallback(async () => {
+  const ticketsQuery = useGetTickets();
+  const bookingsQuery = useGetBookings();
+  const surveysQuery = useGetCpdSurveys();
+  const unreadEmailsQuery = useGetUnreadEmails();
+  // The statuses are extras: a failure leaves them out without an alert
+  useQuietQueryErrors([
+    ticketsQuery,
+    bookingsQuery,
+    surveysQuery,
+    unreadEmailsQuery,
+  ]);
+
+  const openWebmail = useCallback(() => {
+    if (isOpeningMail) return;
+    setIsOpeningMail(true);
     queryClient
       .fetchQuery({
         queryKey: WEBMAIL_LINK_QUERY_KEY,
         queryFn: getWebmailLink,
-        staleTime: 55 * 1000, // 55 seconds
-        gcTime: 55 * 1000, // 55 seconds
-        persister: undefined, // disable persister
+        staleTime: 55 * 1000,
+        gcTime: 55 * 1000,
+        persister: undefined,
       })
-      .then(res => openInAppLink(res.url));
-  }, [openInAppLink, queryClient, getWebmailLink]);
+      .then(res => openInAppLink(res.url))
+      .catch(() =>
+        setFeedback({ text: t('servicesScreen.webMailFailed'), isError: true }),
+      )
+      .finally(() => setIsOpeningMail(false));
+  }, [
+    isOpeningMail,
+    queryClient,
+    getWebmailLink,
+    openInAppLink,
+    setFeedback,
+    t,
+  ]);
 
-  const services = useMemo(() => {
-    return [
+  const groups = useMemo(() => {
+    const unreadReplies = (ticketsQuery.data ?? []).reduce(
+      (sum, ticket) => sum + (ticket.unreadCount ?? 0),
+      0,
+    );
+    const now = Date.now();
+    const upcomingBookings = bookingsQuery.data?.filter(
+      b => b.endsAt.getTime() > now,
+    ).length;
+    const surveysToFill = surveysQuery.data?.length;
+    const unreadNews = getUnreadsCount(['services', 'news']) ?? 0;
+    // The API sends the count as text
+    const unreadMail = Number(unreadEmailsQuery.data?.unreadEmails) || 0;
+    const newGuides = emailGuideRead ? 0 : 1;
+
+    const help: ServiceRow[] = [
       {
         id: 'tickets',
         name: t('ticketsScreen.title'),
-        icon: faComments,
+        icon: 'chat',
         linkTo: { screen: 'Tickets' },
-        unReadCount: unreadTickets,
-        accessibilityLabel: `${t('ticketsScreen.title')} ${
-          unreadTickets ? t('servicesScreen.newElement') : ''
-        }`,
-      },
-      {
-        id: 'news',
-        name: t('newsScreen.title'),
-        icon: faNewspaper,
-        linkTo: {
-          screen: 'News',
-        },
-        unReadCount: getUnreadsCount(['services', 'news']),
-        accessibilityLabel: `${t('newsScreen.title')} ${
-          getUnreadsCount(['services', 'news'])
-            ? t('servicesScreen.newElement')
-            : ''
-        }`,
-      },
-      {
-        id: 'jobOffers',
-        name: t('jobOffersScreen.title'),
-        icon: faBriefcase,
-        linkTo: { screen: 'JobOffers' },
-        accessibilityLabel: t('jobOffersScreen.title'),
-      },
-      {
-        id: 'offering',
-        name: t('offeringScreen.title'),
-        icon: faBookBookmark,
-        linkTo: { screen: 'Offering' },
-        accessibilityLabel: t('offeringScreen.title'),
-      },
-      {
-        id: 'contacts',
-        name: t('contactsScreen.title'),
-        icon: faIdCard,
-        linkTo: { screen: 'Contacts' },
-        accessibilityLabel: t('contactsScreen.title'),
+        unread: unreadReplies,
+        status: unreadReplies
+          ? t('servicesScreen.newReplies', { count: unreadReplies })
+          : undefined,
       },
       {
         id: 'guides',
         name: t('guidesScreen.title'),
-        icon: faSignsPost,
+        icon: 'guide',
         linkTo: { screen: 'Guides' },
-        unReadCount: emailGuideRead ? 0 : 1,
-        accessibilityLabel: `${t('guidesScreen.title')} ${
-          !emailGuideRead ? t('servicesScreen.newElement') : ''
-        }`,
+        unread: newGuides,
+        status: newGuides
+          ? t('servicesScreen.newItems', { count: newGuides })
+          : undefined,
       },
+      {
+        id: 'contacts',
+        name: t('contactsScreen.title'),
+        icon: 'card',
+        linkTo: { screen: 'Contacts' },
+      },
+    ];
+    const campus: ServiceRow[] = [
       {
         id: 'bookings',
         name: t('bookingsScreen.title'),
-        icon: faPersonCirclePlus,
+        icon: 'door',
         linkTo: { screen: 'Bookings' },
-        accessibilityLabel: t('bookingsScreen.title'),
+        status: upcomingBookings
+          ? t('servicesScreen.upcoming', { count: upcomingBookings })
+          : undefined,
+      },
+      {
+        id: 'news',
+        name: t('newsScreen.title'),
+        icon: 'news',
+        linkTo: { screen: 'News' },
+        unread: unreadNews,
+        status: unreadNews
+          ? t('servicesScreen.newItems', { count: unreadNews })
+          : undefined,
+      },
+    ];
+    const career: ServiceRow[] = [
+      {
+        id: 'jobOffers',
+        name: t('jobOffersScreen.title'),
+        icon: 'brief',
+        linkTo: { screen: 'JobOffers' },
+      },
+      {
+        id: 'offering',
+        name: t('offeringScreen.title'),
+        icon: 'bookopen',
+        linkTo: { screen: 'Offering' },
       },
       {
         id: 'surveys',
         name: t('surveysScreen.title'),
-        icon: faClipboardQuestion,
+        icon: 'clipboard',
         linkTo: { screen: 'Surveys' },
-        accessibilityLabel: t('surveysScreen.title'),
+        status: surveysToFill
+          ? t('servicesScreen.toFillIn', { count: surveysToFill })
+          : undefined,
       },
+    ];
+    const mail: ServiceRow[] = [
       {
         id: 'mail',
-        name: 'Web\nMail',
-        icon: faEnvelope,
-        // Opens the webmail in the browser: it needs the network
+        name: t('servicesScreen.webMail'),
+        icon: 'mail',
+        // Opens the mailbox in the browser: it needs the network
         disabled: isOffline,
-        unReadCount: unreadEmailsQuery.data
-          ? unreadEmailsQuery.data.unreadEmails
-          : 0,
-        onPress: () => openWebmailLink(),
-        accessibilityLabel: `${t('WebMail')} ${
-          unreadEmailsQuery.data ? t('servicesScreen.newElement') : ''
-        }`,
+        onPress: openWebmail,
+        status: isOffline
+          ? t('servicesScreen.needsConnection')
+          : unreadMail
+            ? t('servicesScreen.unreadMail', { count: unreadMail })
+            : undefined,
+        hint: t('servicesScreen.opensInBrowser'),
       },
+    ];
+    return [
+      { title: t('servicesScreen.groups.help'), rows: help },
+      { title: t('servicesScreen.groups.campus'), rows: campus },
+      { title: t('servicesScreen.groups.career'), rows: career },
+      { title: t('servicesScreen.groups.mail'), rows: mail },
     ];
   }, [
     t,
-    isOffline,
-    unreadTickets,
+    ticketsQuery.data,
+    bookingsQuery.data,
+    surveysQuery.data,
+    unreadEmailsQuery.data,
     getUnreadsCount,
     emailGuideRead,
-    unreadEmailsQuery.data,
-    openWebmailLink,
+    isOffline,
+    openWebmail,
   ]);
 
-  const [favoriteServices, otherServices] = useMemo(
-    () =>
-      services.reduce(
-        split(s => favoriteServiceIds.includes(s.id)),
-        [[], []],
-      ),
-    [favoriteServiceIds, services],
-  );
-
-  const updateFavorite =
-    (service: (typeof services)[number]) => (favorite: boolean) => {
-      const newVal = favorite
-        ? [...new Set([...favoriteServiceIds, service.id])]
-        : favoriteServiceIds.filter(fs => fs !== service.id);
-      updatePreference('favoriteServices', newVal);
-    };
+  const renderRow = (row: ServiceRow): ReactElement => {
+    const isExternal = row.id === 'mail';
+    // At large text the status moves under the name, so neither is squeezed
+    const statusInTrail = !!row.status && !isLarge;
+    const trailing =
+      statusInTrail || row.unread || isExternal ? (
+        <View style={styles.trailing}>
+          {statusInTrail && (
+            <Text
+              variant="secondaryText"
+              numberOfLines={2}
+              style={styles.status}
+            >
+              {row.status}
+            </Text>
+          )}
+          {!!row.unread && <UnreadBadge text={row.unread} />}
+          {isExternal && (
+            <OutlineIcon name="ext" size={20} color={colors.secondaryText} />
+          )}
+        </View>
+      ) : undefined;
+    return (
+      <ListItem
+        key={row.id}
+        title={row.name}
+        subtitle={isLarge ? row.status : undefined}
+        leadingItem={
+          <OutlineIcon name={row.icon} color={colors.secondaryText} />
+        }
+        trailingItem={trailing}
+        showChevron={!isExternal}
+        linkTo={row.linkTo}
+        onPress={row.onPress}
+        disabled={row.disabled}
+        accessibilityRole={isExternal ? 'link' : 'button'}
+        accessibilityLabel={[row.name, row.status, row.hint]
+          .filter(Boolean)
+          .join(', ')}
+        accessibilityState={{ busy: isExternal && isOpeningMail }}
+      />
+    );
+  };
 
   return (
     <ScrollView ref={scrollRef} contentInsetAdjustmentBehavior="automatic">
-      <SafeAreaView>
-        {favoriteServices.length > 0 && (
-          <Grid
-            numColumns={fontSize && fontSize >= 125 ? 1 : auto}
-            minColumnWidth={ServiceCard.minWidth}
-            maxColumnWidth={ServiceCard.maxWidth}
-            gap={4}
-            style={styles.grid}
-          >
-            {favoriteServices.map(service => (
-              <ServiceCard
-                key={service.id}
-                name={service.name}
-                icon={service.icon}
-                disabled={service.disabled}
-                linkTo={service.linkTo}
-                onPress={service.onPress}
-                favorite
-                onFavoriteChange={updateFavorite(service)}
-                unReadCount={service?.unReadCount}
-                accessibilityLabel={service?.accessibilityLabel}
-              />
-            ))}
-          </Grid>
-        )}
-
-        {otherServices.length > 0 && (
-          <Grid
-            numColumns={fontSize && fontSize >= 125 ? 1 : auto}
-            minColumnWidth={ServiceCard.minWidth}
-            maxColumnWidth={ServiceCard.maxWidth}
-            gap={4}
-            style={styles.grid}
-          >
-            {otherServices.map(service => (
-              <ServiceCard
-                key={service.id}
-                name={service.name}
-                icon={service.icon}
-                disabled={service.disabled}
-                linkTo={service.linkTo}
-                onPress={service.onPress}
-                onFavoriteChange={updateFavorite(service)}
-                unReadCount={service?.unReadCount}
-                accessibilityLabel={service?.accessibilityLabel}
-              />
-            ))}
-          </Grid>
-        )}
-        <BottomBarSpacer />
-      </SafeAreaView>
+      <View style={styles.content}>
+        {groups.map(group => (
+          <Section key={group.title}>
+            <SectionHeader title={group.title} />
+            <OverviewList>{group.rows.map(renderRow)}</OverviewList>
+          </Section>
+        ))}
+      </View>
+      <BottomBarSpacer />
     </ScrollView>
   );
 };
 
 const createStyles = ({ spacing }: Theme) =>
   StyleSheet.create({
-    grid: {
-      margin: spacing[5],
+    content: {
+      paddingTop: spacing[5],
+    },
+    trailing: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing[2],
+      flexShrink: 1,
+    },
+    status: {
+      flexShrink: 1,
+      textAlign: 'right',
     },
   });

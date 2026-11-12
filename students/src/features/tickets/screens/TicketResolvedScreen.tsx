@@ -1,28 +1,20 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  Alert,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  View,
-} from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { faStar as faStarRegular } from '@fortawesome/free-regular-svg-icons';
 import { faStar } from '@fortawesome/free-solid-svg-icons';
+import { useFeedbackContext, useIsOnline } from '@polito/lib/core';
 import {
+  BottomActionBar,
   CtaButton,
-  CtaButtonContainer,
   Icon,
-  Row,
   Text,
+  TextField,
   type Theme,
   useStylesheet,
   useTheme,
 } from '@polito/lib/ui';
-import { useHeaderHeight } from '@react-navigation/elements';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { useProvideTicketFeedback } from '~/core/queries/ticketHooks';
@@ -42,174 +34,173 @@ const STAR_ICON_SIZE = 32;
 export const TicketResolvedScreen = ({ route, navigation }: Props) => {
   const { ticketId } = route.params;
   const { t } = useTranslation();
-  const { palettes, colors, spacing } = useTheme();
+  const { colors } = useTheme();
   const styles = useStylesheet(createStyles);
-  const headerHeight = useHeaderHeight();
+  const { setFeedback } = useFeedbackContext();
+  const isOnline = useIsOnline();
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
+  const [tried, setTried] = useState(false);
   const { mutateAsync: provideFeedback, isPending } =
     useProvideTicketFeedback(ticketId);
 
   const commentLength = comment.trim().length;
-  const commentValid = commentLength >= MIN_COMMENT_LENGTH;
   const commentRequired = rating > 0 && rating <= MAX_RATING_REQUIRING_COMMENT;
-  const canSubmit = rating > 0 && (!commentRequired || commentValid);
-  const showError = commentRequired && !commentValid;
+  const commentValid = !commentRequired || commentLength >= MIN_COMMENT_LENGTH;
+  const ratingError =
+    tried && rating === 0 ? t('ticketResolvedScreen.chooseRating') : undefined;
+  const commentError =
+    tried && !commentValid
+      ? commentLength === 0
+        ? t('ticketResolvedScreen.minCharsHint', { count: MIN_COMMENT_LENGTH })
+        : t('ticketResolvedScreen.remainingCharsHint', {
+            count: MIN_COMMENT_LENGTH - commentLength,
+          })
+      : undefined;
 
   const onSubmit = () => {
-    if (!canSubmit || isPending) {
-      return;
-    }
+    setTried(true);
+    if (rating === 0 || !commentValid || isPending) return;
     provideFeedback({ rating, comment: comment.trim() || undefined })
-      .then(() => exitToTicketsList(navigation))
-      .catch(() => Alert.alert(t('common.error'), t('ticketScreen.sendError')));
+      .then(() => {
+        setFeedback({ text: t('ticketResolvedScreen.sent') });
+        exitToTicketsList(navigation);
+      })
+      .catch(() =>
+        setFeedback({ text: t('ticketResolvedScreen.failed'), isError: true }),
+      );
   };
 
   return (
     <View style={styles.screen}>
       <ScrollView
-        contentContainerStyle={[
-          styles.container,
-          Platform.OS === 'ios' && { paddingTop: headerHeight + spacing[5] },
-        ]}
+        style={styles.screen}
+        contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets
       >
         <View style={styles.headerIcon}>
-          <PodiumIcon size={PODIUM_ICON_SIZE} color={palettes.success[700]} />
+          <PodiumIcon size={PODIUM_ICON_SIZE} color={colors.successText} />
         </View>
-        <Text variant="heading" style={styles.title}>
+        <Text variant="title" accessibilityRole="header" style={styles.center}>
           {t('ticketResolvedScreen.title')}
         </Text>
-
-        <Text variant="title" style={styles.question}>
+        <Text variant="prose" style={[styles.center, styles.question]}>
           {t('ticketResolvedScreen.rateQuestion')}
         </Text>
-        <Row gap={3} align="center" justify="center" style={styles.starsRow}>
+        <View
+          style={styles.starsRow}
+          accessibilityRole="radiogroup"
+          accessibilityLabel={t('ticketResolvedScreen.rateQuestion')}
+        >
           {RATINGS.map(value => (
             <Pressable
               key={value}
-              accessibilityRole="button"
+              accessibilityRole="radio"
+              accessibilityState={{ checked: value === rating }}
               accessibilityLabel={t('ticketResolvedScreen.rateValue', {
                 value,
               })}
               onPress={() => setRating(value)}
-              hitSlop={8}
+              style={styles.star}
             >
               <Icon
                 icon={value <= rating ? faStar : faStarRegular}
                 size={STAR_ICON_SIZE}
-                color={palettes.orange[500]}
+                color={colors.accent}
               />
             </Pressable>
           ))}
-        </Row>
-
-        <Text variant="secondaryText" style={styles.commentLabel}>
-          {t('ticketResolvedScreen.commentLabel')}
-          {commentRequired ? '*' : ''}
-        </Text>
-        <View style={styles.commentBox}>
-          <TextInput
-            style={styles.commentInput}
-            value={comment}
-            onChangeText={setComment}
-            placeholder={t('ticketResolvedScreen.commentPlaceholder')}
-            placeholderTextColor={colors.secondaryText}
-            multiline
-            textAlignVertical="top"
-          />
         </View>
-        {showError && (
-          <Text variant="secondaryText" style={styles.helper}>
-            {commentLength === 0
+        {ratingError && (
+          <Text
+            variant="secondaryText"
+            style={[styles.center, { color: colors.dangerText }]}
+          >
+            {ratingError}
+          </Text>
+        )}
+        <TextField
+          variant="boxed"
+          style={styles.comment}
+          label={
+            commentRequired
+              ? t('ticketResolvedScreen.commentRequiredLabel')
+              : t('ticketResolvedScreen.commentLabel')
+          }
+          placeholder={t('ticketResolvedScreen.commentPlaceholder')}
+          hint={
+            commentRequired && !commentError
               ? t('ticketResolvedScreen.minCharsHint', {
                   count: MIN_COMMENT_LENGTH,
                 })
-              : t('ticketResolvedScreen.remainingCharsHint', {
-                  count: MIN_COMMENT_LENGTH - commentLength,
-                })}
-          </Text>
-        )}
+              : undefined
+          }
+          error={commentError}
+          value={comment}
+          onChangeText={setComment}
+          autoCapitalize="sentences"
+          multiline
+          numberOfLines={5}
+          inputStyle={styles.commentInput}
+        />
       </ScrollView>
-
-      <CtaButtonContainer absolute>
+      <BottomActionBar>
         <CtaButton
           absolute={false}
-          title={t('ticketResolvedScreen.sendFeedback')}
+          containerStyle={styles.cta}
+          disabled={!isOnline}
+          title={
+            isOnline
+              ? t('ticketResolvedScreen.sendFeedback')
+              : t('ticketResolvedScreen.needsConnection')
+          }
           action={onSubmit}
           loading={isPending}
-          style={canSubmit ? undefined : styles.buttonDisabled}
         />
-      </CtaButtonContainer>
+      </BottomActionBar>
     </View>
   );
 };
 
-const createStyles = ({
-  spacing,
-  fontSizes,
-  fontWeights,
-  colors,
-  palettes,
-  shapes,
-}: Theme) =>
+const createStyles = ({ layout, spacing }: Theme) =>
   StyleSheet.create({
     screen: {
       flex: 1,
     },
     container: {
-      padding: spacing[5],
-      paddingBottom: spacing[24],
-      alignItems: 'center',
+      paddingHorizontal: layout.gutter,
+      paddingBottom: spacing[6],
     },
     headerIcon: {
-      marginTop: spacing[6],
-      marginBottom: spacing[6],
+      alignItems: 'center',
+      marginTop: spacing[8],
+      marginBottom: spacing[4],
     },
-    title: {
-      fontSize: fontSizes['2xl'],
-      fontWeight: fontWeights.semibold,
+    center: {
       textAlign: 'center',
-      marginBottom: spacing[6],
     },
     question: {
-      fontSize: fontSizes.sm,
-      fontWeight: fontWeights.medium,
-      color: colors.prose,
-      textAlign: 'center',
+      marginTop: spacing[4],
     },
     starsRow: {
-      marginTop: spacing[2.5],
-      marginBottom: spacing[6],
+      flexDirection: 'row',
+      justifyContent: 'center',
+      marginTop: spacing[2],
     },
-    commentLabel: {
-      alignSelf: 'flex-start',
-      fontSize: fontSizes.xs,
-      marginBottom: spacing[1],
+    star: {
+      minWidth: 48,
+      minHeight: 48,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
-    commentBox: {
-      width: '100%',
-      height: 140,
-      backgroundColor: colors.surface,
-      borderRadius: shapes.lg,
-      paddingHorizontal: spacing[3],
-      paddingVertical: spacing[2],
+    comment: {
+      marginTop: spacing[4],
     },
     commentInput: {
-      flex: 1,
-      fontSize: fontSizes.sm,
-      color: colors.prose,
+      minHeight: 128,
+    },
+    cta: {
       padding: 0,
-    },
-    helper: {
-      alignSelf: 'flex-start',
-      fontSize: fontSizes.xs,
-      fontWeight: fontWeights.medium,
-      marginTop: spacing[1],
-      color: palettes.danger[600],
-    },
-    buttonDisabled: {
-      backgroundColor: palettes.gray[400],
-      borderColor: palettes.gray[400],
     },
   });

@@ -1,13 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
-import { StyleSheet, TouchableOpacity } from 'react-native';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Pressable, StyleSheet } from 'react-native';
 import { open } from 'react-native-file-viewer';
 
-import {
-  type Theme,
-  ThemeContext,
-  darkTheme,
-  useStylesheet,
-} from '@polito/lib/ui';
+import { useFeedbackContext } from '@polito/lib/core';
+import { type Theme, useStylesheet } from '@polito/lib/ui';
 import { TicketAttachment } from '@polito/student-api-client';
 
 import {
@@ -17,60 +14,72 @@ import {
 import { AttachmentChip } from './AttachmentChip';
 
 interface TicketAttachmentChipProps {
-  /** On an incoming bubble, which sits on the surface instead of the blue */
-  incoming?: boolean;
   attachment: TicketAttachment;
   replyId?: number;
   ticketId: number;
+  /** On the student's bubble, in the brand colour */
+  onBrand?: boolean;
 }
 
+/** A file of a ticket message: tapping it downloads it and opens it */
 export const TicketAttachmentChip = ({
   attachment,
   ticketId,
   replyId,
-  incoming = false,
+  onBrand = false,
 }: TicketAttachmentChipProps) => {
+  const { t } = useTranslation();
   const styles = useStylesheet(createStyles);
-  const [shouldOpen, setShouldOpen] = useState<boolean>(false);
-  const isReply = useMemo(() => replyId !== undefined, [replyId]);
+  const { setFeedback } = useFeedbackContext();
+  const [shouldOpen, setShouldOpen] = useState(false);
+  const isReply = replyId !== undefined;
 
-  const { isFetching: isDownloadingReplyAttachment, data: replyAttachment } =
-    useGetTicketReplyAttachment(
-      {
-        replyId: replyId ?? 0,
-        ticketId,
-        attachmentId: attachment.id,
-      },
-      attachment.filename,
-      isReply && shouldOpen,
-    );
-
-  const { isFetching: isDownloadingTicketAttachment, data: ticketAttachment } =
-    useGetTicketAttachment(
-      {
-        ticketId,
-        attachmentId: attachment.id,
-      },
-      attachment.filename,
-      !isReply && shouldOpen,
-    );
-
-  const onPressAttachment = () => setShouldOpen(true);
+  const replyQuery = useGetTicketReplyAttachment(
+    { replyId: replyId ?? 0, ticketId, attachmentId: attachment.id },
+    attachment.filename,
+    isReply && shouldOpen,
+  );
+  const ticketQuery = useGetTicketAttachment(
+    { ticketId, attachmentId: attachment.id },
+    attachment.filename,
+    !isReply && shouldOpen,
+  );
+  const query = isReply ? replyQuery : ticketQuery;
+  const path = query.data;
+  // A retry keeps the error status while it runs
+  const failed = query.isError && !query.isFetching;
 
   useEffect(() => {
-    if (!shouldOpen || !ticketAttachment) return;
-    open(ticketAttachment);
+    if (!shouldOpen) return;
+    if (failed) {
+      setShouldOpen(false);
+      setFeedback({
+        text: t('ticketAttachments.downloadFailed'),
+        isError: true,
+      });
+      return;
+    }
+    if (!path) return;
     setShouldOpen(false);
-  }, [shouldOpen, ticketAttachment]);
+    open(path).catch(() =>
+      setFeedback({ text: t('ticketAttachments.cannotOpen'), isError: true }),
+    );
+  }, [shouldOpen, path, failed, setFeedback, t]);
 
-  useEffect(() => {
-    if (!shouldOpen || !replyAttachment) return;
-    open(replyAttachment);
-    setShouldOpen(false);
-  }, [shouldOpen, replyAttachment]);
-
-  const chip = (
-    <TouchableOpacity onPress={onPressAttachment} style={styles.container}>
+  const loading = shouldOpen && query.isFetching;
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={t('ticketAttachments.open', {
+        name: attachment.filename,
+      })}
+      accessibilityState={{ busy: loading }}
+      onPress={() => {
+        if (failed) query.refetch();
+        setShouldOpen(true);
+      }}
+      style={styles.container}
+    >
       <AttachmentChip
         attachment={{
           name: attachment.filename,
@@ -78,23 +87,16 @@ export const TicketAttachmentChip = ({
           uri: null,
           type: attachment.mimeType,
         }}
-        loading={isDownloadingReplyAttachment || isDownloadingTicketAttachment}
+        onBrand={onBrand}
+        loading={loading}
       />
-    </TouchableOpacity>
-  );
-
-  // Outgoing bubbles are blue: the chip takes the dark theme's light text
-  return incoming ? (
-    chip
-  ) : (
-    <ThemeContext.Provider value={darkTheme}>{chip}</ThemeContext.Provider>
+    </Pressable>
   );
 };
 
 const createStyles = ({ spacing }: Theme) =>
   StyleSheet.create({
     container: {
-      maxWidth: '100%',
-      marginTop: spacing[4],
+      marginTop: spacing[3],
     },
   });

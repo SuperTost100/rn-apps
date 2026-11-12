@@ -10,6 +10,7 @@ import {
   type PlacesStackParamList,
 } from '@polito/lib/features/places';
 import {
+  AppHeader,
   createHeaderCloseButton,
   offlineScreenLayout,
   useInnerHeaderOptions,
@@ -61,7 +62,7 @@ export type OfferingStackParamList = SharedScreensParamList & {
 
 export type ServiceStackParamList = OfferingStackParamList & {
   Services: undefined;
-  Tickets: undefined;
+  Tickets: { newId?: number } | undefined;
   Ticket: { id: number };
   TicketInfo: { id: number };
   TicketResolved: { ticketId: number; markAsResolved?: boolean };
@@ -79,7 +80,8 @@ export type ServiceStackParamList = OfferingStackParamList & {
   News: undefined;
   NewsItem: { id: number };
   Contacts: undefined;
-  Bookings: undefined;
+  /** newId: the booking just made, highlighted in the list */
+  Bookings: { newId?: number } | undefined;
   Booking: { id: number };
   BookingTopic: undefined;
   BookingSlot: { topicId: string; topicName: string };
@@ -91,6 +93,8 @@ export type ServiceStackParamList = OfferingStackParamList & {
     endHour: string;
     day: string;
     hasSeatSelection: boolean | undefined;
+    /** ISO start of the slot, for the confirmation message */
+    startsAt?: string;
   };
   BookingSeat: {
     bookingId: number;
@@ -144,7 +148,10 @@ export const ServicesNavigator = () => {
         getId={({ params: { id } }) => id.toString()}
         options={{
           headerTitle: '',
-          headerBackTitle: t('ticketScreen.headerBackTitle'), // TODO wrong with direct navigation
+          // The subject may take two lines: the header is drawn in JS
+          header: props => (
+            <AppHeader {...props} variant="inner" titleLines={2} />
+          ),
         }}
       />
       <Stack.Screen
@@ -210,7 +217,7 @@ export const ServicesNavigator = () => {
         name="News"
         component={NewsScreen}
         options={{
-          headerTitle: t('newsScreen.title'),
+          headerTitle: t('serviceInfo.news.title'),
         }}
       />
       <Stack.Screen
@@ -225,7 +232,7 @@ export const ServicesNavigator = () => {
         name="Offering"
         component={OfferingTopTabsNavigator}
         options={{
-          headerTitle: t('offeringScreen.title'),
+          headerTitle: t('serviceInfo.catalogue.title'),
           ...withoutHeaderHairline,
         }}
       />

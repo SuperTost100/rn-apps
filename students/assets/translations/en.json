@@ -134,7 +134,9 @@
       "place": "Shows it in Places",
       "virtualPlace": "Online, opens the link"
     },
-    "locationUnavailable": "Couldn't read your position. Check that location is on and try again."
+    "locationUnavailable": "Couldn't read your position. Check that location is on and try again.",
+    "previousWeek": "Previous week",
+    "nextWeek": "Next week"
   },
   "bookingSeatScreen": {
     "confirm": "Confirm booking",
@@ -148,7 +150,8 @@
     },
     "slotBookableFrom": "This slot will be bookable starting from ",
     "title": "Select a seat",
-    "zoomInToEnableSeatSelection": "Zoom in to enable seat selection"
+    "zoomInToEnableSeatSelection": "Zoom in to enable seat selection",
+    "confirmSuccess": "Booking confirmed"
   },
   "bookingsScreen": {
     "emptyState": "You have no active bookings",
@@ -412,7 +415,9 @@
     "withdraw": "Withdraw",
     "year": "year",
     "yesterday": "Yesterday",
-    "sizeExc": "Excessive file size, maximum 32 MB"
+    "sizeExc": "Excessive file size, maximum 32 MB",
+    "fromTime": "from",
+    "toTime": "to"
   },
   "contactsScreen": {
     "cancelRecentSearch": "Remove",
@@ -675,10 +680,38 @@
     "subtopicDescription": "Select the subtopic",
     "subtopicDropdownLabel": "Subtopic",
     "subtopicDropdownPlaceholder": "Pick a subtopic",
-    "title": "Create ticket",
+    "title": "New ticket",
     "topicDescription": "Select topic",
     "topicDropdownLabel": "Topic",
-    "topicDropdownPlaceholder": "Pick a topic"
+    "topicDropdownPlaceholder": "Pick a topic",
+    "faqLine": "Many questions are already answered in the FAQs.",
+    "readFaqs": "Read the FAQs",
+    "intro": "Or write to the student office. Replies come back in Tickets and in the inbox.",
+    "chooseTopic": "Choose a topic",
+    "chooseSubtopic": "Choose a subtopic",
+    "chooseTopicFirst": "Choose a topic first",
+    "subjectPlaceholder": "e.g. Pagamento seconda rata",
+    "subjectHint": "Answers to common questions appear below as you type.",
+    "message": "Message",
+    "attach": "Attach a file",
+    "attachHint": "A file, an image or a photo, up to 32 MB",
+    "faqsMayHelp": "One answer below may help",
+    "faqsMayHelp_plural": "{{count}} answers below may help",
+    "faqToggleHint": "Shows or hides the answer",
+    "openFaq": "Open this answer",
+    "sendNeedsConnection": "Sending needs a connection",
+    "errors": {
+      "topic": "Choose a topic.",
+      "subtopic": "Choose a subtopic.",
+      "subject": "Write a subject.",
+      "message": "Write your question.",
+      "announce": "The ticket was not sent. {{first}}"
+    },
+    "sent": "Ticket #{{id}} sent. The student office replies here, and you get a notification.",
+    "sentNoId": "Ticket sent. The student office replies here, and you get a notification.",
+    "failedTitle": "Couldn't send the ticket",
+    "failedNoReason": "The server did not say why. Try again in a few minutes.",
+    "failedLost": "No answer came from the server, and the ticket is not in your list. Check your connection and send it again: what you wrote is still here."
   },
   "degreeCourseScreen": {
     "classroomExercise": "Classroom excercise",
@@ -1081,7 +1114,27 @@
   "servicesScreen": {
     "subTitleOne": "Information services",
     "subTitleTwo": "Operational services",
-    "title": "Services"
+    "title": "Services",
+    "groups": {
+      "help": "Help",
+      "campus": "Campus",
+      "career": "Career",
+      "mail": "Mail"
+    },
+    "newReplies": "{{count}} new reply",
+    "newReplies_plural": "{{count}} new replies",
+    "newItems": "{{count}} new",
+    "newItems_plural": "{{count}} new",
+    "upcoming": "{{count}} upcoming",
+    "upcoming_plural": "{{count}} upcoming",
+    "toFillIn": "{{count}} to fill in",
+    "toFillIn_plural": "{{count}} to fill in",
+    "unreadMail": "{{count}} unread",
+    "unreadMail_plural": "{{count}} unread",
+    "webMail": "Web mail",
+    "webMailFailed": "Couldn't open web mail. Check your connection and try again.",
+    "needsConnection": "Needs a connection",
+    "opensInBrowser": "opens in the browser"
   },
   "appInfoScreen": {
     "title": "App info",
@@ -1250,11 +1303,19 @@
     "emptyState": "No results found",
     "findFAQ": "Search the FAQs",
     "findFAQSubtitle": "Before posting a ticket, look for an answer in the FAQs.",
-    "noResultFound": "Didn't find what you were looking for?",
+    "noResultFound": "Didn't find your answer?",
     "search": "Search (type at least 3 characters)",
     "searchMinLengthHint": "Please, insert at least 3 characters.",
     "title": "FAQs",
-    "writeTicket": "Write ticket"
+    "writeTicket": "Write a ticket",
+    "intro": "Look for an answer before writing a ticket. The FAQs are in Italian.",
+    "searchLabel": "Search the FAQs",
+    "searchPlaceholder": "e.g. tasse, iscrizione",
+    "searchHint": "Type at least 3 letters.",
+    "results": "{{count}} answer found",
+    "results_plural": "{{count}} answers found",
+    "noResultsTitle": "No FAQ matches \"{{term}}\"",
+    "noResultsText": "Try an Italian word, such as tasse or certificato, or write a ticket."
   },
   "ticketScreen": {
     "headerBackTitle": "Tickets",
@@ -1264,7 +1325,7 @@
     "feedbackTitle": "You have spoken with a virtual operator",
     "feedbackDescription": "This new service was created to give you faster and more effective support. If you need further assistance, our team will respond to you as soon as possible!",
     "feedbackQuestion": "Are you satisfied with the answer?",
-    "reply": "Reply",
+    "reply": "Write a reply",
     "sendFirstMessage": "Ask your question",
     "sendError": "There was an error while sending the message. Try again.",
     "ticketNumber": "Ticket number",
@@ -1272,8 +1333,8 @@
     "youCanReopenTheTicket": "You can reopen the ticket at any time by submitting a reply",
     "resolveQuestion": "Was this answer helpful?",
     "resolveCta": "Yes, resolve the ticket",
-    "resolveConfirmTitle": "Are you sure?",
-    "resolveConfirmMessage": "By confirming your choice the ticket will be resolved, and it will no longer be possible to send further replies.",
+    "resolveConfirmTitle": "Mark this ticket as resolved?",
+    "resolveConfirmMessage": "The student office closes it, and you can no longer reply to it.",
     "rateBarTitle": "The ticket has been resolved",
     "rateBarSubtitle": "Rate how the ticket was handled and the quality of the assistance you received. Your feedback helps us improve our service.",
     "rateBarCta": "Send feedback",
@@ -1295,7 +1356,29 @@
     "duplicateBarSubtitle": "Your request has already been handled in another ticket. Check the linked ticket to read the reply and continue the conversation.",
     "duplicateBarCta": "Go to ticket",
     "waitingOperatorBarTitle": "Waiting for an operator",
-    "waitingOperatorBarSubtitle": "Since the automatic response was not helpful, your request has been forwarded to one of our operators."
+    "waitingOperatorBarSubtitle": "Since the automatic response was not helpful, your request has been forwarded to one of our operators.",
+    "ticket": "Ticket",
+    "updated": "Updated",
+    "you": "You",
+    "studentOffice": "Student office",
+    "virtualAssistant": "Virtual assistant",
+    "replyLabel": "Reply to the student office",
+    "replyOffline": "Replying needs a connection",
+    "send": "Send reply",
+    "sending": "Sending",
+    "notSent": "Not sent",
+    "sentAt": "sent at {{time}}",
+    "retrySend": "Try again",
+    "replySent": "Reply sent.",
+    "replyFailed": "Your reply was not sent. Try again.",
+    "newReplyAnnounce": "New reply from the student office.",
+    "actions": "Ticket actions",
+    "actionsHint": "Mark as resolved, ticket details",
+    "menuTitle": "Ticket #{{id}}",
+    "markAsResolvedHint": "Tell the student office you need nothing else",
+    "cannotResolveHint": "Not available for this ticket now",
+    "resolved": "Ticket marked as resolved.",
+    "resolveFailed": "Couldn't mark the ticket as resolved. Check your connection and try again."
   },
   "ticketResolvedScreen": {
     "title": "Ticket resolved",
@@ -1307,7 +1390,12 @@
     "minCharsHint_plural": "Enter at least {{count}} characters",
     "remainingCharsHint": "{{count}} character missing",
     "remainingCharsHint_plural": "{{count}} characters missing",
-    "sendFeedback": "Send feedback"
+    "sendFeedback": "Send feedback",
+    "chooseRating": "Choose a rating from 1 to 5 stars.",
+    "commentRequiredLabel": "Comment (needed for 1 or 2 stars)",
+    "needsConnection": "Sending needs a connection",
+    "sent": "Thanks, your rating was sent.",
+    "failed": "Couldn't send your rating. Check your connection and try again."
   },
   "tickets": {
     "status": {
@@ -1319,16 +1407,21 @@
       "open": "Open",
       "pending": "Pending",
       "resolved": "Resolved",
-      "waitingUser": "Pending"
+      "waitingUser": "Waiting for you"
     }
   },
   "ticketsScreen": {
-    "addNew": "Add ticket",
+    "addNew": "New ticket",
     "emptyState": "There are no tickets",
     "insertFeedback": "Insert feedback",
     "myTickets": "My tickets",
     "openedOn": "Opened on {{date}}",
-    "title": "Ticket"
+    "title": "Tickets",
+    "updated": "Updated {{when}}",
+    "rateTheReply": "Rate the answer you received",
+    "newReply": "New reply",
+    "ticketNumber": "ticket {{id}}",
+    "loading": "Loading your tickets"
   },
   "transcriptGradeScreen": {
     "title": "Evaluation"
@@ -1845,5 +1938,137 @@
     "headerTitle": "Before you book",
     "intro": "The teacher asks one question before you book.",
     "book": "Book exam"
+  },
+  "ticketAttachments": {
+    "menuTitle": "One attachment per message, up to 32 MB",
+    "attach": "Attach a file",
+    "pickFile": "Choose a file",
+    "pickFileHint": "From the phone or a cloud drive",
+    "pickImage": "Choose an image",
+    "takePhoto": "Take a photo",
+    "tooLarge": "{{name}} is larger than 32 MB, so it can't be attached. Choose a smaller file.",
+    "cameraDeniedTitle": "The camera is off for this app",
+    "cameraDeniedText": "To take a photo, allow camera access in the phone settings.",
+    "imageDeniedTitle": "Your photos are off for this app",
+    "imageDeniedText": "To attach an image, allow access to photos in the phone settings.",
+    "openSettings": "Open settings",
+    "failed": "Couldn't attach the file. Try again.",
+    "remove": "Remove {{name}}",
+    "open": "Open {{name}}",
+    "attached": "Attached: {{name}}",
+    "downloadFailed": "Couldn't download the attachment. Check your connection and try again.",
+    "cannotOpen": "No app on this phone can open this file."
+  },
+  "bookings": {
+    "upcoming": "Upcoming",
+    "emptyText": "Book a desk in a study room, a slot at the student office or an online interview. Your bookings appear here and in the agenda.",
+    "needsConnection": "Booking needs a connection",
+    "needsConnectionNote": "Booking needs a connection.",
+    "seatLabel": "seat {{seat}}",
+    "whenLabel": "{{day}}, {{start}} to {{end}}",
+    "whatToBook": "What do you want to book?",
+    "notOpen": "Not open for booking at the moment",
+    "status": {
+      "available": "Free",
+      "booked": "Booked",
+      "full": "Full",
+      "notAvailable": "Not open",
+      "concluded": "Past"
+    },
+    "placesLeftValue": "{{left}} of {{total}} places left",
+    "placesOf": "{{left}} of {{total}}",
+    "confirmTitle": "Book this slot?",
+    "what": "What",
+    "when": "When",
+    "where": "Where",
+    "placesLeft": "Places left",
+    "slotUnavailableTitle": "You can't book this slot",
+    "slotFull": "No places left in this slot.",
+    "slotOpensOn": "Booking for this slot opens on {{date}}.",
+    "slotClosed": "Booking for this slot has closed.",
+    "bookedFeedback": "Booked: {{day}}, {{time}}. It's in your agenda.",
+    "viewInAgenda": "View in agenda",
+    "bookFailedTitle": "Couldn't book this slot",
+    "bookLostText": "No answer came back, and the booking isn't in your list. Check your connection and try again.",
+    "cancelUntil": "You can cancel until",
+    "cancelTitle": "Cancel this booking?",
+    "cancelText": "You'll lose the slot, and someone else can book it.",
+    "keepBooking": "Keep booking",
+    "cancelledFeedback": "Booking cancelled.",
+    "cancelFailed": "Couldn't cancel the booking. Try again.",
+    "cancelFailedReason": "Couldn't cancel the booking. {{reason}}",
+    "cancelLost": "Couldn't cancel the booking: no answer came back. Check your connection and try again.",
+    "checkInFailed": "Couldn't check in. Try again.",
+    "locationPermissionNeeded": "Check-in needs your location. You can allow it in the settings.",
+    "locationOff": "Location is off. Turn it on to check in."
+  },
+  "serviceInfo": {
+    "contacts": {
+      "matches": "{{count}} person matches \"{{search}}\"",
+      "matches_plural": "{{count}} people match \"{{search}}\"",
+      "noMatchTitle": "Nobody matches \"{{search}}\""
+    },
+    "person": {
+      "call": "Call {{number}}",
+      "write": "Write to {{email}}",
+      "profilePage": "Profile page"
+    },
+    "opensInBrowser": "{{label}}, opens in the browser",
+    "guides": {
+      "new": "New",
+      "settingsToCopy": "Settings to copy",
+      "copy": "Copy {{label}}",
+      "copied": "Copied: {{value}}"
+    },
+    "news": {
+      "title": "News and events",
+      "event": "Event",
+      "news": "News",
+      "eventMeta": "Event · {{day}}, {{time}}",
+      "newsMeta": "News · {{day}}",
+      "published": "Published {{date}}",
+      "where": "Where",
+      "attachments": "Attachments and links",
+      "file": "File",
+      "fileSize": "File, {{size}} KB"
+    },
+    "jobs": {
+      "applyBy": "Apply by {{date}}",
+      "contract": "Contract",
+      "pay": "Pay",
+      "where": "Where",
+      "openPositions": "Open positions",
+      "applyByLabel": "Apply by",
+      "howToApply": "How to apply",
+      "website": "Website"
+    },
+    "catalogue": {
+      "title": "Course catalogue",
+      "bachelor": "Bachelor's degrees",
+      "master": "Master's degrees",
+      "year": "Year {{year}}",
+      "courses": "{{count}} course",
+      "courses_plural": "{{count}} courses",
+      "credits": "{{count}} credit",
+      "credits_plural": "{{count}} credits",
+      "noTracks": "No tracks published for this edition",
+      "noJobs": "No job opportunities published for this degree",
+      "noGuide": "No course guide published for this edition"
+    },
+    "surveys": {
+      "cpdTitle": "Teaching surveys (CPD)",
+      "otherTitle": "Other surveys",
+      "completedTitle": "Completed surveys",
+      "toFillInTitle": "Surveys to fill in",
+      "toFillIn": "To fill in",
+      "done": "Done",
+      "toFillInCount": "{{count}} to fill in",
+      "toFillInCount_plural": "{{count}} to fill in",
+      "due": "Due {{date}}.",
+      "noneCompletedTitle": "No completed surveys",
+      "noneToFillInTitle": "No surveys to fill in",
+      "emptyTitle": "No surveys",
+      "emptyText": "Teaching surveys for your courses and other university surveys appear here."
+    }
   }
 }
