@@ -5,18 +5,17 @@ import {
   ListRenderItemInfo,
   SafeAreaView,
   ScrollView,
+  StyleSheet,
   View,
 } from 'react-native';
 
 import { faLocationDot } from '@fortawesome/free-solid-svg-icons';
-import {
-  convertMachineDateToFormatDate,
-  usePreferencesContext,
-} from '@polito/lib/core';
+import { usePreferencesContext } from '@polito/lib/core';
 import { useGetPerson } from '@polito/lib/features/people';
 import { resolvePlaceId } from '@polito/lib/features/places';
 import {
   BottomBarSpacer,
+  CourseTile,
   CtaButton,
   CtaButtonContainer,
   CtaButtonSpacer,
@@ -25,8 +24,9 @@ import {
   ListItem,
   OverviewList,
   PersonListItem,
-  Row,
   Swiper,
+  Theme,
+  useStylesheet,
   useTheme,
 } from '@polito/lib/ui';
 import { VirtualClassroomRecording } from '@polito/student-api-client';
@@ -34,12 +34,11 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { AppPreferences } from '~/core/types/preferences.ts';
 
-import { EventDetails } from '../../../core/components/EventDetails.tsx';
 import { VideoPlayer } from '../../../core/components/VideoPlayer';
 import { useGetCourseVirtualClassrooms } from '../../../core/queries/courseHooks';
-import { CourseIcon } from '../../courses/components/CourseIcon';
 import { isRecordedVC } from '../../courses/utils/lectures';
 import { AgendaStackParamList } from '../components/AgendaNavigator';
+import { EventHead } from '../components/EventHead';
 import { useAgendaDialog } from '../hooks/useAgendaDialog';
 import { cleanupPastSingleEvents } from '../utils/hiddenEvents';
 import { placesStack } from '../utils/placesStack';
@@ -50,13 +49,17 @@ export const LectureScreen = ({ route, navigation }: Props) => {
   const { item: lecture } = route.params;
   const associatedVirtualClassrooms = lecture.virtualClassrooms;
   const { t } = useTranslation();
-  const { fontSizes } = useTheme();
+  const { colors } = useTheme();
+  const styles = useStylesheet(createStyles);
   const teacherQuery = useGetPerson(lecture.teacherId);
   const { data: virtualClassrooms } = useGetCourseVirtualClassrooms(
     lecture.courseId,
   );
-  const { courses: coursesPrefs, updatePreference } =
-    usePreferencesContext<AppPreferences>();
+  const {
+    courses: coursesPrefs,
+    updatePreference,
+    language,
+  } = usePreferencesContext<AppPreferences>();
   const agendaDialog = useAgendaDialog();
 
   const coursePrefs = useMemo(() => {
@@ -234,26 +237,27 @@ export const LectureScreen = ({ route, navigation }: Props) => {
             <View />
             <CtaButton title={t('courseVirtualClassroomScreen.liveCta')} action={Linking.openURL(lecture.)}/>
           ) */}
-          <Row justify="space-between" align="center">
-            <EventDetails
-              title={currentVideoTitle ?? lecture.title}
-              type={`${t('common.lecture')} ${lecture.description ? '- ' + lecture.description : ''}`}
-              time={`${convertMachineDateToFormatDate(lecture.date)} ${
-                lecture.fromTime
-              } - ${lecture.toTime}`}
-            />
-          </Row>
-          <OverviewList indented>
+          <EventHead
+            caption={lecture.description || t('common.lecture')}
+            subtitle={currentVideoTitle}
+            date={lecture.start.setLocale(language).toFormat('ccc, d LLL yyyy')}
+            time={`${lecture.fromTime} - ${lecture.toTime}`}
+          />
+          <OverviewList indented style={styles.list}>
             {lecture?.place && (
               <ListItem
                 leadingItem={
-                  <Icon icon={faLocationDot} size={fontSizes['2xl']} />
+                  <Icon
+                    icon={faLocationDot}
+                    size={24}
+                    color={colors.secondaryText}
+                  />
                 }
-                title={
-                  lecture.place?.name
-                    ? t('agendaScreen.room', { roomName: lecture.place.name })
-                    : '-'
-                }
+                title={lecture.place.name || '-'}
+                subtitle={t('lectureScreen.roomSubtitle')}
+                accessibilityLabel={t('lectureScreen.roomLabel', {
+                  room: lecture.place.name,
+                })}
                 isAction
                 onPress={() => {
                   navigation.navigate(placesStack(navigation), {
@@ -273,17 +277,17 @@ export const LectureScreen = ({ route, navigation }: Props) => {
               />
             )}
             <ListItem
-              title={lecture.title}
-              subtitle={t('lectureScreen.courseFilesCta')}
+              title={t('lectureScreen.openCourse')}
+              subtitle={t('lectureScreen.openCourseSubtitle')}
+              accessibilityLabel={t('lectureScreen.openCourseLabel', {
+                course: lecture.title,
+              })}
               leadingItem={
-                <CourseIcon icon={lecture.icon} color={lecture.color} />
+                <CourseTile color={lecture.color} icon={lecture.icon} />
               }
               linkTo={{
                 screen: 'Course',
-                params: {
-                  screen: 'CourseFilesScreen',
-                  id: lecture.courseId,
-                },
+                params: { id: lecture.courseId },
               }}
             />
           </OverviewList>
@@ -306,3 +310,10 @@ export const LectureScreen = ({ route, navigation }: Props) => {
     </>
   );
 };
+
+const createStyles = ({ spacing }: Theme) =>
+  StyleSheet.create({
+    list: {
+      marginTop: spacing[4],
+    },
+  });

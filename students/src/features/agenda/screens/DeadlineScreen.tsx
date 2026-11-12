@@ -1,55 +1,60 @@
 import { useTranslation } from 'react-i18next';
-import { SafeAreaView, ScrollView } from 'react-native';
+import { SafeAreaView, ScrollView, StyleSheet } from 'react-native';
 
 import { faLink } from '@fortawesome/free-solid-svg-icons';
-import { convertMachineDateToFormatDate } from '@polito/lib/core';
-import { useOpenInAppLink } from '@polito/lib/core';
+import { useOpenInAppLink, usePreferencesContext } from '@polito/lib/core';
 import {
   BottomBarSpacer,
   Icon,
   ListItem,
   OverviewList,
+  Theme,
+  useStylesheet,
   useTheme,
 } from '@polito/lib/ui';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-import { EventDetails } from '../../../core/components/EventDetails';
 import { AgendaStackParamList } from '../components/AgendaNavigator';
+import { EventHead } from '../components/EventHead';
 
 type Props = NativeStackScreenProps<AgendaStackParamList, 'Deadline'>;
+
+/** The host of a link, to say where it opens */
+const hostOf = (url: string) => {
+  const match = /^[a-z]+:\/\/([^/?#]+)/i.exec(url);
+  return match?.[1];
+};
 
 export const DeadlineScreen = ({ route }: Props) => {
   const { item: deadline } = route.params;
   const { t } = useTranslation();
-  const { palettes, spacing } = useTheme();
+  const { colors } = useTheme();
+  const styles = useStylesheet(createStyles);
+  const { language } = usePreferencesContext();
   const openInAppLink = useOpenInAppLink();
-
-  const onPressDeadlineUrl = () =>
-    deadline.url ? openInAppLink(deadline.url) : null;
 
   return (
     <ScrollView contentInsetAdjustmentBehavior="automatic">
       <SafeAreaView>
-        <EventDetails
-          title={deadline?.title}
-          type={t('common.deadline')}
-          time={convertMachineDateToFormatDate(deadline?.date)}
+        <EventHead
+          caption={
+            deadline.deadlineType
+              ? `${t('common.deadline')} · ${deadline.deadlineType}`
+              : t('common.deadline')
+          }
+          date={deadline.start.setLocale(language).toFormat('ccc, d LLL yyyy')}
         />
-        {/* TODO show link only when relevant */}
-        {deadline?.url && (
-          <OverviewList>
+        {deadline.url && (
+          <OverviewList indented style={styles.list}>
             <ListItem
               leadingItem={
-                <Icon
-                  icon={faLink}
-                  size={20}
-                  color={palettes.primary[400]}
-                  style={{ marginRight: spacing[2] }}
-                />
+                <Icon icon={faLink} size={24} color={colors.secondaryText} />
               }
-              title={deadline?.type}
-              subtitle={deadline?.title}
-              onPress={onPressDeadlineUrl}
+              title={t('deadlineScreen.openLink')}
+              subtitle={hostOf(deadline.url)}
+              accessibilityRole="link"
+              isAction
+              onPress={() => openInAppLink(deadline.url!)}
             />
           </OverviewList>
         )}
@@ -58,3 +63,10 @@ export const DeadlineScreen = ({ route }: Props) => {
     </ScrollView>
   );
 };
+
+const createStyles = ({ spacing }: Theme) =>
+  StyleSheet.create({
+    list: {
+      marginTop: spacing[4],
+    },
+  });

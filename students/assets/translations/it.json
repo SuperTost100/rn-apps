@@ -107,7 +107,9 @@
   "AgendaPreferences": {
     "hideInAgenda": "Nascondi in agenda",
     "hideEvent": "Nascondi evento",
-    "showInAgenda": "Mostra in agenda"
+    "showInAgenda": "Mostra in agenda",
+    "hiddenCount": "{{count}} nascosto",
+    "hiddenCount_plural": "{{count}} nascosti"
   },
   "bookingScreen": {
     "barCodeTitle": "Barcode",
@@ -129,7 +131,12 @@
       "virtualPlace": "Link sportello virtuale"
     },
     "nextWeek": "Prossima settimana",
-    "previousWeek": "Settimana precedente"
+    "previousWeek": "Settimana precedente",
+    "locationAction": {
+      "place": "La mostra in Luoghi",
+      "virtualPlace": "Online, apre il link"
+    },
+    "locationUnavailable": "Non riesco a leggere la tua posizione. Controlla che la localizzazione sia attiva e riprova."
   },
   "bookingSeatScreen": {
     "confirm": "Conferma prenotazione",
@@ -838,7 +845,12 @@
     "courseFilesCta": "Vai al materiale del corso",
     "hideEventAlertTitle": "Nascondi Evento",
     "hideEventAlertMessage": "Stai nascondendo l'evento di: {{ title }} di {{ day }} dalle {{ fromTime }} alle {{ toTime }}",
-    "hideEventButtonTitle": "Nascondi evento dall'agenda"
+    "hideEventButtonTitle": "Nascondi evento dall'agenda",
+    "roomSubtitle": "Aula",
+    "roomLabel": "Aula {{room}}, la mostra in Luoghi",
+    "openCourse": "Apri il corso",
+    "openCourseSubtitle": "Avvisi, materiale e lezioni",
+    "openCourseLabel": "Apri il corso {{course}}"
   },
   "libraryScreen": {
     "title": "Biblioteca"
@@ -1561,5 +1573,8 @@
       "from": "Politecnico di Torino · {{date}}",
       "announce": "Messaggio urgente dal Politecnico di Torino"
     }
+  },
+  "deadlineScreen": {
+    "openLink": "Apri i dettagli"
   }
 }

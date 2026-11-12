@@ -107,7 +107,9 @@
   "AgendaPreferences": {
     "hideInAgenda": "Hide in agenda",
     "hideEvent": "Hide event",
-    "showInAgenda": "Show on the agenda"
+    "showInAgenda": "Show on the agenda",
+    "hiddenCount": "{{count}} hidden",
+    "hiddenCount_plural": "{{count}} hidden"
   },
   "bookingScreen": {
     "barCodeTitle": "Barcode",
@@ -127,7 +129,12 @@
     "locationType": {
       "place": "Place",
       "virtualPlace": "Link virtual place"
-    }
+    },
+    "locationAction": {
+      "place": "Shows it in Places",
+      "virtualPlace": "Online, opens the link"
+    },
+    "locationUnavailable": "Couldn't read your position. Check that location is on and try again."
   },
   "bookingSeatScreen": {
     "confirm": "Confirm booking",
@@ -823,7 +830,12 @@
     "courseFilesCta": "Go to course files",
     "hideEventAlertTitle": "Hide event",
     "hideEventAlertMessage": " You are hiding the {{ day }} {{ title }} event from {{ fromTime }} to {{ toTime }}",
-    "hideEventButtonTitle": "Hide from the agenda"
+    "hideEventButtonTitle": "Hide from the agenda",
+    "roomSubtitle": "Room",
+    "roomLabel": "Room {{room}}, shows it in Places",
+    "openCourse": "Open course",
+    "openCourseSubtitle": "Announcements, files and lectures",
+    "openCourseLabel": "Open the course {{course}}"
   },
   "libraryScreen": {
     "title": "Library"
@@ -1535,5 +1547,8 @@
       "from": "Politecnico di Torino · {{date}}",
       "announce": "Urgent message from Politecnico di Torino"
     }
+  },
+  "deadlineScreen": {
+    "openLink": "Open the details"
   }
 }

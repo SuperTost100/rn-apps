@@ -85,9 +85,9 @@ export const AgendaNavigator = () => {
         name="Lecture"
         component={LectureScreen}
         getId={({ params }) => `${params.item.courseId}${params.item.id}`}
-        options={{
-          headerTitle: t('common.lecture'),
-        }}
+        options={({ route }) => ({
+          headerTitle: route.params.item.title,
+        })}
       />
       <Stack.Screen
         name="Exam"
@@ -116,9 +116,9 @@ export const AgendaNavigator = () => {
         name="Deadline"
         component={DeadlineScreen}
         getId={({ params }) => `${params.item.id}`}
-        options={{
-          headerTitle: t('common.deadline'),
-        }}
+        options={({ route }) => ({
+          headerTitle: route.params.item.title,
+        })}
       />
       <Stack.Screen
         name="PlacesAgendaStack"

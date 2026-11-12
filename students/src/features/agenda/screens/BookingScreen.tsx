@@ -1,20 +1,18 @@
 import { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  Platform,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  View,
-  useWindowDimensions,
-} from 'react-native';
+import { Platform, SafeAreaView, ScrollView, StyleSheet } from 'react-native';
 import Barcode from 'react-native-barcode-svg';
 
-import { faCheckCircle, faLocation } from '@fortawesome/free-solid-svg-icons';
+import {
+  faCheckCircle,
+  faLocationDot,
+  faVideo,
+} from '@fortawesome/free-solid-svg-icons';
 import {
   APP_TIMEZONE,
   useFeedbackContext,
   useOfflineDisabled,
+  usePreferencesContext,
 } from '@polito/lib/core';
 import { useOpenInAppLink } from '@polito/lib/core';
 import { resolvePlaceId } from '@polito/lib/features/places';
@@ -27,16 +25,13 @@ import {
   ListItem,
   OverviewList,
   RefreshControl,
-  ScreenTitle,
   Section,
   SectionHeader,
-  Text,
   Theme,
   faSeat,
   isToday,
   useStylesheet,
   useTheme,
-  useTitlesStyles,
 } from '@polito/lib/ui';
 import { Booking } from '@polito/student-api-client';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -52,8 +47,8 @@ import {
   useUpdateBooking,
 } from '../../../core/queries/bookingHooks';
 import { useGetProfile } from '../../../core/queries/studentHooks';
-import { BookingDateTime } from '../../bookings/components/BookingDateTime';
 import { AgendaStackParamList } from '../components/AgendaNavigator';
+import { EventHead } from '../components/EventHead';
 import { placesStack } from '../utils/placesStack';
 
 type Props = NativeStackScreenProps<AgendaStackParamList, 'Booking'>;
@@ -68,9 +63,9 @@ export const BookingScreen = ({ navigation, route }: Props) => {
   const { id } = route.params;
   const { t } = useTranslation();
   const { setFeedback } = useFeedbackContext();
+  const { language } = usePreferencesContext();
   const { getCurrentPosition, computeDistance } = useGeolocation();
   const { colors, palettes, spacing } = useTheme();
-  const theme = useTheme();
   const bookingsQuery = useGetBookings();
   const deleteBookingMutation = useDeleteBooking(id);
   const updateBookingMutation = useUpdateBooking();
@@ -85,25 +80,12 @@ export const BookingScreen = ({ navigation, route }: Props) => {
   const booking = bookingsQuery.data?.find((e: Booking) => e.id === id);
   const title = booking?.topic?.title ?? '';
   const subTopicTitle = booking?.subtopic?.title ?? '';
-  const titleStyles = useTitlesStyles(theme);
-  const { width } = useWindowDimensions();
   const description = booking?.description;
+  // The header names the booking itself: its description, or its topic
   const screenTitle = description ? description : title;
   useEffect(() => {
-    if (!bookingsQuery.data) return;
-    if (description) {
-      navigation.setOptions({
-        headerTitle: title,
-      });
-    }
-  }, [
-    bookingsQuery,
-    titleStyles.headerStyle,
-    width,
-    description,
-    title,
-    navigation,
-  ]);
+    if (screenTitle) navigation.setOptions({ headerTitle: screenTitle });
+  }, [screenTitle, navigation]);
 
   const hasCheckIn = useMemo(
     () =>
@@ -137,25 +119,31 @@ export const BookingScreen = ({ navigation, route }: Props) => {
 
   const onPressCheckIn = async () => {
     if (!booking?.id) return;
-    getCurrentPosition().then(currentDeviceCoordinates => {
-      const computedDistance = computeDistance(currentDeviceCoordinates, {
-        latitude: Number(booking?.locationCheck?.latitude),
-        longitude: Number(booking?.locationCheck?.longitude),
+    getCurrentPosition()
+      .catch(() => {
+        setFeedback({ text: t('bookingScreen.locationUnavailable') });
+        return undefined;
+      })
+      .then(currentDeviceCoordinates => {
+        if (!currentDeviceCoordinates) return;
+        const computedDistance = computeDistance(currentDeviceCoordinates, {
+          latitude: Number(booking?.locationCheck?.latitude),
+          longitude: Number(booking?.locationCheck?.longitude),
+        });
+        if (computedDistance < Number(booking?.locationCheck?.radiusInKm)) {
+          updateBookingMutation
+            .mutateAsync({
+              bookingId: booking.id,
+              isLocationChecked: true,
+            })
+            .then(() => {
+              setFeedback({ text: t('bookingScreen.checkInFeedback') });
+              bookingsQuery.refetch();
+            });
+        } else {
+          setFeedback({ text: t('bookingScreen.checkLocationErrorFeedback') });
+        }
       });
-      if (computedDistance < Number(booking?.locationCheck?.radiusInKm)) {
-        updateBookingMutation
-          .mutateAsync({
-            bookingId: booking.id,
-            isLocationChecked: true,
-          })
-          .then(() => {
-            setFeedback({ text: t('bookingScreen.checkInFeedback') });
-            bookingsQuery.refetch();
-          });
-      } else {
-        setFeedback({ text: t('bookingScreen.checkLocationErrorFeedback') });
-      }
-    });
   };
 
   const onPressLocation = async (location: Booking['location']) => {
@@ -186,8 +174,8 @@ export const BookingScreen = ({ navigation, route }: Props) => {
 
   const locationAccessibilityLabel = booking
     ? [
-        t(`bookingScreen.locationType.${booking?.location?.type}`),
         booking.location.name,
+        t(`bookingScreen.locationAction.${booking.location.type}`),
       ].join(', ')
     : '';
 
@@ -202,37 +190,44 @@ export const BookingScreen = ({ navigation, route }: Props) => {
         refreshControl={<RefreshControl manual queries={[bookingsQuery]} />}
       >
         <SafeAreaView>
-          <View style={{ padding: spacing[5] }} accessible>
-            <ScreenTitle
-              style={{ marginBottom: spacing[2] }}
-              title={screenTitle}
+          {booking && (
+            <EventHead
+              caption={
+                subTopicTitle
+                  ? `${t('common.booking')} · ${subTopicTitle}`
+                  : t('common.booking')
+              }
+              subtitle={description ? title : undefined}
+              date={DateTime.fromJSDate(booking.startsAt, {
+                zone: APP_TIMEZONE,
+              })
+                .setLocale(language)
+                .toFormat('ccc, d LLL yyyy')}
+              time={`${DateTime.fromJSDate(booking.startsAt, { zone: APP_TIMEZONE }).toFormat('HH:mm')} - ${DateTime.fromJSDate(booking.endsAt, { zone: APP_TIMEZONE }).toFormat('HH:mm')}`}
             />
-            {subTopicTitle && (
-              <Text variant="caption" style={{ marginBottom: spacing[1] }}>
-                {subTopicTitle}
-              </Text>
-            )}
-            <BookingDateTime accessible={true} booking={booking} />
-          </View>
-          <OverviewList>
+          )}
+          <OverviewList indented style={{ marginTop: spacing[4] }}>
             {booking?.location?.name && (
               <ListItem
-                isAction={booking?.location?.type !== 'virtualPlace'}
+                isAction
                 accessibilityRole={
-                  booking?.location?.type === 'virtualPlace' ? 'text' : 'button'
+                  booking.location.type === 'virtualPlace' ? 'link' : 'button'
                 }
                 accessibilityLabel={locationAccessibilityLabel}
                 leadingItem={
                   <Icon
-                    icon={faLocation}
-                    size={20}
+                    icon={
+                      booking.location.type === 'virtualPlace'
+                        ? faVideo
+                        : faLocationDot
+                    }
+                    size={24}
                     color={colors.secondaryText}
-                    style={{ marginRight: spacing[2] }}
                   />
                 }
                 title={booking.location.name}
                 subtitle={t(
-                  `bookingScreen.locationType.${booking.location?.type}`,
+                  `bookingScreen.locationAction.${booking.location.type}`,
                 )}
                 onPress={() => onPressLocation(booking?.location)}
               />
@@ -242,12 +237,7 @@ export const BookingScreen = ({ navigation, route }: Props) => {
                 accessibilityRole="button"
                 accessibilityLabel={seatAccessibilityLabel}
                 leadingItem={
-                  <Icon
-                    icon={faSeat}
-                    size={20}
-                    color={colors.secondaryText}
-                    style={{ marginRight: spacing[2] }}
-                  />
+                  <Icon icon={faSeat} size={24} color={colors.secondaryText} />
                 }
                 title={`${booking.seat.row}${booking.seat.column}`}
                 subtitle={t('common.seat')}

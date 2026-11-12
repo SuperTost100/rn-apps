@@ -1,10 +1,11 @@
 import { useTranslation } from 'react-i18next';
 import { ScrollView } from 'react-native';
 
-import { faCalendar, faChevronRight } from '@fortawesome/free-solid-svg-icons';
+import { faEyeSlash } from '@fortawesome/free-regular-svg-icons';
 import { usePreferencesContext } from '@polito/lib/core';
 import {
   BottomBarSpacer,
+  CourseTile,
   Icon,
   ListItem,
   OverviewList,
@@ -19,7 +20,6 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useGetCourses } from '~/core/queries/courseHooks.ts';
 import { AppPreferences } from '~/core/types/preferences';
 import { AgendaStackParamList } from '~/features/agenda/components/AgendaNavigator.tsx';
-import { CourseIndicator } from '~/features/courses/components/CourseIndicator.tsx';
 
 type Props = NativeStackScreenProps<AgendaStackParamList, 'AgendaPreferences'>;
 
@@ -28,16 +28,15 @@ export const AgendaPreferencesScreen = ({ navigation }: Props) => {
   const coursesQuery = useGetCourses();
   const { courses: coursesPrefs, updatePreference } =
     usePreferencesContext<AppPreferences>();
-  const { spacing, fontSizes } = useTheme();
+  const { spacing, colors } = useTheme();
 
-  const hasHiddenEvents =
-    coursesPrefs &&
-    Object.values(coursesPrefs).some(
-      prefs =>
-        (prefs?.itemsToHideInAgenda && prefs.itemsToHideInAgenda.length > 0) ||
-        (prefs?.singleItemsToHideInAgenda &&
-          prefs.singleItemsToHideInAgenda.length > 0),
-    );
+  const hiddenCount = Object.values(coursesPrefs ?? {}).reduce(
+    (sum, prefs) =>
+      sum +
+      (prefs?.itemsToHideInAgenda?.length ?? 0) +
+      (prefs?.singleItemsToHideInAgenda?.length ?? 0),
+    0,
+  );
 
   return (
     <>
@@ -66,8 +65,9 @@ export const AgendaPreferencesScreen = ({ navigation }: Props) => {
                           !coursesPrefs[course.uniqueShortcode].isHidden
                         }
                         leadingItem={
-                          <CourseIndicator
-                            uniqueShortcode={course.uniqueShortcode}
+                          <CourseTile
+                            color={coursesPrefs[course.uniqueShortcode].color}
+                            icon={coursesPrefs[course.uniqueShortcode].icon}
                           />
                         }
                         onChange={value => {
@@ -88,16 +88,27 @@ export const AgendaPreferencesScreen = ({ navigation }: Props) => {
             <OverviewList emptyStateText={t('coursesScreen.emptyState')} />
           ))}
         <Section>
-          <OverviewList>
+          <SectionHeader title={t('common.hiddenEvents')} />
+          <OverviewList indented>
             <ListItem
               title={t('common.hiddenEvents')}
+              subtitle={
+                hiddenCount
+                  ? t('AgendaPreferences.hiddenCount', { count: hiddenCount })
+                  : t('agendaScreen.noHiddenEvents')
+              }
               isAction
               onPress={() => {
                 navigation.navigate('HiddenEvents');
               }}
-              disabled={!hasHiddenEvents}
-              trailingItem={<Icon icon={faChevronRight} size={fontSizes.xl} />}
-              leadingItem={<Icon icon={faCalendar} size={fontSizes['2xl']} />}
+              disabled={!hiddenCount}
+              leadingItem={
+                <Icon
+                  icon={faEyeSlash}
+                  size={24}
+                  color={colors.secondaryText}
+                />
+              }
             />
           </OverviewList>
         </Section>
